@@ -59,7 +59,7 @@ bool Config::LoadConfig(const char * configFn)
 	if (this->Volume > MAX_Volume) this->Volume = MAX_Volume;
 	if (this->Volume < 0) this->Volume = 0;
 	_setValue(this->DisableDududu, kv, STR_DisableDududu);
-
+	if (this->DisableDududu) this->DisableDududu = 1;
 	return true;
 }
 
@@ -68,7 +68,8 @@ bool Config::SaveConfig(const char * configFn) const
 	ofstream ofs(configFn);
 	if (!ofs) return false;
 
-	ofs << STR_Volume << '=' << this->Volume
+	ofs << STR_Volume << '=' << this->Volume << '\n'
+		<< STR_DisableDududu << '=' << this->DisableDududu << '\n'
 		<< endl;
 
 	ofs.close();
