@@ -52,7 +52,7 @@ static void _PlaySoundFile(const char* fileNm);
 static void _StopPlaying();
 
 #define TO_DSVOLUME(volume) ((volume) == 0 ? DSBVOLUME_MIN : \
-	(long)(2000 * log10(double(volume) / MAX_Volume)))
+	(long long)(2000 * log10(double(volume) / MAX_Volume)))
 
 SVDECL void SVCALL Init(void *p)
 {
