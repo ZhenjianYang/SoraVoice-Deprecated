@@ -58,6 +58,7 @@ bool Config::LoadConfig(const char * configFn)
 	_setValue(this->Volume, kv, STR_Volume);
 	if (this->Volume > MAX_Volume) this->Volume = MAX_Volume;
 	if (this->Volume < 0) this->Volume = 0;
+	_setValue(this->DisableDududu, kv, STR_DisableDududu);
 
 	return true;
 }
@@ -77,4 +78,5 @@ bool Config::SaveConfig(const char * configFn) const
 void Config::load_default()
 {
 	this->Volume = DFT_Volume;
+	this->DisableDududu = DFT_DisableDududu;
 }

@@ -25,6 +25,8 @@ static const int TIME_BUF = 1;
 static bool _startup = false;
 static bool _isAo = false;
 
+static int *_pflagPlaying = nullptr;
+
 static Config _config;
 
 static VF _vf;
@@ -52,7 +54,7 @@ static void _PlaySoundFile(const char* fileNm);
 static void _StopPlaying();
 
 #define TO_DSVOLUME(volume) ((volume) == 0 ? DSBVOLUME_MIN : \
-	(long long)(2000 * log10(double(volume) / MAX_Volume)))
+	(int)(2000 * log10(double(volume) / MAX_Volume)))
 
 SVDECL void SVCALL Init(void *p)
 {
@@ -72,6 +74,7 @@ SVDECL void SVCALL Init(void *p)
 
 	_isAo = ip->_isAo;
 	_pDS = *(ip->p_pDS);
+	_pflagPlaying = &ip->flagPlaying;
 
 	_vf.ov_open_callbacks = *(ip->p_ov_open_callbacks);
 	_vf.ov_info = *(ip->p_ov_info);
@@ -329,10 +332,11 @@ void _PlaySoundFile(const char* fileNm)
 	LOG("Notify set");
 
 	_pDSBuff->SetVolume(TO_DSVOLUME(_config.Volume));
-	LOG("DSVolume = %ld", TO_DSVOLUME(_config.Volume));
+	LOG("DSVolume = %d", TO_DSVOLUME(_config.Volume));
 
 	_mt.lock();
 	_isPlaying = true;
+	if (_pflagPlaying && _config.DisableDududu) *_pflagPlaying = 1;
 	_pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
 	_mt.unlock();
 
@@ -345,6 +349,7 @@ void _StopPlaying()
 
 	_isPlaying = false;
 	_playEnd = -1;
+	if(_pflagPlaying) *_pflagPlaying = 0;
 	if (_pDSBuff) {
 		_pDSBuff->Stop();
 		_pDSBuff->Release();

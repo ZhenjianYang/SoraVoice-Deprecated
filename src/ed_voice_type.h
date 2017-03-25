@@ -18,7 +18,7 @@ struct VF {
 struct InitParam
 {
 	bool _isAo;
-	int reversed0;
+	int flagPlaying;
 	int reversed1;
 	int reversed2;
 
