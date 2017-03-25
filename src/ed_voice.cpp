@@ -1,14 +1,15 @@
 #include "ed_voice.h"
 #include "config.h"
 #include "Log.h"
+#include "ed_voice_type.h"
 
 #include "mapping.h"
+
 
 #include <thread>
 #include <mutex>
 
 #include <dsound.h>
-#include <vorbis\vorbisfile.h>
 
 #define CONFIG_FILE "ed_voice.ini"
 
@@ -17,10 +18,6 @@
 #define VOICEFILE_ATTR	".ogg"
 #define VOLUME_STEP 5
 
-using VF_ov_open_callbacks = decltype(ov_open_callbacks);
-using VF_ov_info = decltype(ov_info);
-using VF_ov_read = decltype(ov_read);
-using VF_ov_clear = decltype(ov_clear);
 
 static const int NUM_AUDIO_BUF = 2;
 static const int TIME_BUF = 1;
@@ -30,12 +27,7 @@ static bool _isAo = false;
 
 static Config _config;
 
-static struct {
-	VF_ov_open_callbacks* ov_open_callbacks;
-	VF_ov_info* ov_info;
-	VF_ov_read* ov_read;
-	VF_ov_clear* ov_clear;
-} _vf;
+static VF _vf;
 
 static HANDLE _hEvent[NUM_AUDIO_BUF];
 
@@ -55,29 +47,12 @@ static DSBPOSITIONNOTIFY _dSNotify[NUM_AUDIO_BUF];
 
 static char _buff_vfn[sizeof(VOICEFILE_PREFIX) + MAX_VOICEID_LEN + sizeof(VOICEFILE_ATTR)];
 
-struct InitParam
-{
-	bool _isAo;
-	int reversed0;
-	int reversed1;
-	int reversed2;
-
-	LPDIRECTSOUND* p_pDS;
-
-	VF_ov_open_callbacks** p_ov_open_callbacks;
-	VF_ov_info** p_ov_info;
-	VF_ov_read** p_ov_read;
-	VF_ov_clear** p_ov_clear;
-};
-
 static void _ThreadReadData();
 static void _PlaySoundFile(const char* fileNm);
+static void _StopPlaying();
 
-static inline long TO_DSVOLUME(int volume) {
-	return _config.Volume == 0 ?
-		DSBVOLUME_MIN :
-		(long)(2000 * log10(double(_config.Volume) / MAX_Volume));
-}
+#define TO_DSVOLUME(volume) ((volume) == 0 ? DSBVOLUME_MIN : \
+	(long)(2000 * log10(double(volume) / MAX_Volume)))
 
 SVDECL void SVCALL Init(void *p)
 {
@@ -96,12 +71,12 @@ SVDECL void SVCALL Init(void *p)
 	LOG("p->p_ov_clear = 0x%08X", ip->p_ov_clear);
 
 	_isAo = ip->_isAo;
-	_pDS = *ip->p_pDS;
+	_pDS = *(ip->p_pDS);
 
-	_vf.ov_open_callbacks = *ip->p_ov_open_callbacks;
-	_vf.ov_info = *ip->p_ov_info;
-	_vf.ov_read = *ip->p_ov_read;
-	_vf.ov_clear = *ip->p_ov_clear;
+	_vf.ov_open_callbacks = *(ip->p_ov_open_callbacks);
+	_vf.ov_info = *(ip->p_ov_info);
+	_vf.ov_read = *(ip->p_ov_read);
+	_vf.ov_clear = *(ip->p_ov_clear);
 
 	LOG("pDS = 0x%08X", _pDS);
 	LOG("ov_open_callbacks = 0x%08X", _vf.ov_open_callbacks);
@@ -169,11 +144,11 @@ SVDECL void SVCALL Play(void *v, void *p)
 
 	if (len_vid <= MAX_VOICEID_LEN_NEED_MAPPING) {
 		vid += VoiceIdAdjustAdder[len_vid];
-		LOG("Adjust Voice ID is %d", vid);
+		LOG("Adjusted Voice ID is %d", vid);
 		LOG("Number of mapping is %d", NUM_MAPPING);
 
 		if (vid >= NUM_MAPPING) {
-			LOG("Adjust Voice ID is out of the range of Mapping", NUM_MAPPING);
+			LOG("Adjusted Voice ID is out of the range of Mapping", NUM_MAPPING);
 			return;
 		}
 
@@ -199,18 +174,12 @@ SVDECL void SVCALL Play(void *v, void *p)
 
 SVDECL void SVCALL Stop(void *p)
 {
-	if (!_isPlaying) return;
-
-	_isPlaying = false;
-	_playEnd = -1;
-	if (_pDSBuff) {
-		_pDSBuff->Stop();
-		_pDSBuff->Release();
-	}
-	_vf.ov_clear(&_ovf);
+	_mt.lock();
+	_StopPlaying();
+	_mt.unlock();
 }
 
-int ReadSoundData(char* buff, int size) {
+int _ReadSoundData(char* buff, int size) {
 	if (buff == nullptr || size <= 0) return 0;
 
 	for (int i = 0; i < size; i++) buff[i] = 0;
@@ -223,7 +192,7 @@ int ReadSoundData(char* buff, int size) {
 	{
 		int request = size - total < block ? size - total : block;
 		int read = _vf.ov_read(&_ovf, buff + total, request, 0, 2, 1, &bitstream);
-		if (read == 0) return total;
+		if (read <= 0) return total;
 
 		total += read;
 	}
@@ -243,7 +212,8 @@ void _ThreadReadData()
 				int id = rst - WAIT_OBJECT_0;
 				if (_playEnd >= 0) {
 					if (id == _playEnd) {
-						Stop(nullptr);
+						LOG("Voice end, stop!");
+						_StopPlaying();
 					}
 				}
 				else {
@@ -255,8 +225,8 @@ void _ThreadReadData()
 					int read = 0;
 
 					if (DS_OK == _pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
-						read = ReadSoundData((char*)AP1, AB1);
-						if (AP2) read += ReadSoundData((char*)AP2, AB2);
+						read = _ReadSoundData((char*)AP1, AB1);
+						if (AP2) read += _ReadSoundData((char*)AP2, AB2);
 						_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 					}
 
@@ -276,7 +246,7 @@ void _PlaySoundFile(const char* fileNm)
 	LOG("Start playing: %s", fileNm);
 
 	_mt.lock();
-	Stop(nullptr);
+	_StopPlaying();
 	_mt.unlock();
 	LOG("Previous playing stopped.");
 
@@ -323,8 +293,8 @@ void _PlaySoundFile(const char* fileNm)
 	void *AP1, *AP2;
 	DWORD AB1, AB2;
 	if (DS_OK == _pDSBuff->Lock(0, _dSBufferDesc.dwBufferBytes / NUM_AUDIO_BUF * (NUM_AUDIO_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
-		ReadSoundData((char*)AP1, AB1);
-		if(AP2) ReadSoundData((char*)AP2, AB2);
+		_ReadSoundData((char*)AP1, AB1);
+		if(AP2) _ReadSoundData((char*)AP2, AB2);
 		_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 	}
 	else {
@@ -367,4 +337,17 @@ void _PlaySoundFile(const char* fileNm)
 	_mt.unlock();
 
 	LOG("Playing...");
+}
+
+void _StopPlaying()
+{
+	if (!_isPlaying) return;
+
+	_isPlaying = false;
+	_playEnd = -1;
+	if (_pDSBuff) {
+		_pDSBuff->Stop();
+		_pDSBuff->Release();
+	}
+	_vf.ov_clear(&_ovf);
 }
