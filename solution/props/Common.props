@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <SrcDir>$(SolutionDir)..\src\</SrcDir>
+    <ExtlibsHome>$(SolutionDir)..\extlibs\</ExtlibsHome>
+    <ExtIncDirs>$(ExtlibsHome)include;$(ExtlibsHome)include\WTL</ExtIncDirs>
+    <ExtLibsDirs>$(ExtlibsHome)lib</ExtLibsDirs>
+    <ExtBinsDirs>$(ExtlibsHome)bin</ExtBinsDirs>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
+    <IncludePath>$(ExtIncDirs);$(SrcDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(ExtLibsDirs);$(OutDir);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="SrcDir">
+      <Value>$(SrcDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ExtlibsHome">
+      <Value>$(ExtlibsHome)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ExtIncDirs">
+      <Value>$(ExtIncDirs)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ExtLibsDirs">
+      <Value>$(ExtLibsDirs)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ExtBinsDirs">
+      <Value>$(ExtBinsDirs)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
