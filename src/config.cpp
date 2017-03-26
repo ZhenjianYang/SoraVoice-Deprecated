@@ -58,8 +58,16 @@ bool Config::LoadConfig(const char * configFn)
 	_setValue(this->Volume, kv, STR_Volume);
 	if (this->Volume > MAX_Volume) this->Volume = MAX_Volume;
 	if (this->Volume < 0) this->Volume = 0;
+
 	_setValue(this->DisableDududu, kv, STR_DisableDududu);
 	if (this->DisableDududu) this->DisableDududu = 1;
+
+	_setValue(this->DisableDialogSE, kv, STR_DisableDialogSE);
+	if (this->DisableDialogSE) this->DisableDialogSE = 1;
+
+	_setValue(this->SkipVoice, kv, STR_SkipVoice);
+	if (this->SkipVoice) this->SkipVoice = 1;
+
 	return true;
 }
 
@@ -70,6 +78,8 @@ bool Config::SaveConfig(const char * configFn) const
 
 	ofs << STR_Volume << '=' << this->Volume << '\n'
 		<< STR_DisableDududu << '=' << this->DisableDududu << '\n'
+		<< STR_DisableDialogSE << '=' << this->DisableDialogSE << '\n'
+		<< STR_SkipVoice << '=' << this->SkipVoice
 		<< endl;
 
 	ofs.close();
@@ -80,4 +90,6 @@ void Config::load_default()
 {
 	this->Volume = DFT_Volume;
 	this->DisableDududu = DFT_DisableDududu;
+	this->DisableDialogSE = DFT_DisableDialogSE;
+	this->SkipVoice = DFT_SkipVoice;
 }

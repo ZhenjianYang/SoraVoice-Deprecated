@@ -3,6 +3,8 @@
 #include <dsound.h>
 #include <vorbis\vorbisfile.h>
 
+using byte = unsigned char;
+
 using VF_ov_open_callbacks = decltype(ov_open_callbacks);
 using VF_ov_info = decltype(ov_info);
 using VF_ov_read = decltype(ov_read);
@@ -17,10 +19,15 @@ struct VF {
 
 struct InitParam
 {
-	bool _isAo;
-	int flagPlaying;
-	int reversed1;
-	int reversed2;
+	int IsAo;
+	struct {
+		byte Playing;
+		byte DisableDududu;
+		byte DisableDialogSE;
+		byte Reversed;
+	} Flags;
+	int Reversed1;
+	int Reversed2;
 
 	LPDIRECTSOUND* p_pDS;
 

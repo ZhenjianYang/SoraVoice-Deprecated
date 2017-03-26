@@ -5,7 +5,6 @@
 
 #include "mapping.h"
 
-
 #include <thread>
 #include <mutex>
 
@@ -18,25 +17,16 @@
 #define VOICEFILE_ATTR	".ogg"
 #define VOLUME_STEP 5
 
-
 static const int NUM_AUDIO_BUF = 2;
 static const int TIME_BUF = 1;
 
 static bool _startup = false;
-static bool _isAo = false;
 
-static int *_pflagPlaying = nullptr;
-
+static InitParam *_param = nullptr;
 static Config _config;
 
 static VF _vf;
-
 static HANDLE _hEvent[NUM_AUDIO_BUF];
-
-static std::thread _th_read;
-static std::mutex _mt;
-static bool _isPlaying = false;
-static int _playEnd = -1;
 
 static OggVorbis_File _ovf;
 static LPDIRECTSOUND _pDS = NULL;
@@ -46,6 +36,11 @@ static DSBUFFERDESC _dSBufferDesc;
 static int _buffSize = 0;
 static int _halfSize = 0;
 static DSBPOSITIONNOTIFY _dSNotify[NUM_AUDIO_BUF];
+
+static std::thread _th_read;
+static std::mutex _mt;
+static bool _isPlaying = false;
+static int _playEnd = -1;
 
 static char _buff_vfn[sizeof(VOICEFILE_PREFIX) + MAX_VOICEID_LEN + sizeof(VOICEFILE_ATTR)];
 
@@ -62,24 +57,22 @@ SVDECL void SVCALL Init(void *p)
 
 	LOG_OPEN;
 	
-	InitParam* ip = (InitParam*)p;
+	_param = (InitParam*)p;
 
-	LOG("p = 0x%08X", ip);
-	LOG("p->isAo = 0x%08X", ip->_isAo);
-	LOG("p->p_pDS = 0x%08X", ip->p_pDS);
-	LOG("p->p_ov_open_callbacks = 0x%08X", ip->p_ov_open_callbacks);
-	LOG("p->p_ov_info = 0x%08X", ip->p_ov_info);
-	LOG("p->p_ov_read = 0x%08X", ip->p_ov_read);
-	LOG("p->p_ov_clear = 0x%08X", ip->p_ov_clear);
+	LOG("p = 0x%08X", _param);
+	LOG("p->isAo = 0x%08X", _param->IsAo);
+	LOG("p->p_pDS = 0x%08X", _param->p_pDS);
+	LOG("p->p_ov_open_callbacks = 0x%08X", _param->p_ov_open_callbacks);
+	LOG("p->p_ov_info = 0x%08X", _param->p_ov_info);
+	LOG("p->p_ov_read = 0x%08X", _param->p_ov_read);
+	LOG("p->p_ov_clear = 0x%08X", _param->p_ov_clear);
 
-	_isAo = ip->_isAo;
-	_pDS = *(ip->p_pDS);
-	_pflagPlaying = &ip->flagPlaying;
+	_pDS = *(_param->p_pDS);
 
-	_vf.ov_open_callbacks = *(ip->p_ov_open_callbacks);
-	_vf.ov_info = *(ip->p_ov_info);
-	_vf.ov_read = *(ip->p_ov_read);
-	_vf.ov_clear = *(ip->p_ov_clear);
+	_vf.ov_open_callbacks = *(_param->p_ov_open_callbacks);
+	_vf.ov_info = *(_param->p_ov_info);
+	_vf.ov_read = *(_param->p_ov_read);
+	_vf.ov_clear = *(_param->p_ov_clear);
 
 	LOG("pDS = 0x%08X", _pDS);
 	LOG("ov_open_callbacks = 0x%08X", _vf.ov_open_callbacks);
@@ -96,6 +89,9 @@ SVDECL void SVCALL Init(void *p)
 	_config.LoadConfig(CONFIG_FILE);
 	LOG("Config loaded");
 	LOG("config.Volume = %d", _config.Volume);
+	LOG("config.DisableDududu = %d", _config.DisableDududu);
+	LOG("config.DisableDialogSE = %d", _config.DisableDialogSE);
+	LOG("config.SkipVoice = %d", _config.SkipVoice);
 
 	for (int i = 0; i < sizeof(_hEvent) / sizeof(*_hEvent); i++) {
 		_hEvent[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -106,7 +102,7 @@ SVDECL void SVCALL Init(void *p)
 	_th_read.detach();
 	LOG("Thread created!");
 
-	const char* pre_fix = _isAo ? VOICEFILE_PREFIX_AO : VOICEFILE_PREFIX;
+	const char* pre_fix = _param->IsAo ? VOICEFILE_PREFIX_AO : VOICEFILE_PREFIX;
 	for (int i = 0; i < sizeof(VOICEFILE_PREFIX); i++) {
 		_buff_vfn[i] = pre_fix[i];
 	}
@@ -115,7 +111,8 @@ SVDECL void SVCALL Init(void *p)
 SVDECL void SVCALL End(void *p)
 {
 	_startup = false;
-	Stop(nullptr);
+	Stop(_param);
+	_param = nullptr;
 }
 
 SVDECL void SVCALL Play(void *v, void *p)
@@ -177,6 +174,10 @@ SVDECL void SVCALL Play(void *v, void *p)
 
 SVDECL void SVCALL Stop(void *p)
 {
+	if (!_config.SkipVoice && !p) return;
+
+	LOG("Force stopping is called.");
+
 	_mt.lock();
 	_StopPlaying();
 	_mt.unlock();
@@ -336,7 +337,9 @@ void _PlaySoundFile(const char* fileNm)
 
 	_mt.lock();
 	_isPlaying = true;
-	if (_pflagPlaying && _config.DisableDududu) *_pflagPlaying = 1;
+	_param->Flags.Playing = 1;
+	if (_config.DisableDududu) _param->Flags.DisableDududu = 1;
+	if (_config.DisableDialogSE) _param->Flags.DisableDialogSE = 1;
 	_pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
 	_mt.unlock();
 
@@ -349,7 +352,8 @@ void _StopPlaying()
 
 	_isPlaying = false;
 	_playEnd = -1;
-	if(_pflagPlaying) *_pflagPlaying = 0;
+	_param->Flags.Playing = 0;
+	_param->Flags.DisableDududu = 0;
 	if (_pDSBuff) {
 		_pDSBuff->Stop();
 		_pDSBuff->Release();
