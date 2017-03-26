@@ -18,7 +18,11 @@
 #define VOLUME_STEP 5
 
 static const int NUM_AUDIO_BUF = 2;
+static const int NUM_NOTIFY_PER_BUFF = 8;
+static const int NUM_NOTIFY = NUM_AUDIO_BUF * NUM_NOTIFY_PER_BUFF;
 static const int TIME_BUF = 1;
+
+static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
 
 static bool _startup = false;
 
@@ -26,16 +30,17 @@ static InitParam *_param = nullptr;
 static Config _config;
 
 static VF _vf;
-static HANDLE _hEvent[NUM_AUDIO_BUF];
+static HANDLE _hEvent[NUM_NOTIFY];
 
 static OggVorbis_File _ovf;
 static LPDIRECTSOUND _pDS = NULL;
 static LPDIRECTSOUNDBUFFER _pDSBuff = NULL;
 static WAVEFORMATEX _waveFormatEx;
 static DSBUFFERDESC _dSBufferDesc;
+static DSBPOSITIONNOTIFY _dSNotify[NUM_NOTIFY];
 static int _buffSize = 0;
-static int _halfSize = 0;
-static DSBPOSITIONNOTIFY _dSNotify[NUM_AUDIO_BUF];
+static int _notifySize = 0;
+static int _halfNotifySize = 0;
 
 static std::thread _th_read;
 static std::mutex _mt;
@@ -95,6 +100,7 @@ SVDECL void SVCALL Init(void *p)
 
 	for (int i = 0; i < sizeof(_hEvent) / sizeof(*_hEvent); i++) {
 		_hEvent[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
+		_dSNotify[i].hEventNotify = _hEvent[i];
 	}
 	LOG("Event created!");
 
@@ -208,34 +214,40 @@ void _ThreadReadData()
 {
 	while (_startup)
 	{
-		DWORD rst = WaitForMultipleObjects(NUM_AUDIO_BUF, _hEvent, FALSE, INFINITE);
-		if (rst >= WAIT_OBJECT_0 && rst < WAIT_OBJECT_0 + NUM_AUDIO_BUF) {
+		DWORD rst = WaitForMultipleObjects(NUM_NOTIFY, _hEvent, FALSE, INFINITE);
+		if (rst >= WAIT_OBJECT_0 && rst < WAIT_OBJECT_0 + NUM_NOTIFY) {
 			_mt.lock();
 			
 			if (_isPlaying) {
-				int id = rst - WAIT_OBJECT_0;
-				if (_playEnd >= 0) {
-					if (id == _playEnd) {
-						LOG("Voice end, stop!");
-						_StopPlaying();
-					}
+				const int id = rst - WAIT_OBJECT_0;
+				if (id == _playEnd) {
+					LOG("Voice end, stop!");
+					_StopPlaying();
 				}
 				else {
-					int size = id != 0 ? _buffSize : _dSBufferDesc.dwBufferBytes - (NUM_AUDIO_BUF - 1) * _buffSize;
-					int start = (id - 1 + NUM_AUDIO_BUF) % NUM_AUDIO_BUF * _buffSize;
+					const int buff_no = id / NUM_NOTIFY_PER_BUFF;
+					const int notify_no_inbuff = id % NUM_NOTIFY_PER_BUFF;
 
-					void *AP1, *AP2;
-					DWORD AB1, AB2;
-					int read = 0;
+					if (notify_no_inbuff == 0) {
+						const int read_buff_no = (buff_no - 1 + NUM_AUDIO_BUF) % NUM_AUDIO_BUF;
 
-					if (DS_OK == _pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
-						read = _ReadSoundData((char*)AP1, AB1);
-						if (AP2) read += _ReadSoundData((char*)AP2, AB2);
-						_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
-					}
+						const int start = read_buff_no * _buffSize;
+						const int size = read_buff_no == NUM_AUDIO_BUF - 1 ? _dSBufferDesc.dwBufferBytes - (NUM_AUDIO_BUF - 1) * _buffSize : _buffSize;
 
-					if (read < _halfSize) {
-						_playEnd = (id - 1 + NUM_AUDIO_BUF) % NUM_AUDIO_BUF;
+						void *AP1, *AP2;
+						DWORD AB1, AB2;
+						int read = 0;
+
+						if (DS_OK == _pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
+							read = _ReadSoundData((char*)AP1, AB1);
+							if (AP2) read += _ReadSoundData((char*)AP2, AB2);
+							_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
+						}
+
+						if (read < size && _playEnd < 0) {
+							_playEnd = read_buff_no * NUM_NOTIFY_PER_BUFF + (read + _notifySize - _halfNotifySize) / _notifySize;
+							if (_playEnd >= NUM_NOTIFY) _playEnd = 0;
+						}
 					}
 				}
 			}
@@ -285,7 +297,8 @@ void _PlaySoundFile(const char* fileNm)
 	_dSBufferDesc.guid3DAlgorithm = GUID_NULL;
 
 	_buffSize = _dSBufferDesc.dwBufferBytes / NUM_AUDIO_BUF;
-	_halfSize = _buffSize / 2;
+	_notifySize = _buffSize / NUM_NOTIFY_PER_BUFF;
+	_halfNotifySize = _notifySize / 2;
 
 	if (DS_OK != _pDS->CreateSoundBuffer(&_dSBufferDesc, &_pDSBuff, NULL)) {
 		LOG("Create sound buff failed!");
@@ -296,7 +309,7 @@ void _PlaySoundFile(const char* fileNm)
 
 	void *AP1, *AP2;
 	DWORD AB1, AB2;
-	if (DS_OK == _pDSBuff->Lock(0, _dSBufferDesc.dwBufferBytes / NUM_AUDIO_BUF * (NUM_AUDIO_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
+	if (DS_OK == _pDSBuff->Lock(0, _buffSize * (NUM_AUDIO_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
 		_ReadSoundData((char*)AP1, AB1);
 		if(AP2) _ReadSoundData((char*)AP2, AB2);
 		_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
@@ -310,8 +323,9 @@ void _PlaySoundFile(const char* fileNm)
 	LOG("First data wroten");
 
 	for (int i = 0; i < NUM_AUDIO_BUF; ++i) {
-		_dSNotify[i].hEventNotify = _hEvent[i];
-		_dSNotify[i].dwOffset = i * _buffSize + _halfSize;
+		for (int j = 0; j < NUM_NOTIFY_PER_BUFF; j++) {
+			_dSNotify[i * NUM_NOTIFY_PER_BUFF + j].dwOffset = i * _buffSize + j * _notifySize + _halfNotifySize;
+		}
 	}
 
 	static LPDIRECTSOUNDNOTIFY pDSN = NULL;
@@ -322,7 +336,7 @@ void _PlaySoundFile(const char* fileNm)
 		return;
 	};
 
-	if (DS_OK != pDSN->SetNotificationPositions(NUM_AUDIO_BUF, _dSNotify)) {
+	if (DS_OK != pDSN->SetNotificationPositions(NUM_NOTIFY, _dSNotify)) {
 		pDSN->Release();
 		_pDSBuff->Release();
 		_vf.ov_clear(&_ovf);
