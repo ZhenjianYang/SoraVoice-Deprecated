@@ -60,6 +60,8 @@ int main(int argc, char* argv[])
 		for (int i = 0; i < num; i++) {
 			int type = GET_INT(buff + 4 + i * 8);
 			int offset = GET_INT(buff + 4 + i * 8 + 4);
+			int type_next;
+			while (i < num - 1 && (type_next = GET_INT(buff + 4 + i * 8 + 8)) == 0) i++;
 			int offset_next = i == num - 1 ? len - base: GET_INT(buff + 4 + i * 8 + 12);
 
 			int start = offset + base;
@@ -78,14 +80,28 @@ int main(int argc, char* argv[])
 					j = t;
 					cnt++; 
 					string text;
-					while (j < end) {
-						if (j < end - 1 && buff[j] == 2 && (buff[j + 1] == 3 || buff[j + 1] == 0)) break;
+					/*while (j < end) {
+					if (j < end - 1 && buff[j] == 2 && (buff[j + 1] == 3 || buff[j + 1] == 0)) break;
 
-						if (buff[j] == 1) text.append("\\n");
+					if (buff[j] == 1) text.append("\\n");
+					else if (buff[j] >= 0x20 && buff[j] < 0xFF) text.push_back(buff[j]);
+					j++;
+					}*/
+					while (j < end) {
+						if (j < end - 1 && buff[j] == 2 && (buff[j + 1] == 3 || buff[j + 1] == 0)) {
+							if (buff[j + 1] == 3) {
+								text.append("\\2\\3");
+							}
+							else if (buff[j + 1] == 0) {
+								text.append("\\2");
+							}
+							break;
+						}
+						if (j < end - 1 && buff[j] == 2 && (buff[j + 1] == 3 || buff[j + 1] == 0)) break;
+						if (buff[j] == 1) text.append("\\1\\n");
 						else if(buff[j] >= 0x20 && buff[j] < 0xFF) text.push_back(buff[j]);
 						j++;
 					}
-
 					if (out_cnt == 0) {
 						ofs.open(dir_out + name + ATTR_OUT);
 					}
