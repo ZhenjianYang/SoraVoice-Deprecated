@@ -69,16 +69,17 @@ int main(int argc, char* argv[])
 			line_cnt++;
 			string line = buff_snt;
 			
-			if (line.find(STR_SAY) == 0) {
+			char ch = line[0];
+			if (line.find(STR_SAY) == 0 || (ch == '\"' &&  line.find(STR_SAY) == 1)) {
 				flag = FLAG_SAY;
 			}
-			else if (line.find(STR_TEXT) == 0) {
+			else if (line.find(STR_TEXT) == 0 || (ch == '\"' &&  line.find(STR_TEXT) == 1)) {
 				flag = FLAG_TEXT;
 			}
-			else if (line.find(STR_TALK) == 0) {
+			else if (line.find(STR_TALK) == 0 || (ch == '\"' &&  line.find(STR_TALK) == 1)) {
 				flag = FLAG_TALK;
 			}
-			else if (line.find(STR_MENU) == 0) {
+			else if (line.find(STR_MENU) == 0 || (ch == '\"' &&  line.find(STR_MENU) == 1)) {
 				flag = FLAG_MENU;
 			}
 			else if(line.find(STR_4TBL) == 0 && (FLAG_SAY == flag || FLAG_TEXT == flag || FLAG_TALK == flag)) {
@@ -87,7 +88,7 @@ int main(int argc, char* argv[])
 				}
 				text += line.c_str() + 4;
 
-				if (text.length() >= 2 && text[text.length() - 2] == '\\' && text[text.length() - 1] == '3') {
+				/*if (text.length() >= 2 && text[text.length() - 2] == '\\' && text[text.length() - 1] == '3') {
 					text.pop_back();
 					text.pop_back();
 				}
@@ -106,6 +107,19 @@ int main(int argc, char* argv[])
 				}
 				else if (text.length() >= 2 && text[text.length() - 2] == '\\' && text[text.length() - 1] == '1') {
 					text.back() = 'n';
+				}*/
+				//if ((text.length() >= 2 && text[text.length() - 2] == '\\' && text[text.length() - 1] == '2') || (text.length() >= 4 && text[text.length() - 4] == '\\' && text[text.length() - 3] == '2')) {
+				if (text.find("\\2") != string::npos) {
+					if (out_cnt == 0) {
+						ofs.open(dir_out + name + ATTR_OUT);
+					}
+					ofs << setfill('0') << setw(6) << setiosflags(ios::right) << line_no << ","
+						<< text << "\n\n";
+					++out_cnt;
+					text.clear();
+				}
+				else {
+					text.append("\\n");
 				}
 			}
 			else if (line.find(CH_SQ) == 0 && FLAG_TALK == flag) {
