@@ -1,0 +1,34 @@
+%define addr_voice 0x0314F000
+%define ptr_initparam addr_voice
+%define ptr_flag_playing (ptr_initparam + 4)
+%define ptr_flag_disable_du (ptr_initparam + 5)
+%define ptr_flag_disable_dlgse (ptr_initparam + 6)
+
+%define ptr_tmp (ptr_initparam + 0x30)
+
+%define ptr_voice_play 0x0314E111
+%define ptr_voice_stop 0x0314E115
+
+%define ptr_volume 0x00560490
+%define ptr_volume0 0x00560498
+
+%define addr_jmp_showtext 0x00498B54
+%define addr_jmpto_showtext 0x00498F2C
+
+%define addr_call_dududu 0x0049A4AD
+%define addr_dududu 0x00469220
+
+%define addr_call_dlgse 0x0049A3F7
+%define addr_dlgse 0x00469220
+
+%define volume_lowest -10000
+
+%define vs_playvoice (addr_voice + 0x50)
+%define vs_disable_du (addr_voice + 0xC0)
+%define vs_dlgse (addr_voice + 0x140)
+
+%define p_pDS				0x02BF41B8
+%define p_ov_open_callbacks	0x02BF28BC
+%define p_ov_info			0x02BF25A8
+%define p_ov_read			0x02BF28B4
+%define p_ov_clear			0x02BF25AC
