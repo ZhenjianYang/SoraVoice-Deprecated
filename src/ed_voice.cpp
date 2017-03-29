@@ -10,6 +10,8 @@
 
 #include <dsound.h>
 
+#include <test.h>
+
 #define CONFIG_FILE "ed_voice.ini"
 
 #define VOICEFILE_PREFIX "voice\\ch"
@@ -24,108 +26,161 @@ static const int TIME_BUF = 1;
 
 static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
 
-static bool _startup = false;
+int _ReadSoundData(char* buff, int size);
+void _ThreadReadData();
+void _PlaySoundFile();
+void _StopPlaying();
 
-static InitParam *_param = nullptr;
-static Config _config;
+static struct 
+{
+	InitParam* initParam = nullptr;
+	struct {
+		byte isAo;
+		byte startup;
+	} *base = nullptr;
 
-static VF _vf;
-static HANDLE _hEvent[NUM_NOTIFY];
+	InitParam::Status* status;
+	InitParam::Order* order;
 
-static OggVorbis_File _ovf;
-static LPDIRECTSOUND _pDS = NULL;
-static LPDIRECTSOUNDBUFFER _pDSBuff = NULL;
-static WAVEFORMATEX _waveFormatEx;
-static DSBUFFERDESC _dSBufferDesc;
-static DSBPOSITIONNOTIFY _dSNotify[NUM_NOTIFY];
-static int _buffSize = 0;
-static int _notifySize = 0;
-static int _halfNotifySize = 0;
+private:
+	Config _config;
 
-static std::thread _th_read;
-static std::mutex _mt;
-static bool _isPlaying = false;
-static int _playEnd = -1;
+	struct {
+		VF_ov_open_callbacks* ov_open_callbacks;
+		VF_ov_info* ov_info;
+		VF_ov_read* ov_read;
+		VF_ov_clear* ov_clear;
 
-static char _buff_vfn[sizeof(VOICEFILE_PREFIX) + MAX_VOICEID_LEN + sizeof(VOICEFILE_ATTR)];
+		OggVorbis_File ovf;
+		char oggFn[sizeof(VOICEFILE_PREFIX) + MAX_VOICEID_LEN + sizeof(VOICEFILE_ATTR)];
+	} _ogg;
 
-static void _ThreadReadData();
-static void _PlaySoundFile(const char* fileNm);
-static void _StopPlaying();
+	struct {
+		LPDIRECTSOUND pDS;
+		LPDIRECTSOUNDBUFFER pDSBuff;
+		WAVEFORMATEX waveFormatEx;
+		DSBUFFERDESC dSBufferDesc;
+		DSBPOSITIONNOTIFY dSNotifies[NUM_NOTIFY];
 
-#define TO_DSVOLUME(volume) ((volume) == 0 ? DSBVOLUME_MIN : \
-	(int)(2000 * log10(double(volume) / MAX_Volume)))
+		int buffSize;
+		int notifySize;
+		int halfNotifySize;
+	} _dsd;
+
+	struct {
+		HANDLE hEvents[NUM_NOTIFY];
+		std::thread th_read;
+		std::mutex mt;
+		int playEnd = -1;
+	} _th;
+
+	struct {
+		char* keys;
+	} _inp;
+
+public:
+	decltype(_ogg)* const ogg = &_ogg;
+	decltype(_dsd)* const dsd = &_dsd;
+	decltype(_th)* const th = &_th;
+	decltype(_inp)* const inp = &_inp;
+	decltype(_config)* const config = &_config;
+
+	void SetSV(InitParam* initParam) {
+		if (!initParam) return;
+
+		this->initParam = initParam;
+		this->base = (decltype(this->base))initParam;
+		this->status = &initParam->status;
+		this->order = &initParam->order;
+
+		this->ogg->ov_open_callbacks = *(initParam->p_ov_open_callbacks);
+		this->ogg->ov_info = *(initParam->p_ov_info);
+		this->ogg->ov_read = *(initParam->p_ov_read);
+		this->ogg->ov_clear = *(initParam->p_ov_clear);
+
+		this->dsd->pDS = *(initParam->p_pDS);
+
+		this->inp->keys = initParam->p_Keys;
+	}
+} sv;
+const auto psv = &sv;
+
+static inline int TO_DSVOLUME(int volume) {
+	return (volume) == 0 ? 
+		DSBVOLUME_MIN : 
+		(int)(2000 * log10(double(volume) / MAX_Volume));
+}
 
 SVDECL void SVCALL Init(void *p)
 {
-	if (_startup || nullptr == p) return;
+	if (psv->base && psv->base->startup || nullptr == p) return;
 
 	LOG_OPEN;
 	
-	_param = (InitParam*)p;
+	psv->SetSV((InitParam*)p);
 
-	LOG("p = 0x%08X", _param);
-	LOG("p->isAo = 0x%08X", _param->IsAo);
-	LOG("p->p_pDS = 0x%08X", _param->p_pDS);
-	LOG("p->p_ov_open_callbacks = 0x%08X", _param->p_ov_open_callbacks);
-	LOG("p->p_ov_info = 0x%08X", _param->p_ov_info);
-	LOG("p->p_ov_read = 0x%08X", _param->p_ov_read);
-	LOG("p->p_ov_clear = 0x%08X", _param->p_ov_clear);
+	LOG("p = 0x%08X", psv->initParam);
+	LOG("p->isAo = 0x%08X", psv->initParam->isAo);
+	LOG("p->p_pDS = 0x%08X", psv->initParam->p_pDS);
+	LOG("p->p_ov_open_callbacks = 0x%08X", psv->initParam->p_ov_open_callbacks);
+	LOG("p->p_ov_info = 0x%08X", psv->initParam->p_ov_info);
+	LOG("p->p_ov_read = 0x%08X", psv->initParam->p_ov_read);
+	LOG("p->p_ov_clear = 0x%08X", psv->initParam->p_ov_clear);
 
-	_pDS = *(_param->p_pDS);
+	LOG("pDS = 0x%08X", psv->dsd->pDS);
+	LOG("ov_open_callbacks = 0x%08X", psv->ogg->ov_open_callbacks);
+	LOG("ov_info = 0x%08X", psv->ogg->ov_info);
+	LOG("ov_read = 0x%08X", psv->ogg->ov_read);
+	LOG("ov_clear = 0x%08X", psv->ogg->ov_clear);
 
-	_vf.ov_open_callbacks = *(_param->p_ov_open_callbacks);
-	_vf.ov_info = *(_param->p_ov_info);
-	_vf.ov_read = *(_param->p_ov_read);
-	_vf.ov_clear = *(_param->p_ov_clear);
-
-	LOG("pDS = 0x%08X", _pDS);
-	LOG("ov_open_callbacks = 0x%08X", _vf.ov_open_callbacks);
-	LOG("ov_info = 0x%08X", _vf.ov_info);
-	LOG("ov_read = 0x%08X", _vf.ov_read);
-	LOG("ov_clear = 0x%08X", _vf.ov_clear);
-
-	if (!_pDS || !_vf.ov_open_callbacks || !_vf.ov_info || !_vf.ov_read || !_vf.ov_clear) {
+	if (!psv->dsd->pDS || !psv->ogg->ov_open_callbacks || !psv->ogg->ov_info || !psv->ogg->ov_read || !psv->ogg->ov_clear) {
 		LOG("nullptr exists, return!");
 		return;
 	}
 
-	_startup = true;
-	_config.LoadConfig(CONFIG_FILE);
-	LOG("Config loaded");
-	LOG("config.Volume = %d", _config.Volume);
-	LOG("config.DisableDududu = %d", _config.DisableDududu);
-	LOG("config.DisableDialogSE = %d", _config.DisableDialogSE);
-	LOG("config.SkipVoice = %d", _config.SkipVoice);
+	psv->base->startup = 1;
 
-	for (int i = 0; i < sizeof(_hEvent) / sizeof(*_hEvent); i++) {
-		_hEvent[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
-		_dSNotify[i].hEventNotify = _hEvent[i];
+	psv->config->LoadConfig(CONFIG_FILE);
+	LOG("Config loaded");
+	LOG("config.Volume = %d", psv->config->Volume);
+	LOG("config.DisableDududu = %d", psv->config->DisableDududu);
+	LOG("config.DisableDialogSE = %d", psv->config->DisableDialogSE);
+	LOG("config.SkipVoice = %d", psv->config->SkipVoice);
+
+	for (int i = 0; i < sizeof(psv->th->hEvents) / sizeof(*psv->th->hEvents); i++) {
+		psv->th->hEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
+		psv->dsd->dSNotifies[i].hEventNotify = psv->th->hEvents[i];
 	}
 	LOG("Event created!");
 
-	_th_read = std::thread(_ThreadReadData);
-	_th_read.detach();
+	psv->th->th_read = std::thread(_ThreadReadData);
+	psv->th->th_read.detach();
 	LOG("Thread created!");
 
-	const char* pre_fix = _param->IsAo ? VOICEFILE_PREFIX_AO : VOICEFILE_PREFIX;
+	const char* pre_fix = psv->base->isAo ? VOICEFILE_PREFIX_AO : VOICEFILE_PREFIX;
 	for (int i = 0; i < sizeof(VOICEFILE_PREFIX); i++) {
-		_buff_vfn[i] = pre_fix[i];
+		psv->ogg->oggFn[i] = pre_fix[i];
 	}
+
+	//LOG("Go test!");
+	//Test(nullptr);
 }
 
 SVDECL void SVCALL End(void *p)
 {
-	_startup = false;
-	Stop(_param);
-	_param = nullptr;
+	psv->base->startup = false;
+	Stop(psv);
+	psv->initParam = nullptr;
+	psv->base = nullptr;
+	psv->status = nullptr;
+	psv->order = nullptr;
 }
 
 SVDECL void SVCALL Play(void *v, void *p)
 {
 	if (v == nullptr) return;
 	Init(p);
-	if (!_startup) return;
+	if (!psv->base || !psv->base->startup) return;
 
 	const char* t = (const char*)v;
 	if (*t != '#') return;
@@ -138,14 +193,14 @@ SVDECL void SVCALL Play(void *v, void *p)
 	for (int i = 0; i < MAX_VOICEID_LEN; i++) {
 		if (*t < '0' || *t > '9') break;
 		vid *= 10; vid += *t - '0';
-		_buff_vfn[idx + len_vid] = *t;
+		psv->ogg->oggFn[idx + len_vid] = *t;
 
 		len_vid++; t++;
 	}
-	_buff_vfn[idx + len_vid] = 0;
+	psv->ogg->oggFn[idx + len_vid] = 0;
 	if (*t != 'V' || len_vid == 0) return;
 
-	LOG("Input Voice ID is \"%s\"", _buff_vfn + idx);
+	LOG("Input Voice ID is \"%s\"", psv->ogg->oggFn + idx);
 	LOG("The max length of voice id need mapping is %d", MAX_VOICEID_LEN_NEED_MAPPING);
 
 	if (len_vid <= MAX_VOICEID_LEN_NEED_MAPPING) {
@@ -164,29 +219,29 @@ SVDECL void SVCALL Play(void *v, void *p)
 		}
 
 		for (len_vid = 0; VoiceIdMapping[vid][len_vid]; len_vid++) {
-			_buff_vfn[idx + len_vid] = VoiceIdMapping[vid][len_vid];
+			psv->ogg->oggFn[idx + len_vid] = VoiceIdMapping[vid][len_vid];
 		}
-		_buff_vfn[idx + len_vid] = 0;
+		psv->ogg->oggFn[idx + len_vid] = 0;
 	}
-	LOG("True Voice ID is \"%s\"", _buff_vfn + idx);
+	LOG("True Voice ID is \"%s\"", psv->ogg->oggFn + idx);
 	idx += len_vid;
 	for (int i = 0; i < sizeof(VOICEFILE_ATTR); i++) {
-		_buff_vfn[idx++] = VOICEFILE_ATTR[i];
+		psv->ogg->oggFn[idx++] = VOICEFILE_ATTR[i];
 	}
 
-	LOG("Ogg filename: %s", _buff_vfn);
-	_PlaySoundFile(_buff_vfn);
+	LOG("Ogg filename: %s", psv->ogg->oggFn);
+	_PlaySoundFile();
 }
 
 SVDECL void SVCALL Stop(void *p)
 {
-	if (!_config.SkipVoice && !p) return;
+	if (!psv->config->SkipVoice && !p) return;
 
 	LOG("Force stopping is called.");
 
-	_mt.lock();
+	psv->th->mt.lock();
 	_StopPlaying();
-	_mt.unlock();
+	psv->th->mt.unlock();
 }
 
 int _ReadSoundData(char* buff, int size) {
@@ -201,7 +256,7 @@ int _ReadSoundData(char* buff, int size) {
 	while (total < size)
 	{
 		int request = size - total < block ? size - total : block;
-		int read = _vf.ov_read(&_ovf, buff + total, request, 0, 2, 1, &bitstream);
+		int read = psv->ogg->ov_read(&psv->ogg->ovf, buff + total, request, 0, 2, 1, &bitstream);
 		if (read <= 0) return total;
 
 		total += read;
@@ -212,15 +267,16 @@ int _ReadSoundData(char* buff, int size) {
 
 void _ThreadReadData()
 {
-	while (_startup)
+	auto &playEnd = psv->th->playEnd;
+	while (psv->base && psv->base->startup)
 	{
-		DWORD rst = WaitForMultipleObjects(NUM_NOTIFY, _hEvent, FALSE, INFINITE);
+		DWORD rst = WaitForMultipleObjects(NUM_NOTIFY, psv->th->hEvents, FALSE, INFINITE);
 		if (rst >= WAIT_OBJECT_0 && rst < WAIT_OBJECT_0 + NUM_NOTIFY) {
-			_mt.lock();
+			psv->th->mt.lock();
 			
-			if (_isPlaying) {
+			if (psv->status->playing) {
 				const int id = rst - WAIT_OBJECT_0;
-				if (id == _playEnd) {
+				if (id == playEnd) {
 					LOG("Voice end, stop!");
 					_StopPlaying();
 				}
@@ -231,146 +287,158 @@ void _ThreadReadData()
 					if (notify_no_inbuff == 0) {
 						const int read_buff_no = (buff_no - 1 + NUM_AUDIO_BUF) % NUM_AUDIO_BUF;
 
-						const int start = read_buff_no * _buffSize;
-						const int size = read_buff_no == NUM_AUDIO_BUF - 1 ? _dSBufferDesc.dwBufferBytes - (NUM_AUDIO_BUF - 1) * _buffSize : _buffSize;
+						const int start = read_buff_no * psv->dsd->buffSize;
+						const int size = read_buff_no == NUM_AUDIO_BUF - 1 ? 
+							psv->dsd->dSBufferDesc.dwBufferBytes - (NUM_AUDIO_BUF - 1) * psv->dsd->buffSize 
+							: psv->dsd->buffSize;
 
 						void *AP1, *AP2;
 						DWORD AB1, AB2;
 						int read = 0;
 
-						if (DS_OK == _pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
+						if (DS_OK == psv->dsd->pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
 							read = _ReadSoundData((char*)AP1, AB1);
 							if (AP2) read += _ReadSoundData((char*)AP2, AB2);
-							_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
+							psv->dsd->pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 						}
 
-						if (read < size && _playEnd < 0) {
-							_playEnd = read_buff_no * NUM_NOTIFY_PER_BUFF + (read + _notifySize - _halfNotifySize) / _notifySize;
-							if (_playEnd >= NUM_NOTIFY) _playEnd = 0;
+						if (read < size && playEnd < 0) {
+							playEnd = read_buff_no * NUM_NOTIFY_PER_BUFF + (read + psv->dsd->notifySize - psv->dsd->halfNotifySize) / psv->dsd->notifySize;
+							if (playEnd >= NUM_NOTIFY) playEnd = 0;
 						}
 					}
 				}
 			}
 			
-			_mt.unlock();
+			psv->th->mt.unlock();
 		}
 	}
 }
 
-void _PlaySoundFile(const char* fileNm)
+void _PlaySoundFile()
 {
-	LOG("Start playing: %s", fileNm);
+	LOG("Start playing: %s", psv->ogg->oggFn);
 
-	_mt.lock();
+	psv->th->mt.lock();
 	_StopPlaying();
-	_mt.unlock();
+	psv->th->mt.unlock();
 	LOG("Previous playing stopped.");
 
-	FILE* f = fopen(fileNm, "rb");
+	FILE* f = fopen(psv->ogg->oggFn, "rb");
 	if (f == NULL) {
 		LOG("Open file failed!");
 		return;
 	}
 
-	if (_vf.ov_open_callbacks(f, &_ovf, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
+	auto &ovf = psv->ogg->ovf;
+	if (psv->ogg->ov_open_callbacks(f, &ovf, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
 		fclose(f);
 		LOG("Open file as ogg failed!");
 		return;
 	}
 	LOG("Ogg file opened");
 		
-	vorbis_info* info = _vf.ov_info(&_ovf, -1);
+	vorbis_info* info = psv->ogg->ov_info(&ovf, -1);
 	
-	_waveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
-	_waveFormatEx.nChannels = info->channels;
-	_waveFormatEx.nSamplesPerSec = info->rate;
-	_waveFormatEx.wBitsPerSample = 16;
-	_waveFormatEx.nBlockAlign = info->channels * 16 / 8;
-	_waveFormatEx.nAvgBytesPerSec = _waveFormatEx.nSamplesPerSec * _waveFormatEx.nBlockAlign;
-	_waveFormatEx.cbSize = 0;
+	auto &waveFormatEx = psv->dsd->waveFormatEx;
+	waveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
+	waveFormatEx.nChannels = info->channels;
+	waveFormatEx.nSamplesPerSec = info->rate;
+	waveFormatEx.wBitsPerSample = 16;
+	waveFormatEx.nBlockAlign = info->channels * 16 / 8;
+	waveFormatEx.nAvgBytesPerSec = waveFormatEx.nSamplesPerSec * waveFormatEx.nBlockAlign;
+	waveFormatEx.cbSize = 0;
 
-	_dSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
-	_dSBufferDesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_CTRLVOLUME;
-	_dSBufferDesc.dwBufferBytes = _waveFormatEx.nAvgBytesPerSec * TIME_BUF;
-	_dSBufferDesc.dwReserved = 0;
-	_dSBufferDesc.lpwfxFormat = &_waveFormatEx;
-	_dSBufferDesc.guid3DAlgorithm = GUID_NULL;
+	auto &dSBufferDesc = psv->dsd->dSBufferDesc;
+	dSBufferDesc.dwSize = sizeof(dSBufferDesc);
+	dSBufferDesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_CTRLVOLUME;
+	dSBufferDesc.dwBufferBytes = waveFormatEx.nAvgBytesPerSec * TIME_BUF;
+	dSBufferDesc.dwReserved = 0;
+	dSBufferDesc.lpwfxFormat = &waveFormatEx;
+	dSBufferDesc.guid3DAlgorithm = GUID_NULL;
 
-	_buffSize = _dSBufferDesc.dwBufferBytes / NUM_AUDIO_BUF;
-	_notifySize = _buffSize / NUM_NOTIFY_PER_BUFF;
-	_halfNotifySize = _notifySize / 2;
+	auto &buffSize = psv->dsd->buffSize;
+	auto &notifySize = psv->dsd->notifySize;
+	auto &halfNotifySize = psv->dsd->halfNotifySize;
+	buffSize = dSBufferDesc.dwBufferBytes / NUM_AUDIO_BUF;
+	notifySize = buffSize / NUM_NOTIFY_PER_BUFF;
+	halfNotifySize = notifySize / 2;
 
-	if (DS_OK != _pDS->CreateSoundBuffer(&_dSBufferDesc, &_pDSBuff, NULL)) {
+	auto &pDSBuff = psv->dsd->pDSBuff;
+	auto &pDS = psv->dsd->pDS;
+	if (DS_OK != pDS->CreateSoundBuffer(&dSBufferDesc, &pDSBuff, NULL)) {
 		LOG("Create sound buff failed!");
-		_vf.ov_clear(&_ovf);
+		psv->ogg->ov_clear(&ovf);
 		return;
 	}
 	LOG("Sound buff opened");
 
 	void *AP1, *AP2;
 	DWORD AB1, AB2;
-	if (DS_OK == _pDSBuff->Lock(0, _buffSize * (NUM_AUDIO_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
+	if (DS_OK == pDSBuff->Lock(0, psv->dsd->buffSize * (NUM_AUDIO_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
 		_ReadSoundData((char*)AP1, AB1);
 		if(AP2) _ReadSoundData((char*)AP2, AB2);
-		_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
+		pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 	}
 	else {
-		_pDSBuff->Release();
-		_vf.ov_clear(&_ovf);
+		pDSBuff->Release();
+		psv->ogg->ov_clear(&ovf);
 		LOG("Write first data failed!");
 		return;
 	}
 	LOG("First data wroten");
 
+	auto &dSNotifies = psv->dsd->dSNotifies;
 	for (int i = 0; i < NUM_AUDIO_BUF; ++i) {
 		for (int j = 0; j < NUM_NOTIFY_PER_BUFF; j++) {
-			_dSNotify[i * NUM_NOTIFY_PER_BUFF + j].dwOffset = i * _buffSize + j * _notifySize + _halfNotifySize;
+			dSNotifies[i * NUM_NOTIFY_PER_BUFF + j].dwOffset = i * buffSize + j * notifySize + halfNotifySize;
 		}
 	}
 
 	static LPDIRECTSOUNDNOTIFY pDSN = NULL;
-	if(DS_OK != _pDSBuff->QueryInterface(IID_IDirectSoundNotify, (LPVOID*)&pDSN)){
-		_pDSBuff->Release();
-		_vf.ov_clear(&_ovf);
+	if(DS_OK != pDSBuff->QueryInterface(IID_IDirectSoundNotify, (LPVOID*)&pDSN)){
+		pDSBuff->Release();
+		psv->ogg->ov_clear(&ovf);
 		LOG("Set notify failed!");
 		return;
 	};
 
-	if (DS_OK != pDSN->SetNotificationPositions(NUM_NOTIFY, _dSNotify)) {
+	if (DS_OK != pDSN->SetNotificationPositions(NUM_NOTIFY, dSNotifies)) {
 		pDSN->Release();
-		_pDSBuff->Release();
-		_vf.ov_clear(&_ovf);
+		pDSBuff->Release();
+		psv->ogg->ov_clear(&ovf);
 		LOG("Set notify failed!");
 		return;
 	}
 	pDSN->Release();
 	LOG("Notify set");
 
-	_pDSBuff->SetVolume(TO_DSVOLUME(_config.Volume));
-	LOG("DSVolume = %d", TO_DSVOLUME(_config.Volume));
+	auto &config = psv->config;
+	pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
+	LOG("DSVolume = %d", TO_DSVOLUME(config->Volume));
 
-	_mt.lock();
-	_isPlaying = true;
-	_param->Flags.Playing = 1;
-	if (_config.DisableDududu) _param->Flags.DisableDududu = 1;
-	if (_config.DisableDialogSE) _param->Flags.DisableDialogSE = 1;
-	_pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
-	_mt.unlock();
+	psv->th->mt.lock();
+	psv->status->playing = 1;
+	if (config->DisableDududu) psv->order->disableDududu = 1;
+	if (config->DisableDialogSE) psv->order->disableDialogSE = 1;
+	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
+	psv->th->mt.unlock();
 
 	LOG("Playing...");
 }
 
 void _StopPlaying()
 {
-	if (!_isPlaying) return;
+	if (!psv->status) return;
 
-	_isPlaying = false;
-	_playEnd = -1;
-	_param->Flags.Playing = 0;
-	_param->Flags.DisableDududu = 0;
-	if (_pDSBuff) {
-		_pDSBuff->Stop();
-		_pDSBuff->Release();
+	psv->status->playing = 0;
+	psv->th->playEnd = -1;
+	psv->order->disableDududu = 0;
+
+	if (psv->dsd->pDSBuff) {
+		psv->dsd->pDSBuff->Stop();
+		psv->dsd->pDSBuff->Release();
+		psv->dsd->pDSBuff = NULL;
 	}
-	_vf.ov_clear(&_ovf);
+	psv->ogg->ov_clear(&psv->ogg->ovf);
 }

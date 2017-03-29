@@ -7,10 +7,9 @@
 #include <vorbis\vorbisfile.h>
 #include <dsound.h>
 
-using namespace std;
+#include <dinput.h>
 
-static VF _vf;
-static LPDIRECTSOUND _pDS = NULL;
+using namespace std;
 
 InitParam p;
 
@@ -21,21 +20,27 @@ static HWND GetHwnd(void)
 	return FindWindow(NULL, pszWindowTitle);
 }
 
+#pragma comment(lib, "dinput8.lib")  
+#pragma comment(lib, "dxguid.lib") 
+
 int main(int argc, char* argv[])
 {
-	p.p_pDS = &_pDS;
-	p.p_ov_open_callbacks = &_vf.ov_open_callbacks;
-	p.p_ov_info = &_vf.ov_info;
-	p.p_ov_read = &_vf.ov_read;
-	p.p_ov_clear = &_vf.ov_clear;
+	VF_ov_open_callbacks* vf_ov_open_callbacks = ov_open_callbacks;
+	VF_ov_info* vf_ov_info = ov_info;
+	VF_ov_read* vf_ov_read = ov_read;
+	VF_ov_clear* vf_ov_clear = ov_clear;
 
-	_vf.ov_open_callbacks = ov_open_callbacks;
-	_vf.ov_info = ov_info;
-	_vf.ov_read = ov_read;
-	_vf.ov_clear = ov_clear;
+	LPDIRECTSOUND pDS = NULL;
 
-	DirectSoundCreate(NULL, &_pDS, NULL);
-	_pDS->SetCooperativeLevel(GetHwnd(), DSSCL_PRIORITY);
+	p.p_pDS = &pDS;
+	p.p_ov_open_callbacks = &vf_ov_open_callbacks;
+	p.p_ov_info = &vf_ov_info;
+	p.p_ov_read = &vf_ov_read;
+	p.p_ov_clear = &vf_ov_clear;
+
+	DirectSoundCreate(NULL, &pDS, NULL);
+	HWND hWnd = GetHwnd();
+	pDS->SetCooperativeLevel(hWnd, DSSCL_PRIORITY);
 
 	Init(&p);
 
