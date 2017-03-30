@@ -11,28 +11,31 @@ using VF_ov_info = decltype(ov_info);
 using VF_ov_read = decltype(ov_read);
 using VF_ov_clear = decltype(ov_clear);
 
+struct SVData;
+
 #pragma pack(push, 1)
 struct InitParam
 {
-	//0
-	byte isAo;
+	//0x00
+	SVData* sv;
 
+	//0x04
+	byte isAo;
 	struct Status {
-		byte startup;
+		byte ended;
 		byte playing;
-		byte reversedStatus;
+		byte reversedStatus1;
 	} status;
 
-	//4
 	struct Order {
+	//0x08
 		byte disableDududu;
 		byte disableDialogSE;
+		byte skipVoice;
 		byte autoPlay;
-		byte reversedOrder;
 	} order;
 
 	int reversed1;
-	int reversed2;
 
 	//0x10
 	VF_ov_open_callbacks** p_ov_open_callbacks;

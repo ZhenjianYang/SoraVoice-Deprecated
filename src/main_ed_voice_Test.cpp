@@ -49,6 +49,6 @@ int main(int argc, char* argv[])
 	{
 		Play((void *)cmd.c_str(), &p);
 	}
-
+	End(&p);
 	return 0;
 }

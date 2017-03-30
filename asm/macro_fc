@@ -1,19 +1,10 @@
 %define addr_voice 0x01A5B000
-%define ptr_initparam addr_voice
-%define ptr_flag_playing (ptr_initparam + 4)
-%define ptr_flag_disable_du (ptr_initparam + 5)
-%define ptr_flag_disable_dlgse (ptr_initparam + 6)
-
-%define ptr_tmp (ptr_initparam + 0x30)
-
-%define ptr_voice_play 0x01A5A111
-%define ptr_voice_stop 0x01A5A115
 
 %define ptr_volume 0x0051D034
 %define ptr_volume0 0x0051D03C
 
-%define addr_jmp_showtext 0x00480D18
-%define addr_jmpto_showtext 0x00480F28
+%define addr_jmp_text 0x00480D18
+%define addr_jmpto_text 0x00480F28
 
 %define addr_call_dududu 0x00482296
 %define addr_dududu 0x004582D0
@@ -21,14 +12,15 @@
 %define addr_call_dlgse 0x004821C7
 %define addr_dlgse 0x004582D0
 
-%define volume_lowest -10000
+%define addr_jmp_input 0x00454C2A
+%define addr_jmpto_input 0x004549B0
 
-%define vs_playvoice (addr_voice + 0x50)
-%define vs_disable_du (addr_voice + 0xC0)
-%define vs_dlgse (addr_voice + 0x140)
+%define p_ov_open_callbacks		0x01612028
+%define p_ov_info				0x01611D18
+%define p_ov_read				0x01612020
+%define p_ov_clear				0x01611D1C
 
-%define p_pDS				0x01613940
-%define p_ov_open_callbacks	0x01612028
-%define p_ov_info			0x01611D18
-%define p_ov_read			0x01612020
-%define p_ov_clear			0x01611D1C
+%define p_keys					0x01611B78
+%define p_pDS					0x01613940
+
+

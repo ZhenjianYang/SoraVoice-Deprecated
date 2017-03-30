@@ -18,6 +18,7 @@ extern "C" {
 	SVDECL void SVCALL Play(void*, void*);
 	SVDECL void SVCALL Stop(void*);
 
+	SVDECL void SVCALL Input(void*);
 #ifdef __cplusplus
 }
 #endif // __cplusplus

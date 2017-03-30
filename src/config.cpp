@@ -68,6 +68,9 @@ bool Config::LoadConfig(const char * configFn)
 	_setValue(this->SkipVoice, kv, STR_SkipVoice);
 	if (this->SkipVoice) this->SkipVoice = 1;
 
+	_setValue(this->AutoPlay, kv, STR_AutoPlay);
+	if (this->AutoPlay) this->AutoPlay = 1;
+
 	return true;
 }
 
@@ -79,8 +82,9 @@ bool Config::SaveConfig(const char * configFn) const
 	ofs << STR_Volume << '=' << this->Volume << '\n'
 		<< STR_DisableDududu << '=' << this->DisableDududu << '\n'
 		<< STR_DisableDialogSE << '=' << this->DisableDialogSE << '\n'
-		<< STR_SkipVoice << '=' << this->SkipVoice
-		<< endl;
+		<< STR_SkipVoice << '=' << this->SkipVoice << '\n'
+		<< STR_AutoPlay << '=' << this->AutoPlay << '\n'
+		;
 
 	ofs.close();
 	return true;
@@ -92,4 +96,5 @@ void Config::load_default()
 	this->DisableDududu = DFT_DisableDududu;
 	this->DisableDialogSE = DFT_DisableDialogSE;
 	this->SkipVoice = DFT_SkipVoice;
+	this->AutoPlay = DFT_AutoPlay;
 }
