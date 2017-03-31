@@ -165,6 +165,7 @@ SVDECL void SVCALL Init(void *p)
 	LOG("config.DisableDududu = %d", sv->config->DisableDududu);
 	LOG("config.DisableDialogSE = %d", sv->config->DisableDialogSE);
 	LOG("config.SkipVoice = %d", sv->config->SkipVoice);
+	LOG("config.AutoPlay = %d", sv->config->AutoPlay);
 
 	for (int i = 0; i < NUM_NOTIFY; i++) {
 		sv->th->hEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);

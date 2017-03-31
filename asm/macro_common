@@ -1,6 +1,7 @@
 
-%define ptr_lookup_table (addr_voice + 0x150)
+%define ptr_impaddr_table (addr_voice + 0x170)
 
+%define addr_codebase (addr_voice + 0x200)
 %define ptr_initparam (addr_voice + 0x200)
 
 %define ptr_sv					ptr_initparam
@@ -15,11 +16,11 @@
 
 %define ptr_tmp (ptr_initparam + 0x30)
 
-%define ptr_voice_init		(ptr_lookup_table + 0x00)
-%define ptr_voice_end		(ptr_lookup_table + 0x04)
-%define ptr_voice_play		(ptr_lookup_table + 0x08)
-%define ptr_voice_stop		(ptr_lookup_table + 0x0C)
-%define ptr_voice_input		(ptr_lookup_table + 0x10)
+%define ptr_voice_init		(ptr_impaddr_table + 0x00)
+%define ptr_voice_end		(ptr_impaddr_table + 0x04)
+%define ptr_voice_play		(ptr_impaddr_table + 0x08)
+%define ptr_voice_stop		(ptr_impaddr_table + 0x0C)
+%define ptr_voice_input		(ptr_impaddr_table + 0x10)
 
 %define volume_lowest -10000
 
@@ -31,7 +32,7 @@
 
 %define dik_press	0x80
 
-%define vs_text			(addr_voice + 0x50)
-%define vs_dududu		(addr_voice + 0xC0)
-%define vs_dlgse		(addr_voice + 0x140)
-%define vs_input		(addr_voice + 0x200)
+%define vs_text			(addr_codebase + 0x40)
+%define vs_dududu		(addr_codebase + 0xC0)
+%define vs_dlgse		(addr_codebase + 0x140)
+%define vs_input		(addr_codebase + 0x200)

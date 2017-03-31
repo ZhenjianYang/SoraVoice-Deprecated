@@ -1,4 +1,4 @@
-%define addr_voice 0x033FA000
+%define addr_voice 0x033F9000
 
 %define ptr_volume 0x005BB344
 %define ptr_volume0 0x005BB34C
@@ -20,6 +20,6 @@
 %define p_ov_read				0x02CA74B4
 %define p_ov_clear				0x02CA71AC
 
-%define p_keys					0x
+%define p_keys					0x0
 %define p_pDS					0x02CAA330
 
