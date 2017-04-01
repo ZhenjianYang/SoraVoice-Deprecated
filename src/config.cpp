@@ -9,7 +9,7 @@ using namespace std;
 
 using KeyValue = map<string, string>;
 
-static bool _setValue(int& var, KeyValue& kv, const char* name) {
+static bool _getValue(int& var, KeyValue& kv, const char* name) {
 	auto it = kv.find(name);
 	if (it == kv.end()) return false;
 
@@ -55,27 +55,27 @@ bool Config::LoadConfig(const char * configFn)
 		kv.insert({ key, value });
 	}
 
-	_setValue(this->Volume, kv, STR_Volume);
+	_getValue(this->Volume, kv, STR_Volume);
 	if (this->Volume > MAX_Volume) this->Volume = MAX_Volume;
 	if (this->Volume < 0) this->Volume = 0;
 
-	_setValue(this->AutoPlay, kv, STR_AutoPlay);
+	_getValue(this->AutoPlay, kv, STR_AutoPlay);
 	if (this->AutoPlay) this->AutoPlay = 1;
 
-	_setValue(this->SkipVoice, kv, STR_SkipVoice);
+	_getValue(this->SkipVoice, kv, STR_SkipVoice);
 	if (this->SkipVoice) this->SkipVoice = 1;
 
-	_setValue(this->DisableDialogSE, kv, STR_DisableDialogSE);
+	_getValue(this->DisableDialogSE, kv, STR_DisableDialogSE);
 	if (this->DisableDialogSE) this->DisableDialogSE = 1;
 
-	_setValue(this->DisableDududu, kv, STR_DisableDududu);
+	_getValue(this->DisableDududu, kv, STR_DisableDududu);
 	if (this->DisableDududu) this->DisableDududu = 1;
 
 
-	_setValue(this->EnableKeys, kv, STR_EnableKeys);
+	_getValue(this->EnableKeys, kv, STR_EnableKeys);
 	if (this->EnableKeys) this->EnableKeys = 1;
 
-	_setValue(this->SaveChange, kv, STR_SaveChange);
+	_getValue(this->SaveChange, kv, STR_SaveChange);
 	if (this->SaveChange) this->SaveChange = 1;
 
 	return true;
