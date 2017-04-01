@@ -74,13 +74,11 @@
     <ClInclude Include="..\..\src\ed_voice_type.h" />
     <ClInclude Include="..\..\src\Log.h" />
     <ClInclude Include="..\..\src\mapping.h" />
-    <ClInclude Include="..\..\src\test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\config.cpp" />
     <ClCompile Include="..\..\src\ed_voice.cpp" />
     <ClCompile Include="..\..\src\Log.cpp" />
-    <ClCompile Include="..\..\src\test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
