@@ -9,38 +9,22 @@
 #include <mutex>
 
 #include <dsound.h>
-#include <dinput.h>
+
+#include <test.h>
 
 #define CONFIG_FILE "ed_voice.ini"
 
 #define VOICEFILE_PREFIX "voice\\ch"
 #define VOICEFILE_PREFIX_AO "voice\\\\v"
 #define VOICEFILE_ATTR	".ogg"
-
-static const int VOLUME_STEP = 1;
-static const int VOLUME_STEP_BIG = 5;
+#define VOLUME_STEP 5
 
 static const int NUM_AUDIO_BUF = 2;
 static const int NUM_NOTIFY_PER_BUFF = 8;
 static const int NUM_NOTIFY = NUM_AUDIO_BUF * NUM_NOTIFY_PER_BUFF;
 static const int TIME_BUF = 1;
 
-static const int KEY_MIN = DIK_5;
-static const int KEY_MAX = DIK_EQUALS;
-
-static const int KEY_VOLUME_UP = DIK_EQUALS;
-static const int KEY_VOLUME_DOWN = DIK_MINUS;
-static const int KEY_VOLUME_0	 = DIK_0;
-static const int KEY_VOLUME_BIGSTEP1 = DIK_LSHIFT;
-static const int KEY_VOLUME_BIGSTEP2 = DIK_RSHIFT;
-
-static const int KEY_AUTOPLAY = DIK_9;
-static const int KEY_SKIPVOICE = DIK_8;
-static const int KEY_DLGSE = DIK_7;
-static const int KEY_DU = DIK_6;
-
 static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
-static_assert(NUM_KEYS_OLD >= KEY_MAX - KEY_MIN + 1, "Size of keys old is not enough");
 
 static int _ReadSoundData(SVData *sv, char* buff, int size);
 static void _ThreadReadData(SVData *sv);
@@ -119,11 +103,10 @@ private:
 
 	struct InpType {
 		char* const keys;
-		char* const last;
 
 	private:
 		friend SVData;
-		InpType(InitParam* ip) : keys(ip->p_Keys), last(ip->keysOld) {
+		InpType(InitParam* ip) : keys(ip->p_Keys) {
 		}
 	} _inp;
 
@@ -153,7 +136,7 @@ SVDECL void SVCALL Init(void *p)
 	if (!ip || ip->sv) return;
 
 	LOG_OPEN;
-
+	
 	SVData *sv = new SVData(ip);
 
 	LOG("p = 0x%08X", sv->initParam);
@@ -227,7 +210,6 @@ SVDECL void SVCALL Play(void *v, void *p)
 	InitParam* ip = (InitParam*)p;
 	if (!v || !p || !ip->sv) return;
 	
-	
 	SVData *sv = ip->sv;
 
 	const char* t = (const char*)v;
@@ -299,124 +281,6 @@ SVDECL void SVCALL Input(void *p)
 {
 	InitParam* ip = (InitParam*)p;
 	if (!ip || !ip->sv) return;
-
-	SVData *sv = ip->sv;
-	if (!sv->config->EnableKeys) return;
-
-	const char* keys = sv->inp->keys;
-	char* last = sv->inp->last;
-	auto config = sv->config;
-
-	bool needsave = false;
-	bool needsetvolume = false;
-	int volume_old = config->Volume;
-
-	if (keys[KEY_VOLUME_UP] && keys[KEY_VOLUME_DOWN]) {
-		if (!last[KEY_VOLUME_UP - KEY_MIN] || !last[KEY_VOLUME_DOWN - KEY_MIN]) {
-			if (config->SaveChange) {
-				config->Reset();
-				needsave = true;
-				needsetvolume = true;
-			}
-			else {
-				config->LoadConfig(CONFIG_FILE);
-				config->EnableKeys = 1;
-				config->SaveChange = 0;
-				needsetvolume = true;
-			}
-			sv->status->mute = 0;
-			if (sv->status->playing) {
-				sv->order->skipVoice = config->SkipVoice;
-				sv->order->disableDialogSE = config->DisableDialogSE;
-				sv->order->disableDududu = config->DisableDududu;
-			}
-			LOG("Reset config");
-		}
-	} //if(KEY_VOLUME_UP | KEY_VOLUME_DOWN | KEY_VOLUME_0)
-	else {
-		if (keys[KEY_VOLUME_UP] && !last[KEY_VOLUME_UP - KEY_MIN] && !keys[KEY_VOLUME_DOWN] && !keys[KEY_VOLUME_0]) {
-			if (keys[KEY_VOLUME_BIGSTEP1] || keys[KEY_VOLUME_BIGSTEP2]) config->Volume += VOLUME_STEP_BIG;
-			else config->Volume += VOLUME_STEP;
-
-			if (config->Volume > MAX_Volume) config->Volume = MAX_Volume;
-			sv->status->mute = 0;
-			if (sv->dsd->pDSBuff) {
-				sv->dsd->pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
-			}
-			needsetvolume = volume_old != config->Volume;
-			needsave = needsetvolume;
-			LOG("Set Volume : %d", config->Volume);
-		} //if(KEY_VOLUME_UP)
-		else if (keys[KEY_VOLUME_DOWN] && !last[KEY_VOLUME_DOWN - KEY_MIN] && !keys[KEY_VOLUME_UP] && !keys[KEY_VOLUME_0]) {
-			if (keys[KEY_VOLUME_BIGSTEP1] || keys[KEY_VOLUME_BIGSTEP2]) config->Volume -= VOLUME_STEP_BIG;
-			else config->Volume -= VOLUME_STEP;
-
-			if (config->Volume < 0) config->Volume = 0;
-			needsetvolume = volume_old != config->Volume;
-			needsave = needsetvolume;
-
-			LOG("Set Volume : %d", config->Volume);
-		}//if(KEY_VOLUME_DOWN)
-		else if (keys[KEY_VOLUME_0] && !last[KEY_VOLUME_0 - KEY_MIN] && !keys[KEY_VOLUME_UP] && !keys[KEY_VOLUME_DOWN]) {
-			sv->status->mute = 1 - sv->status->mute;
-			needsetvolume = true;
-
-			LOG("Set mute : %d", sv->status->mute);
-		}//if(KEY_VOLUME_0)
-
-		if (keys[KEY_AUTOPLAY] && !last[KEY_AUTOPLAY - KEY_MIN]) {
-			config->AutoPlay = 1 - config->AutoPlay;
-			needsave = true;
-
-			LOG("Set AutoPlay : %d", config->AutoPlay);
-		}//if(KEY_AUTOPLAY)
-
-		if (keys[KEY_SKIPVOICE] && !last[KEY_SKIPVOICE - KEY_MIN]) {
-			config->SkipVoice = 1 - config->SkipVoice;
-			needsave = true;
-			if (sv->status->playing) {
-				sv->order->skipVoice = config->SkipVoice;
-			}
-
-			LOG("Set SkipVoice : %d", config->SkipVoice);
-		}//if(KEY_SKIPVOICE)
-
-		if (keys[KEY_DLGSE] && !last[KEY_DLGSE - KEY_MIN]) {
-			config->DisableDialogSE = 1 - config->DisableDialogSE;
-			if (sv->status->playing) {
-				sv->order->disableDialogSE = config->DisableDialogSE;
-			}
-			needsave = true;
-
-			LOG("Set DisableDialogSE : %d", config->DisableDialogSE);
-		}//if(KEY_DLGSE)
-
-		if (keys[KEY_DU] && !last[KEY_DU - KEY_MIN]) {
-			config->DisableDududu = 1 - config->DisableDududu;
-			if (sv->status->playing) {
-				sv->order->disableDududu = config->DisableDududu;
-			}
-			needsave = true;
-
-			LOG("Set DisableDududu : %d", config->DisableDududu);
-		}//if(KEY_DU)
-	}
-
-	if (needsetvolume) {
-		sv->th->mt.lock();
-		if (sv->status->playing) {
-			if (sv->status->mute) sv->dsd->pDSBuff->SetVolume(TO_DSVOLUME(0));
-			else sv->dsd->pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
-		}
-		sv->th->mt.unlock();
-	}
-
-	if (needsave && config->SaveChange) {
-		config->SaveConfig(CONFIG_FILE);
-		LOG("Config file saved");
-	}
-
-	memcpy(last, keys + KEY_MIN, NUM_KEYS_OLD);
 }
 
 int _ReadSoundData(SVData *sv, char* buff, int size) {
@@ -455,10 +319,7 @@ void _ThreadReadData(SVData* sv)
 				if (id == playEnd) {
 					LOG("Voice end, stop!");
 					_StopPlaying(sv);
-					if (sv->config->AutoPlay) {
-						sv->order->autoPlay = 1;
-						SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-					}
+					if (sv->config->AutoPlay) sv->order->autoPlay = 1;
 				}
 				else {
 					const int buff_no = id / NUM_NOTIFY_PER_BUFF;
@@ -595,14 +456,8 @@ void _PlaySoundFile(SVData *sv)
 	LOG("Notify set");
 
 	auto &config = sv->config;
-	if (!sv->status->mute) {
-		pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
-		LOG("DSVolume = %d", TO_DSVOLUME(config->Volume));
-	}
-	else {
-		pDSBuff->SetVolume(TO_DSVOLUME(0));
-		LOG("Mute");
-	}
+	pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
+	LOG("DSVolume = %d", TO_DSVOLUME(config->Volume));
 
 	sv->th->mt.lock();
 	sv->status->playing = 1;
