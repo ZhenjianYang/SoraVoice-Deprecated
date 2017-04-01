@@ -39,7 +39,9 @@ loop_check_input:
 	inc eax
 	dec cl
 	jnz short loop_check_input
-	
+	mov eax, ptr_keys_old
+	mov dword [ptr_keys_old], 0
+	mov dword [ptr_keys_old+4], 0
 	jmp short auto_play
 	
 input_found:
