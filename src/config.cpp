@@ -59,17 +59,24 @@ bool Config::LoadConfig(const char * configFn)
 	if (this->Volume > MAX_Volume) this->Volume = MAX_Volume;
 	if (this->Volume < 0) this->Volume = 0;
 
-	_setValue(this->DisableDududu, kv, STR_DisableDududu);
-	if (this->DisableDududu) this->DisableDududu = 1;
-
-	_setValue(this->DisableDialogSE, kv, STR_DisableDialogSE);
-	if (this->DisableDialogSE) this->DisableDialogSE = 1;
+	_setValue(this->AutoPlay, kv, STR_AutoPlay);
+	if (this->AutoPlay) this->AutoPlay = 1;
 
 	_setValue(this->SkipVoice, kv, STR_SkipVoice);
 	if (this->SkipVoice) this->SkipVoice = 1;
 
-	_setValue(this->AutoPlay, kv, STR_AutoPlay);
-	if (this->AutoPlay) this->AutoPlay = 1;
+	_setValue(this->DisableDialogSE, kv, STR_DisableDialogSE);
+	if (this->DisableDialogSE) this->DisableDialogSE = 1;
+
+	_setValue(this->DisableDududu, kv, STR_DisableDududu);
+	if (this->DisableDududu) this->DisableDududu = 1;
+
+
+	_setValue(this->EnableKeys, kv, STR_EnableKeys);
+	if (this->EnableKeys) this->EnableKeys = 1;
+
+	_setValue(this->SaveChange, kv, STR_SaveChange);
+	if (this->SaveChange) this->SaveChange = 1;
 
 	return true;
 }
@@ -78,23 +85,43 @@ bool Config::SaveConfig(const char * configFn) const
 {
 	ofstream ofs(configFn);
 	if (!ofs) return false;
-
-	ofs << STR_Volume << '=' << this->Volume << '\n'
-		<< STR_DisableDududu << '=' << this->DisableDududu << '\n'
-		<< STR_DisableDialogSE << '=' << this->DisableDialogSE << '\n'
-		<< STR_SkipVoice << '=' << this->SkipVoice << '\n'
-		<< STR_AutoPlay << '=' << this->AutoPlay << '\n'
+	ofs << CMT_Volume << '\n'
+		<< STR_Volume << " = " << this->Volume << '\n'
+		<< '\n'
+		<< CMT_AutoPlay << '\n'
+		<< STR_AutoPlay << " = " << this->AutoPlay << '\n'
+		<< '\n' 
+		<< CMT_SkipVoice << '\n'
+		<< STR_SkipVoice << " = " << this->SkipVoice << '\n'
+		<< '\n'
+		<< CMT_DisableDialogSE << '\n'
+		<< STR_DisableDialogSE << " = " << this->DisableDialogSE << '\n'
+		<< '\n'
+		<< CMT_DisableDududu << '\n'
+		<< STR_DisableDududu << " = " << this->DisableDududu << '\n'
+		<< '\n'
+		<< '\n'
+		<< CMT_EnableKeys << '\n'
+		<< STR_EnableKeys << " = " << this->EnableKeys << '\n'
+		<< '\n'
+		<< CMT_SaveChange << '\n'
+		<< STR_SaveChange << " = " << this->SaveChange << '\n'
 		;
 
 	ofs.close();
 	return true;
 }
 
-void Config::load_default()
+void Config::load_default(bool all)
 {
 	this->Volume = DFT_Volume;
-	this->DisableDududu = DFT_DisableDududu;
-	this->DisableDialogSE = DFT_DisableDialogSE;
-	this->SkipVoice = DFT_SkipVoice;
 	this->AutoPlay = DFT_AutoPlay;
+	this->SkipVoice = DFT_SkipVoice;
+	this->DisableDialogSE = DFT_DisableDialogSE;
+	this->DisableDududu = DFT_DisableDududu;
+
+	if (all) {
+		this->EnableKeys = DFT_EnableKeys;
+		this->SaveChange = DFT_SaveChange;
+	}
 }

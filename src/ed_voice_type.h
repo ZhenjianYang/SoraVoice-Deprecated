@@ -13,6 +13,8 @@ using VF_ov_clear = decltype(ov_clear);
 
 struct SVData;
 
+#define NUM_KEYS_OLD 8
+
 #pragma pack(push, 1)
 struct InitParam
 {
@@ -24,7 +26,7 @@ struct InitParam
 	struct Status {
 		byte ended;
 		byte playing;
-		byte reversedStatus1;
+		byte mute;
 	} status;
 
 	struct Order {
@@ -46,6 +48,8 @@ struct InitParam
 	//0x20
 	char* p_Keys;
 	LPDIRECTSOUND* p_pDS;
+	//0x28
+	char keysOld[NUM_KEYS_OLD];
 };
 #pragma pack(pop)
 
