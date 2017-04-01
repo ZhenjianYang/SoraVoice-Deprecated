@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
 			if (it.first.find(str_addr_jmp) == 0) {
 				string sn = it.first.substr(str_addr_jmp.size());
 				auto it2 = map_sn_roff.find(sn);
-				if (it2 == map_sn_roff.end()) continue;
+				if (it2 == map_sn_roff.end() || it2->second == 0) continue;
 
 				int rva_jmp = it.second - Base;
 				int rva_jmpto = it2->second + roff_base + si_new.vAddr;
@@ -354,7 +354,7 @@ int main(int argc, char* argv[])
 			else if (it.first.find(str_addr_call) == 0) {
 				string sn = it.first.substr(str_addr_call.size());
 				auto it2 = map_sn_roff.find(sn);
-				if (it2 == map_sn_roff.end()) continue;
+				if (it2 == map_sn_roff.end() || it2->second == 0) continue;
 
 				int rva_call = it.second - Base;
 				int rva_callto = it2->second + roff_base + si_new.vAddr;
@@ -373,7 +373,7 @@ int main(int argc, char* argv[])
 			int off = roff + si_new.Off;
 
 			auto it = mv.find(macps[i]);
-			if (it == mv.end()) continue;
+			if (it == mv.end() || it->second == 0) continue;
 
 			int value = it->second;
 			PUT(value, buff_new + off);
