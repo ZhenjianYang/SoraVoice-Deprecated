@@ -17,6 +17,8 @@
 #define VOICEFILE_PREFIX_AO "voice\\\\v"
 #define VOICEFILE_ATTR	".ogg"
 
+const GUID IID_IDirectSoundNotify = { 0xb0210783, 0x89cd, 0x11d0, 0xaf, 0x8, 0x0, 0xa0, 0xc9, 0x25, 0xcd, 0x16 };
+
 static const int VOLUME_STEP = 1;
 static const int VOLUME_STEP_BIG = 5;
 

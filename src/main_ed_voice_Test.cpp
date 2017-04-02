@@ -11,8 +11,6 @@
 
 using namespace std;
 
-InitParam p;
-
 static HWND GetHwnd(void)
 {
 	char pszWindowTitle[1024];
@@ -20,11 +18,10 @@ static HWND GetHwnd(void)
 	return FindWindow(NULL, pszWindowTitle);
 }
 
-#pragma comment(lib, "dinput8.lib")  
-#pragma comment(lib, "dxguid.lib") 
-
 int main(int argc, char* argv[])
 {
+	InitParam p;
+
 	VF_ov_open_callbacks* vf_ov_open_callbacks = ov_open_callbacks;
 	VF_ov_info* vf_ov_info = ov_info;
 	VF_ov_read* vf_ov_read = ov_read;
