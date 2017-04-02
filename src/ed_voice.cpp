@@ -11,6 +11,8 @@
 #include <dsound.h>
 #include <dinput.h>
 
+#include <d3d8/d3dx8.h>
+
 #define CONFIG_FILE "ed_voice.ini"
 
 #define VOICEFILE_PREFIX "voice\\ch"
@@ -419,6 +421,14 @@ SVDECL void SVCALL Input(void *p)
 	}
 
 	memcpy(last, keys + KEY_MIN, NUM_KEYS_OLD);
+}
+
+SVDECL void *D3DCALL Direct3DCreate8(unsigned SDKVersion, void *p)
+{
+	InitParam* ip = (InitParam*)p;
+	if (ip && !ip->sv) Init(p);
+
+	return 0;
 }
 
 int _ReadSoundData(SVData *sv, char* buff, int size) {

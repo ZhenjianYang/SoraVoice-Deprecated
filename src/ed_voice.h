@@ -1,6 +1,7 @@
 #pragma once
 
 #define SVCALL __stdcall
+#define D3DCALL __stdcall
 
 #ifdef _SVDLL
 #define SVDECL _declspec(dllexport)
@@ -19,6 +20,8 @@ extern "C" {
 	SVDECL void SVCALL Stop(void*);
 
 	SVDECL void SVCALL Input(void*);
+
+	SVDECL void* D3DCALL Direct3DCreate8(unsigned, void*);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
