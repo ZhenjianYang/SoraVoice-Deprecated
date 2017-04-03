@@ -302,5 +302,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# nasm
-nasm/
+# exe
+*.exe
+
+# zrep
+zrep_*.txt
