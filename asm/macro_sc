@@ -15,6 +15,11 @@
 %define addr_jmp_input 0x00465C5A
 %define addr_jmpto_input 0x004659E0
 
+%define addr_callapi_d3d 0x0045A24B
+%define addr_api_d3d 0x00538052
+
+%define p_hwnd					0x02F2BA20
+
 %define p_ov_open_callbacks		0x02BF28BC
 %define p_ov_info				0x02BF25A8
 %define p_ov_read				0x02BF28B4

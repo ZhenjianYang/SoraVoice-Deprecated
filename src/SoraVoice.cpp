@@ -1,14 +1,21 @@
+#define NOMINMAX 1
+
 #include "SoraVoice.h"
 #include "Log.h"
 #include "mapping.h"
 #include "config.h"
+#include "message.h"
 
 #include <vorbis\vorbisfile.h>
 #include <dsound.h>
 #include <dinput.h>
+#include <d3d8/d3dx8.h>
+
 #include <thread>
 #include <mutex>
-#include <d3d8/d3dx8.h>
+#include <memory>
+#include <list>
+#include <set>
 
 #define CONFIG_FILE "ed_voice.ini"
 #define VOICEFILE_PREFIX "voice\\ch"
@@ -40,6 +47,43 @@ static const int KEY_AUTOPLAY = DIK_9;
 static const int KEY_SKIPVOICE = DIK_8;
 static const int KEY_DLGSE = DIK_7;
 static const int KEY_DU = DIK_6;
+static const int KEY_INFO = DIK_5;
+
+static const int MAX_TEXT_BUF = 63;
+
+static const int MIN_FONT_SIZE = 25;
+static const int TEXT_NUM_SCRH = 25;
+
+static const double BOUND_WIDTH_RATE = 0.5;
+static const double LINE_SPACE_RATE = 0.15;
+static const double TEXT_SHADOW_POS_RATE = 0.08;
+
+static const int INFO_TIME = 2000;
+static const int HELLO_TIME = 6000;
+static const int INFINITY_TIME = 0;
+static const int REMAIN_TIME = 3000;
+static const unsigned SHADOW_COLOR = 0x40404040;
+
+using Clock = std::chrono::steady_clock;
+using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
+using TimeUnit = std::chrono::milliseconds;
+
+enum class InfoType
+{
+	Hello,
+	InfoOnoff,
+	AutoPlayMark,
+	
+	Volume,
+	AutoPlay,
+	SkipVoice,
+	DisableDialogSE,
+	DisableDududu,
+
+	ConfigReset,
+
+	All
+};
 
 struct Ogg {
 	decltype(::ov_open_callbacks)* const ov_open_callbacks;
@@ -83,7 +127,8 @@ struct Thread {
 	HANDLE hEvents[NUM_NOTIFY];
 	HANDLE hEventEnd;
 	std::thread th_read;
-	std::mutex mt;
+	std::mutex mt_play;
+	std::mutex mt_text;
 	int playEnd;
 	Thread(InitParam* ip) : playEnd(-1), hEventEnd(NULL) {
 		memset(hEvents, 0, sizeof(hEvents));
@@ -95,6 +140,181 @@ struct InputData {
 	InputData(InitParam* ip) : keys(ip->p_Keys), last(ip->keysOld) {
 	}
 };
+struct Info {
+	ID3DXFont *font;
+	LOGFONT lf;
+	int width;
+	int height;
+	int bound;
+	int linespace;
+	int shadow;
+	unsigned fontColor;
+	byte& showing;
+	const HWND hwnd;
+
+	struct InfoText
+	{
+		char text[MAX_TEXT_BUF + 1];
+		RECT rect;
+		unsigned color;
+		unsigned format;
+		InfoType type;
+
+		TimePoint dead;
+	};
+	std::list<std::unique_ptr<InfoText>> texts;
+
+	Info(InitParam* ip, const Config* config)
+		:font(nullptr),  width(0), height(0), fontColor((unsigned)config->FontColor), showing(ip->status.showing), hwnd(*(HWND*)ip->pHwnd)
+	{
+		constexpr int len_cfn = std::extent<decltype(config->FontName)>::value;
+		constexpr int len_lffn = std::extent<decltype(lf.lfFaceName)>::value;
+		static_assert(len_cfn == len_lffn, "Font names' length not match");
+
+		memset(&lf, 0, sizeof(lf));
+		lf.lfHeight = -MIN_FONT_SIZE;
+		lf.lfWeight = FW_NORMAL;
+		lf.lfCharSet = DEFAULT_CHARSET;
+		lf.lfOutPrecision = OUT_OUTLINE_PRECIS;
+		lf.lfQuality = CLEARTYPE_QUALITY;
+
+		memcpy(lf.lfFaceName, config->FontName, len_lffn);
+		lf.lfFaceName[len_lffn - 1] = 1;
+	}
+	~Info() { if (font) font->Release(); }
+
+	void addText(InfoType type, int time, const char* text, ...) {
+		TimePoint now = Clock::now();
+		TimePoint dead = time == 0 ? TimePoint::max() : now + TimeUnit(time);
+
+		LOG("Add text, type = %d", type);
+		const int h = lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight;
+
+		auto it = texts.end();
+
+		if (type != InfoType::Hello) {
+			for (it = texts.begin(); it != texts.end(); ++it) {
+				if ((*it)->type == type) {
+					LOG("No need to Create new Text.");
+					break;
+				}
+			}
+		}
+
+		if (it == texts.end()) {
+			LOG("Create new Text.");
+			texts.push_back(std::unique_ptr<InfoText>(new InfoText));
+			it = --texts.end();
+		}
+		(*it)->type = type;
+		(*it)->color = fontColor;
+		(*it)->dead = dead;
+		(*it)->format = type == InfoType::AutoPlayMark ? DT_BOTTOM | DT_LEFT : DT_TOP | DT_LEFT;
+
+		va_list argptr;
+		va_start(argptr, text);
+		vsnprintf((*it)->text, sizeof((*it)->text), text, argptr);
+		va_end(argptr);
+		int text_width = (int)(strlen((*it)->text) * h * 0.65);
+		LOG("Text is %s", (*it)->text);
+		LOG("Text width is %d", text_width);
+
+		auto& rect = (*it)->rect;
+		memset(&rect, 0, sizeof(rect));
+
+		std::set<int> invalid_bottom, invalid_top;
+		for (auto it2 = texts.begin(); it2 != texts.end(); ++it2) {
+			if (it == it2) continue;
+			invalid_top.insert((*it2)->rect.top);
+			invalid_bottom.insert((*it2)->rect.bottom);
+		}
+
+		if ((*it)->format & DT_BOTTOM) {
+			for (int bottom = height - bound; ; bottom -= h + bound) {
+				if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
+					rect.bottom = bottom;
+					break;
+				}
+			}
+			rect.top = rect.bottom - h - linespace;
+		}
+		else {
+			for (int top = bound; ; top += h + linespace) {
+				if (invalid_top.find(top) == invalid_top.end()) {
+					rect.top = top;
+					break;
+				}
+			}
+
+			rect.bottom = rect.top + h + linespace;
+		}
+
+		if ((*it)->format & DT_RIGHT) {
+			rect.right = width - bound;
+			rect.left = width - text_width;
+		}
+		else {
+			rect.left = bound;
+			rect.right = text_width;
+		}
+
+		LOG("top = %d, bottom = %d, left = %d, right = %d", rect.top, rect.bottom, rect.left, rect.right);
+
+		showing = texts.size() > 0;
+	}
+
+	void removeText(InfoType type) {
+		if (type == InfoType::All) {
+			texts.clear();
+		}
+		else {
+			texts.remove_if([&type](const std::unique_ptr<InfoText>& t) { return t->type == type; });
+		}
+		showing = texts.size() > 0;
+	}
+
+	void removeDead() {
+		TimePoint now = Clock::now();
+		for (auto it = texts.begin(); it != texts.end(); ++it) {
+			if ((*it)->dead < now) {
+				texts.erase(it);
+			}
+		}
+		showing = texts.size() > 0;
+	}
+
+	void drawTexts(IDirect3DDevice8 *D3DD) {
+		if (width == 0) return;
+
+		D3DD->BeginScene();
+
+		if (!font) {
+			D3DXCreateFontIndirect(D3DD, &lf, &font);
+		}
+
+		if (font) {
+			RECT rect_shadow;
+
+			for (const auto& text : texts) {
+				rect_shadow = text->rect;
+				if (text->format & DT_RIGHT) rect_shadow.right += shadow;
+				else rect_shadow.left += shadow;
+				if (text->format & DT_BOTTOM) rect_shadow.bottom += shadow;
+				else rect_shadow.top += shadow;
+
+				unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (((text->color >> 24) * 3 / 4) << 24);
+				font->DrawTextA(text->text, -1, &rect_shadow, text->format, color_shadow);
+			}
+
+			for (const auto& text : texts) {
+				font->DrawTextA(text->text, -1, &text->rect, text->format, text->color);
+			}
+		}
+
+		D3DD->EndScene();
+		//if(font) font->Release();
+	}
+};
 
 static inline int TO_DSVOLUME(int volume) {
 	return (volume) == 0 ?
@@ -103,16 +323,16 @@ static inline int TO_DSVOLUME(int volume) {
 }
 
 SoraVoice::SoraVoice(InitParam* initParam)
-	:isAo(initParam->isAo), ended(initParam->status.ended), status(&initParam->status), order(&initParam->order),
-	config(new Config), ogg(new Ogg(initParam)), dsd(new DSD(initParam)),
-	th(new Thread(initParam)), ipt(new InputData(initParam))
+	:ended(initParam->status.ended), status(&initParam->status), order(&initParam->order),
+	config(new Config(CONFIG_FILE)), ogg(new Ogg(initParam)), dsd(new DSD(initParam)),
+	th(new Thread(initParam)), ipt(new InputData(initParam)), inf(new Info(initParam, config))
 {
 	static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
 	static_assert(sizeof(initParam->keysOld) >= KEY_MAX - KEY_MIN + 1, "Size of keys old is not enough");
 	static_assert(D3D_SDK_VERSION == 220, "SDKVersion must be 220");
 
 	LOG("p = 0x%08X", initParam);
-	LOG("p->isAo = 0x%08X", initParam->isAo);
+	LOG("p->pHwnd = 0x%08X", initParam->pHwnd);
 	LOG("p->p_pDS = 0x%08X", initParam->p_pDS);
 	LOG("p->p_Keys = 0x%08X", initParam->p_Keys);
 	LOG("p->p_ov_open_callbacks = 0x%08X", initParam->p_ov_open_callbacks);
@@ -120,6 +340,7 @@ SoraVoice::SoraVoice(InitParam* initParam)
 	LOG("p->p_ov_read = 0x%08X", initParam->p_ov_read);
 	LOG("p->p_ov_clear = 0x%08X", initParam->p_ov_clear);
 
+	LOG("Hwnd = 0x%08X", *(unsigned*)initParam->pHwnd);
 	LOG("pDS = 0x%08X", *initParam->p_pDS);
 	LOG("ov_open_callbacks = 0x%08X", *initParam->p_ov_open_callbacks);
 	LOG("ov_info = 0x%08X", *initParam->p_ov_info);
@@ -185,9 +406,9 @@ void SoraVoice::Stop()
 {
 	LOG("Force stopping is called.");
 
-	th->mt.lock();
+	th->mt_play.lock();
 	stopPlaying();
-	th->mt.unlock();
+	th->mt_play.unlock();
 }
 
 void SoraVoice::Input()
@@ -221,6 +442,25 @@ void SoraVoice::Input()
 				order->disableDududu = config->DisableDududu;
 			}
 			LOG("Reset config");
+
+			th->mt_text.lock();
+			if (config->ShowInfo) {
+				//inf->addText(InfoType::ConfigReset, INFO_TIME, Message::Reset);
+				inf->addText(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+				inf->addText(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::Switch[config->AutoPlay]);
+				inf->addText(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+				inf->addText(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+				inf->addText(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+				inf->addText(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+
+				if (config->AutoPlay && config->ShowInfo == 2 && status->playing) {
+					inf->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+				}
+			}
+			else {
+				inf->removeText(InfoType::All);
+			}
+			th->mt_text.unlock();
 		}
 	} //if(KEY_VOLUME_UP | KEY_VOLUME_DOWN | KEY_VOLUME_0)
 	else {
@@ -235,6 +475,13 @@ void SoraVoice::Input()
 			}
 			needsetvolume = volume_old != config->Volume;
 			needsave = needsetvolume;
+
+			th->mt_text.lock();
+			if (config->ShowInfo) {
+				inf->addText(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+			}
+			th->mt_text.unlock();
+
 			LOG("Set Volume : %d", config->Volume);
 		} //if(KEY_VOLUME_UP)
 		else if (keys[KEY_VOLUME_DOWN] && !last[KEY_VOLUME_DOWN - KEY_MIN] && !keys[KEY_VOLUME_UP] && !keys[KEY_VOLUME_0]) {
@@ -245,11 +492,26 @@ void SoraVoice::Input()
 			needsetvolume = volume_old != config->Volume;
 			needsave = needsetvolume;
 
+			th->mt_text.lock();
+			if (config->ShowInfo) {
+				inf->addText(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+			}
+			th->mt_text.unlock();
+
 			LOG("Set Volume : %d", config->Volume);
 		}//if(KEY_VOLUME_DOWN)
 		else if (keys[KEY_VOLUME_0] && !last[KEY_VOLUME_0 - KEY_MIN] && !keys[KEY_VOLUME_UP] && !keys[KEY_VOLUME_DOWN]) {
 			status->mute = 1 - status->mute;
 			needsetvolume = true;
+
+			th->mt_text.lock();
+			if (config->ShowInfo && status->mute) {
+				inf->addText(InfoType::Volume, INFO_TIME, Message::Mute);
+			}
+			else {
+				inf->addText(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+			}
+			th->mt_text.unlock();
 
 			LOG("Set mute : %d", status->mute);
 		}//if(KEY_VOLUME_0)
@@ -257,6 +519,18 @@ void SoraVoice::Input()
 		if (keys[KEY_AUTOPLAY] && !last[KEY_AUTOPLAY - KEY_MIN]) {
 			config->AutoPlay = 1 - config->AutoPlay;
 			needsave = true;
+
+			th->mt_text.lock();
+			if (config->ShowInfo) {
+				inf->addText(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::Switch[config->AutoPlay]);
+				if (config->AutoPlay && config->ShowInfo == 2 && status->playing) {
+					inf->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+				}
+				else {
+					inf->removeText(InfoType::AutoPlayMark);
+				}
+			}
+			th->mt_text.unlock();
 
 			LOG("Set AutoPlay : %d", config->AutoPlay);
 		}//if(KEY_AUTOPLAY)
@@ -268,6 +542,12 @@ void SoraVoice::Input()
 				order->skipVoice = config->SkipVoice;
 			}
 
+			th->mt_text.lock();
+			if (config->ShowInfo) {
+				inf->addText(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+			}
+			th->mt_text.unlock();
+
 			LOG("Set SkipVoice : %d", config->SkipVoice);
 		}//if(KEY_SKIPVOICE)
 
@@ -277,6 +557,12 @@ void SoraVoice::Input()
 				order->disableDialogSE = config->DisableDialogSE;
 			}
 			needsave = true;
+
+			th->mt_text.lock();
+			if (config->ShowInfo) {
+				inf->addText(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+			}
+			th->mt_text.unlock();
 
 			LOG("Set DisableDialogSE : %d", config->DisableDialogSE);
 		}//if(KEY_DLGSE)
@@ -288,17 +574,42 @@ void SoraVoice::Input()
 			}
 			needsave = true;
 
+			th->mt_text.lock();
+			if (config->ShowInfo) {
+				inf->addText(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+			}
+			th->mt_text.unlock();
+
 			LOG("Set DisableDududu : %d", config->DisableDududu);
+		}//if(KEY_DU)
+
+		if (keys[KEY_INFO] && !last[KEY_INFO - KEY_MIN]) {
+			config->ShowInfo = (config->ShowInfo + 1) % (Config::MAX_ShowInfo + 1);
+			needsave = true;
+
+			th->mt_text.lock();
+			if (config->ShowInfo) {
+				if (config->ShowInfo == 2 && config->AutoPlay && status->playing) {
+					inf->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+				}
+			}
+			else {
+				inf->removeText(InfoType::All);
+			}
+			inf->addText(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+			th->mt_text.unlock();
+
+			LOG("Set ShowInfo : %d", config->ShowInfo);
 		}//if(KEY_DU)
 	}
 
 	if (needsetvolume) {
-		th->mt.lock();
+		th->mt_play.lock();
 		if (status->playing) {
 			if (status->mute) dsd->pDSBuff->SetVolume(TO_DSVOLUME(0));
 			else dsd->pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
 		}
-		th->mt.unlock();
+		th->mt_play.unlock();
 	}
 
 	if (needsave && config->SaveChange) {
@@ -312,21 +623,27 @@ void SoraVoice::Input()
 void SoraVoice::Show(void * D3DD)
 {
 	if (!D3DD) return;
+	IDirect3DDevice8* d3dd = (IDirect3DDevice8*)D3DD;
 
-	IDirect3DDevice8 * dD3dd = (IDirect3DDevice8 *)D3DD;
+	inf->removeDead();
+	if (!status->showing) return;
+	inf->drawTexts(d3dd);
 }
-
-
 
 void SoraVoice::init()
 {
-	config->LoadConfig(CONFIG_FILE);
 	LOG("Config loaded");
 	LOG("config.Volume = %d", config->Volume);
+	LOG("config.AutoPlay = %d", config->AutoPlay);
+	LOG("config.SkipVoice = %d", config->SkipVoice);
 	LOG("config.DisableDududu = %d", config->DisableDududu);
 	LOG("config.DisableDialogSE = %d", config->DisableDialogSE);
-	LOG("config.SkipVoice = %d", config->SkipVoice);
-	LOG("config.AutoPlay = %d", config->AutoPlay);
+	LOG("config.ShowInfo = %d", config->ShowInfo);
+	LOG("config.FontName = %s", config->FontName);
+	LOG("config.FontColor = 0x%08X", config->FontColor);
+
+	LOG("config.EnableKeys = %d", config->EnableKeys);
+	LOG("config.SaveChange = %d", config->SaveChange);
 
 	for (int i = 0; i < NUM_NOTIFY; i++) {
 		th->hEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -335,16 +652,33 @@ void SoraVoice::init()
 	th->hEventEnd = CreateEvent(NULL, FALSE, FALSE, NULL);
 	LOG("Event created!");
 
-	const char* pre_fix = VOICEFILE_PREFIX;
-	for (int i = 0; i < sizeof(VOICEFILE_PREFIX); i++) {
-		ogg->oggFn[i] = pre_fix[i];
-	}
-
 	ended = 0;
 
 	th->th_read = std::thread(&SoraVoice::threadReadData, this);
 	th->th_read.detach();
 	LOG("Thread created!");
+
+
+	RECT rect;
+	if (GetClientRect(inf->hwnd, &rect)) {
+		inf->width = rect.right - rect.left;
+		inf->height = rect.bottom - rect.top;
+		int fontSize = inf->height / TEXT_NUM_SCRH;
+		if (fontSize < MIN_FONT_SIZE) fontSize = MIN_FONT_SIZE;
+		inf->lf.lfHeight = -fontSize;
+		inf->bound = (int)(fontSize * BOUND_WIDTH_RATE + 0.5);
+		inf->shadow = (int)(fontSize * TEXT_SHADOW_POS_RATE + 0.5);
+		inf->linespace = (int)(fontSize * LINE_SPACE_RATE + 0.5);
+
+		LOG("screen width = %d", inf->width);
+		LOG("screen height = %d", inf->height);
+		LOG("Font Size = %d", fontSize);
+
+		if (config->ShowInfo) {
+			inf->addText(InfoType::Hello, 5000, Message::Title);
+			inf->addText(InfoType::Hello, 5000, Message::Version, VERSION);
+		}
+	}
 }
 
 void SoraVoice::destory()
@@ -362,6 +696,7 @@ void SoraVoice::destory()
 	delete dsd;
 	delete th;
 	delete ipt;
+	delete inf;
 }
 
 int SoraVoice::readSoundData(char * buff, int size)
@@ -393,7 +728,7 @@ void SoraVoice::threadReadData()
 	{
 		DWORD rst = WaitForMultipleObjects(NUM_NOTIFY, th->hEvents, FALSE, INFINITE);
 		if (rst >= WAIT_OBJECT_0 && rst < WAIT_OBJECT_0 + NUM_NOTIFY) {
-			th->mt.lock();
+			th->mt_play.lock();
 
 			if (status->playing) {
 				const int id = rst - WAIT_OBJECT_0;
@@ -402,6 +737,11 @@ void SoraVoice::threadReadData()
 					stopPlaying();
 					if (config->AutoPlay) {
 						order->autoPlay = 1;
+						th->mt_text.lock();
+						if (config->ShowInfo == 2) {
+							inf->addText(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
+						}
+						th->mt_text.unlock();
 						SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 					}
 				}
@@ -435,7 +775,7 @@ void SoraVoice::threadReadData()
 				}
 			}
 
-			th->mt.unlock();
+			th->mt_play.unlock();
 		}//if
 	}//while
 	SetEvent(th->hEventEnd);
@@ -445,9 +785,9 @@ void SoraVoice::playSoundFile()
 {
 	LOG("Start playing: %s", ogg->oggFn);
 
-	th->mt.lock();
+	th->mt_play.lock();
 	stopPlaying();
-	th->mt.unlock();
+	th->mt_play.unlock();
 	LOG("Previous playing stopped.");
 
 	FILE* f = fopen(ogg->oggFn, "rb");
@@ -548,13 +888,18 @@ void SoraVoice::playSoundFile()
 		LOG("Mute");
 	}
 
-	th->mt.lock();
+	th->mt_play.lock();
 	status->playing = 1;
 	if (config->DisableDududu) order->disableDududu = 1;
 	if (config->DisableDialogSE) order->disableDialogSE = 1;
 	if (config->SkipVoice) order->skipVoice = 1;
+	th->mt_text.lock();
+	if (config->AutoPlay && config->ShowInfo == 2) {
+		inf->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+	}
+	th->mt_text.unlock();
 	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
-	th->mt.unlock();
+	th->mt_play.unlock();
 
 	LOG("Playing...");
 }

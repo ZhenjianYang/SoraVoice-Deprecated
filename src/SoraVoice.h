@@ -2,10 +2,11 @@
 
 #include "InitParam.h"
 
+#define VERSION "0.4.0"
+
 class SoraVoice
 {
 private:
-	const byte& isAo;
 	byte& ended;
 
 	InitParam::Status* const status;
@@ -16,6 +17,7 @@ private:
 	struct DSD* const dsd;
 	struct Thread* const th;
 	struct InputData* const ipt;
+	struct Info* const inf;
 
 private:
 	void init();

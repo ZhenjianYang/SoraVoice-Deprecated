@@ -79,6 +79,7 @@
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\ed_voice.h" />
     <ClInclude Include="..\..\src\HookD3d.h" />
+    <ClInclude Include="..\..\src\message.h" />
     <ClInclude Include="..\..\src\SoraVoice.h" />
     <ClInclude Include="..\..\src\InitParam.h" />
     <ClInclude Include="..\..\src\Log.h" />

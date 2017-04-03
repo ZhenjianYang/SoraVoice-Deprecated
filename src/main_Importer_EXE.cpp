@@ -53,6 +53,8 @@ const byte opjmp = 0xE9;
 const byte opcall = 0xE8;
 
 const string macps[] = {
+	"p_hwnd",
+
 	"p_ov_open_callbacks",
 	"p_ov_info",
 	"p_ov_read",
@@ -70,7 +72,7 @@ const map<string, int> map_sn_roff = {
 	{ "input", 0x200 },
 };
 const int roff_base = 0x200;
-const int roff_macp = roff_base + 0x10;
+const int roff_macp = roff_base + 0x0C;
 
 static_assert(sizeof(import_names[0]) % 2 == 0, "Size of import_name must be even");
 

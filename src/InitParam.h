@@ -9,11 +9,11 @@ struct InitParam
 	void* sv;
 
 	//0x04
-	byte isAo;
 	struct Status {
 		byte ended;
 		byte playing;
 		byte mute;
+		byte showing;
 	} status;
 
 	struct Order {
@@ -24,7 +24,8 @@ struct InitParam
 		byte autoPlay;
 	} order;
 
-	int reversed1;
+	//0x0C
+	void* pHwnd;
 
 	//0x10
 	void** p_ov_open_callbacks;

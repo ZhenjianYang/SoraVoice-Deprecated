@@ -23,6 +23,7 @@ static HWND GetHwnd(void)
 int main(int argc, char* argv[])
 {
 	InitParam p;
+	memset(&p, 0, sizeof(p));
 
 	void* vf_ov_open_callbacks = ov_open_callbacks;
 	void* vf_ov_info = ov_info;

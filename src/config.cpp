@@ -22,7 +22,7 @@ using KeyValue = map<string, string>;
 #define SET_DEFAULT(name) name = DFT_##name
 #define SET_DEFAULT_STR(name) strcpy(name, DFT_##name)
 
-static bool _getValue(unsigned& var, const KeyValue& kv, const char* name) {
+static bool _getValue(int& var, const KeyValue& kv, const char* name) {
 	auto it = kv.find(name);
 	if (it == kv.end()) return false;
 
@@ -31,7 +31,7 @@ static bool _getValue(unsigned& var, const KeyValue& kv, const char* name) {
 		rad = 16;
 	}
 	char *p;
-	var = std::strtoul(it->second.c_str(), &p, rad);
+	var = (int)std::strtoul(it->second.c_str(), &p, rad);
 	return true;
 }
 

@@ -10,7 +10,7 @@
 						";    0    关闭，不显示信息\n"\
 						";    1    配置变化时，显示信息\n"\
 						";    2    配置变化时，显示信息；同时在播放语音的情况下显示自动播放的符号(若启用了自动播放)\n"\
-						"#默认为2"
+						"#默认为1"
 #define _CMT_FontName	"#信息字体名(非路径)。必须为已在系统中安装的字体。默认为黑体"
 #define _CMT_FontColor	"#信息字体颜色。格式为0xAARRGGBB。默认为0xFFFFFFFF(白色)"
 
@@ -36,12 +36,12 @@
 #define DEFINE_CONFIG_COMMON(name) static constexpr char STR_##name[] = #name;\
 									static constexpr char CMT_##name[] = _CMT_##name;\
 
-#define DEFINE_CONFIG(name, dft) unsigned name; \
-								static const unsigned DFT_##name = dft;\
+#define DEFINE_CONFIG(name, dft) int name; \
+								static const int DFT_##name = dft;\
 								DEFINE_CONFIG_COMMON(name);
 
 #define DEFINE_CONFIG_WMAX(name, dft, max) DEFINE_CONFIG(name, dft)\
-											static const unsigned MAX_##name = max;
+											static const int MAX_##name = max;
 
 #define DEFINE_STRCONFIG(name, dft, len) char name[len+1]; \
 										static constexpr char DFT_##name[] = dft;\
@@ -54,8 +54,8 @@ struct Config
 	DEFINE_CONFIG(SkipVoice, 1);
 	DEFINE_CONFIG(DisableDialogSE, 1);
 	DEFINE_CONFIG(DisableDududu, 1);
-	DEFINE_CONFIG_WMAX(ShowInfo, 2, 2);
-	DEFINE_STRCONFIG(FontName, "黑体", 128);
+	DEFINE_CONFIG_WMAX(ShowInfo, 1, 2);
+	DEFINE_STRCONFIG(FontName, "黑体", 31);
 	DEFINE_CONFIG(FontColor, 0xFFFFFFFF);
 
 	DEFINE_CONFIG(EnableKeys, 1);
@@ -66,6 +66,7 @@ struct Config
 
 	void Reset(bool all = false) { load_default(all); }
 	Config() { load_default(); }
+	Config(const char* configFn) { LoadConfig(configFn); }
 private:
 	void load_default(bool all = true);
 };
