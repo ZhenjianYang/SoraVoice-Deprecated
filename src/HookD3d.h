@@ -16,5 +16,5 @@ extern "C" {
 }
 #endif // __cplusplus
 
-void InitHook(void* sv);
+void InitHook(void* p);
 

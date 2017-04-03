@@ -1,10 +1,23 @@
 #include "SoraVoice.h"
 #include "Log.h"
 #include "mapping.h"
+#include "config.h"
+
+#include <vorbis\vorbisfile.h>
+#include <dsound.h>
+#include <dinput.h>
+#include <thread>
+#include <mutex>
+#include <d3d8/d3dx8.h>
 
 #define CONFIG_FILE "ed_voice.ini"
 #define VOICEFILE_PREFIX "voice\\ch"
 #define VOICEFILE_ATTR	".ogg"
+
+#define MAX_OGG_FILENAME_LEN 25
+#define NUM_AUDIO_BUF 2
+#define NUM_NOTIFY_PER_BUFF 8
+#define NUM_NOTIFY (NUM_AUDIO_BUF * NUM_NOTIFY_PER_BUFF)
 
 static const GUID IID_IDirectSoundNotify = { 0xb0210783, 0x89cd, 0x11d0, 0xaf, 0x8, 0x0, 0xa0, 0xc9, 0x25, 0xcd, 0x16 };
 
@@ -28,19 +41,75 @@ static const int KEY_SKIPVOICE = DIK_8;
 static const int KEY_DLGSE = DIK_7;
 static const int KEY_DU = DIK_6;
 
+struct Ogg {
+	decltype(::ov_open_callbacks)* const ov_open_callbacks;
+	decltype(::ov_info)* const ov_info;
+	decltype(::ov_read)* const ov_read;
+	decltype(::ov_clear)* const ov_clear;
+
+	OggVorbis_File ovf;
+	char oggFn[MAX_OGG_FILENAME_LEN + 1];
+
+	Ogg(InitParam* ip)
+		:ov_open_callbacks((decltype(ov_open_callbacks))*ip->p_ov_open_callbacks),
+		ov_info((decltype(ov_info))*ip->p_ov_info),
+		ov_read((decltype(ov_read))*ip->p_ov_read),
+		ov_clear((decltype(ov_clear))*ip->p_ov_clear) {
+		memset(&ovf, 0, sizeof(ovf));
+		memcpy(oggFn, VOICEFILE_PREFIX, sizeof(VOICEFILE_PREFIX));
+		memset(oggFn + sizeof(VOICEFILE_PREFIX), 0, sizeof(oggFn) - sizeof(VOICEFILE_PREFIX));
+	}
+};
+struct DSD {
+	const LPDIRECTSOUND pDS;
+	LPDIRECTSOUNDBUFFER pDSBuff;
+	WAVEFORMATEX waveFormatEx;
+	DSBUFFERDESC dSBufferDesc;
+	DSBPOSITIONNOTIFY dSNotifies[NUM_NOTIFY];
+
+	int buffSize;
+	int notifySize;
+	int halfNotifySize;
+
+	DSD(InitParam* ip)
+		: pDS((decltype(pDS))*ip->p_pDS), pDSBuff(nullptr),
+		buffSize(0), notifySize(0), halfNotifySize(0) {
+		memset(&waveFormatEx, 0, sizeof(waveFormatEx));
+		memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
+		memset(dSNotifies, 0, sizeof(dSNotifies));
+	}
+};
+struct Thread {
+	HANDLE hEvents[NUM_NOTIFY];
+	HANDLE hEventEnd;
+	std::thread th_read;
+	std::mutex mt;
+	int playEnd;
+	Thread(InitParam* ip) : playEnd(-1), hEventEnd(NULL) {
+		memset(hEvents, 0, sizeof(hEvents));
+	}
+};
+struct InputData {
+	char* const keys;
+	char* const last;
+	InputData(InitParam* ip) : keys(ip->p_Keys), last(ip->keysOld) {
+	}
+};
+
 static inline int TO_DSVOLUME(int volume) {
 	return (volume) == 0 ?
 		DSBVOLUME_MIN :
 		(int)(2000 * log10(double(volume) / MAX_Volume));
 }
 
-void SoraVoice::Init()
+SoraVoice::SoraVoice(InitParam* initParam)
+	:isAo(initParam->isAo), ended(initParam->status.ended), status(&initParam->status), order(&initParam->order),
+	config(new Config), ogg(new Ogg(initParam)), dsd(new DSD(initParam)),
+	th(new Thread(initParam)), ipt(new InputData(initParam))
 {
 	static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
 	static_assert(sizeof(initParam->keysOld) >= KEY_MAX - KEY_MIN + 1, "Size of keys old is not enough");
 	static_assert(D3D_SDK_VERSION == 220, "SDKVersion must be 220");
-
-	LOG_OPEN;
 
 	LOG("p = 0x%08X", initParam);
 	LOG("p->isAo = 0x%08X", initParam->isAo);
@@ -57,31 +126,7 @@ void SoraVoice::Init()
 	LOG("ov_read = 0x%08X", *initParam->p_ov_read);
 	LOG("ov_clear = 0x%08X", *initParam->p_ov_clear);
 
-	config->LoadConfig(CONFIG_FILE);
-	LOG("Config loaded");
-	LOG("config.Volume = %d", config->Volume);
-	LOG("config.DisableDududu = %d", config->DisableDududu);
-	LOG("config.DisableDialogSE = %d", config->DisableDialogSE);
-	LOG("config.SkipVoice = %d", config->SkipVoice);
-	LOG("config.AutoPlay = %d", config->AutoPlay);
-
-	for (int i = 0; i < NUM_NOTIFY; i++) {
-		th->hEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
-		dsd->dSNotifies[i].hEventNotify = th->hEvents[i];
-	}
-	th->hEventEnd = CreateEvent(NULL, FALSE, FALSE, NULL);
-	LOG("Event created!");
-
-	const char* pre_fix = VOICEFILE_PREFIX;
-	for (int i = 0; i < sizeof(VOICEFILE_PREFIX); i++) {
-		ogg->oggFn[i] = pre_fix[i];
-	}
-
-	ended = 0;
-
-	th->th_read = std::thread(&SoraVoice::ThreadReadData, this);
-	th->th_read.detach();
-	LOG("Thread created!");
+	init();
 }
 
 void SoraVoice::Play(const char* t)
@@ -103,7 +148,7 @@ void SoraVoice::Play(const char* t)
 	ogg->oggFn[idx + len_vid] = 0;
 	if (*t != 'V' || len_vid == 0) return;
 
-	LOG("Input Voice ID is \"%s\"", ogg->oggFn + idx);
+	LOG("iptut Voice ID is \"%s\"", ogg->oggFn + idx);
 	LOG("The max length of voice id need mapping is %d", MAX_VOICEID_LEN_NEED_MAPPING);
 
 	if (len_vid <= MAX_VOICEID_LEN_NEED_MAPPING) {
@@ -133,7 +178,7 @@ void SoraVoice::Play(const char* t)
 	}
 
 	LOG("Ogg filename: %s", ogg->oggFn);
-	PlaySoundFile();
+	playSoundFile();
 }
 
 void SoraVoice::Stop()
@@ -141,27 +186,16 @@ void SoraVoice::Stop()
 	LOG("Force stopping is called.");
 
 	th->mt.lock();
-	StopPlaying();
+	stopPlaying();
 	th->mt.unlock();
-}
-
-void SoraVoice::End()
-{
-	Stop();
-
-	memset(order, 0, sizeof(*order));
-	ended = 1;
-
-	SetEvent(th->hEvents[0]);
-	WaitForSingleObject(th->hEventEnd, INFINITE);
 }
 
 void SoraVoice::Input()
 {
 	if (!config->EnableKeys) return;
 
-	const char* keys = inp->keys;
-	char* last = inp->last;
+	const char* keys = ipt->keys;
+	char* last = ipt->last;
 
 	bool needsave = false;
 	bool needsetvolume = false;
@@ -275,12 +309,60 @@ void SoraVoice::Input()
 	memcpy(last, keys + KEY_MIN, KEYS_NUM);
 }
 
-void SoraVoice::Show(IDirect3DDevice8 * D3DD)
+void SoraVoice::Show(void * D3DD)
 {
 	
 }
 
-int SoraVoice::ReadSoundData(char * buff, int size)
+
+
+void SoraVoice::init()
+{
+	config->LoadConfig(CONFIG_FILE);
+	LOG("Config loaded");
+	LOG("config.Volume = %d", config->Volume);
+	LOG("config.DisableDududu = %d", config->DisableDududu);
+	LOG("config.DisableDialogSE = %d", config->DisableDialogSE);
+	LOG("config.SkipVoice = %d", config->SkipVoice);
+	LOG("config.AutoPlay = %d", config->AutoPlay);
+
+	for (int i = 0; i < NUM_NOTIFY; i++) {
+		th->hEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
+		dsd->dSNotifies[i].hEventNotify = th->hEvents[i];
+	}
+	th->hEventEnd = CreateEvent(NULL, FALSE, FALSE, NULL);
+	LOG("Event created!");
+
+	const char* pre_fix = VOICEFILE_PREFIX;
+	for (int i = 0; i < sizeof(VOICEFILE_PREFIX); i++) {
+		ogg->oggFn[i] = pre_fix[i];
+	}
+
+	ended = 0;
+
+	th->th_read = std::thread(&SoraVoice::threadReadData, this);
+	th->th_read.detach();
+	LOG("Thread created!");
+}
+
+void SoraVoice::destory()
+{
+	Stop();
+
+	memset(order, 0, sizeof(*order));
+	ended = 1;
+
+	SetEvent(th->hEvents[0]);
+	WaitForSingleObject(th->hEventEnd, INFINITE);
+
+	delete config;
+	delete ogg;
+	delete dsd;
+	delete th;
+	delete ipt;
+}
+
+int SoraVoice::readSoundData(char * buff, int size)
 {
 	if (buff == nullptr || size <= 0) return 0;
 
@@ -302,7 +384,7 @@ int SoraVoice::ReadSoundData(char * buff, int size)
 	return total;
 }
 
-void SoraVoice::ThreadReadData()
+void SoraVoice::threadReadData()
 {
 	auto &playEnd = th->playEnd;
 	while (!ended)
@@ -315,7 +397,7 @@ void SoraVoice::ThreadReadData()
 				const int id = rst - WAIT_OBJECT_0;
 				if (id == playEnd) {
 					LOG("Voice end, stop!");
-					StopPlaying();
+					stopPlaying();
 					if (config->AutoPlay) {
 						order->autoPlay = 1;
 						SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
@@ -338,8 +420,8 @@ void SoraVoice::ThreadReadData()
 						int read = 0;
 
 						if (DS_OK == dsd->pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
-							read = ReadSoundData((char*)AP1, AB1);
-							if (AP2) read += ReadSoundData((char*)AP2, AB2);
+							read = readSoundData((char*)AP1, AB1);
+							if (AP2) read += readSoundData((char*)AP2, AB2);
 							dsd->pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 						}
 
@@ -357,12 +439,12 @@ void SoraVoice::ThreadReadData()
 	SetEvent(th->hEventEnd);
 }
 
-void SoraVoice::PlaySoundFile()
+void SoraVoice::playSoundFile()
 {
 	LOG("Start playing: %s", ogg->oggFn);
 
 	th->mt.lock();
-	StopPlaying();
+	stopPlaying();
 	th->mt.unlock();
 	LOG("Previous playing stopped.");
 
@@ -418,8 +500,8 @@ void SoraVoice::PlaySoundFile()
 	void *AP1, *AP2;
 	DWORD AB1, AB2;
 	if (DS_OK == pDSBuff->Lock(0, dsd->buffSize * (NUM_AUDIO_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
-		ReadSoundData((char*)AP1, AB1);
-		if (AP2) ReadSoundData((char*)AP2, AB2);
+		readSoundData((char*)AP1, AB1);
+		if (AP2) readSoundData((char*)AP2, AB2);
 		pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 	}
 	else {
@@ -475,7 +557,7 @@ void SoraVoice::PlaySoundFile()
 	LOG("Playing...");
 }
 
-void SoraVoice::StopPlaying()
+void SoraVoice::stopPlaying()
 {
 	if (!status->playing) return;
 

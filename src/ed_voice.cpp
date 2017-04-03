@@ -8,9 +8,7 @@ SVDECL void SVCALL Init(void *p)
 	InitParam* ip = (InitParam*)p;
 	if (!ip || ip->sv) return;
 
-	SoraVoice *sv = new SoraVoice(ip);
-	sv->Init();
-	ip->sv = sv;
+	ip->sv = new SoraVoice(ip);
 }
 
 SVDECL void SVCALL End(void *p)
@@ -18,7 +16,6 @@ SVDECL void SVCALL End(void *p)
 	InitParam* ip = (InitParam*)p;
 	if (!ip || !ip->sv) return;
 
-	((SoraVoice *)ip->sv)->End();
 	delete ip->sv;
 	ip->sv = nullptr;
 }
@@ -49,9 +46,9 @@ SVDECL void SVCALL Input(void *p)
 
 SVDECL void* D3DCALL D3DCreate(void *p, unsigned SDKVersion)
 {
-	InitParam* ip = (InitParam*)p;
-	if (ip) {
-		InitHook(ip);
+	LOG_OPEN;
+	if (p) {
+		InitHook(p);
 	}
 	return HK_Direct3D_Create8(SDKVersion);
 }

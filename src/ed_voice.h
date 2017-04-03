@@ -24,7 +24,7 @@ extern "C" {
 
 	SVDECL void SVCALL Input(void*);
 
-	SVDECL void* D3DCALL D3DCreate(void *p, unsigned SDKVersion);
+	SVDECL void* D3DCALL D3DCreate(void *, unsigned);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
