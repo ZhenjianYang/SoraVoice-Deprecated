@@ -99,7 +99,7 @@ struct InputData {
 static inline int TO_DSVOLUME(int volume) {
 	return (volume) == 0 ?
 		DSBVOLUME_MIN :
-		(int)(2000 * log10(double(volume) / MAX_Volume));
+		(int)(2000 * log10(double(volume) / Config::MAX_Volume));
 }
 
 SoraVoice::SoraVoice(InitParam* initParam)
@@ -228,7 +228,7 @@ void SoraVoice::Input()
 			if (keys[KEY_VOLUME_BIGSTEP1] || keys[KEY_VOLUME_BIGSTEP2]) config->Volume += VOLUME_STEP_BIG;
 			else config->Volume += VOLUME_STEP;
 
-			if (config->Volume > MAX_Volume) config->Volume = MAX_Volume;
+			if (config->Volume > Config::MAX_Volume) config->Volume = Config::MAX_Volume;
 			status->mute = 0;
 			if (dsd->pDSBuff) {
 				dsd->pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
@@ -311,7 +311,9 @@ void SoraVoice::Input()
 
 void SoraVoice::Show(void * D3DD)
 {
-	
+	if (!D3DD) return;
+
+	IDirect3DDevice8 * dD3dd = (IDirect3DDevice8 *)D3DD;
 }
 
 

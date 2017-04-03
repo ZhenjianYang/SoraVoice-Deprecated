@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <map>
+#include <iomanip>
 
 using namespace std;
 
@@ -9,7 +10,19 @@ using namespace std;
 
 using KeyValue = map<string, string>;
 
-static bool _getValue(int& var, KeyValue& kv, const char* name) {
+#define GET_VALUE(name, kv) _getValue(name, kv, STR_##name)
+#define GET_VALUE_MAXFIX(name, kv) {_getValue(name, kv, STR_##name);\
+				if(name < 0) name = 0; \
+				if(name > MAX_##name) name = MAX_##name;}
+#define GET_VALUE_BOOLFIX(name, kv) {_getValue(name, kv, STR_##name); if(name) name = 1;}
+
+#define OUTPUT_VALUE(name, ofs) ofs << CMT_##name << '\n' << STR_##name << " = " << name << '\n' << '\n'
+#define OUTPUT_VALUE_WFMT(name, ofs, format) ofs << CMT_##name << '\n' << STR_##name << " = " << format << name << '\n' << '\n'
+
+#define SET_DEFAULT(name) name = DFT_##name
+#define SET_DEFAULT_STR(name) strcpy(name, DFT_##name)
+
+static bool _getValue(unsigned& var, const KeyValue& kv, const char* name) {
 	auto it = kv.find(name);
 	if (it == kv.end()) return false;
 
@@ -18,7 +31,21 @@ static bool _getValue(int& var, KeyValue& kv, const char* name) {
 		rad = 16;
 	}
 	char *p;
-	var = (int)std::strtoll(it->second.c_str(), &p, rad);
+	var = std::strtoul(it->second.c_str(), &p, rad);
+	return true;
+}
+
+template<typename ArrayType, typename = std::enable_if<std::is_array<ArrayType>::value>::type>
+static bool _getValue(ArrayType &var, const KeyValue& kv, const char* name) {
+
+	auto it = kv.find(name);
+	if (it == kv.end()) return false;
+
+	for (int i = 0; i < (int)it->second.length() && i < sizeof(var) / sizeof(&var); i++) {
+		var[i] = it->second[i];
+	}
+	var[sizeof(var) / sizeof(&var) - 1] = 0;
+
 	return true;
 }
 
@@ -55,28 +82,18 @@ bool Config::LoadConfig(const char * configFn)
 		kv.insert({ key, value });
 	}
 
-	_getValue(this->Volume, kv, STR_Volume);
-	if (this->Volume > MAX_Volume) this->Volume = MAX_Volume;
-	if (this->Volume < 0) this->Volume = 0;
+	GET_VALUE_MAXFIX(Volume, kv);
+	GET_VALUE_BOOLFIX(AutoPlay, kv);
+	GET_VALUE_BOOLFIX(SkipVoice, kv);
+	GET_VALUE_BOOLFIX(DisableDialogSE, kv);
+	GET_VALUE_BOOLFIX(DisableDududu, kv);
 
-	_getValue(this->AutoPlay, kv, STR_AutoPlay);
-	if (this->AutoPlay) this->AutoPlay = 1;
+	GET_VALUE_MAXFIX(ShowInfo, kv);
+	GET_VALUE(FontName, kv);
+	GET_VALUE(FontColor, kv);
 
-	_getValue(this->SkipVoice, kv, STR_SkipVoice);
-	if (this->SkipVoice) this->SkipVoice = 1;
-
-	_getValue(this->DisableDialogSE, kv, STR_DisableDialogSE);
-	if (this->DisableDialogSE) this->DisableDialogSE = 1;
-
-	_getValue(this->DisableDududu, kv, STR_DisableDududu);
-	if (this->DisableDududu) this->DisableDududu = 1;
-
-
-	_getValue(this->EnableKeys, kv, STR_EnableKeys);
-	if (this->EnableKeys) this->EnableKeys = 1;
-
-	_getValue(this->SaveChange, kv, STR_SaveChange);
-	if (this->SaveChange) this->SaveChange = 1;
+	GET_VALUE_BOOLFIX(EnableKeys, kv);
+	GET_VALUE_BOOLFIX(SaveChange, kv);
 
 	return true;
 }
@@ -85,28 +102,21 @@ bool Config::SaveConfig(const char * configFn) const
 {
 	ofstream ofs(configFn);
 	if (!ofs) return false;
-	ofs << CMT_Volume << '\n'
-		<< STR_Volume << " = " << this->Volume << '\n'
-		<< '\n'
-		<< CMT_AutoPlay << '\n'
-		<< STR_AutoPlay << " = " << this->AutoPlay << '\n'
-		<< '\n' 
-		<< CMT_SkipVoice << '\n'
-		<< STR_SkipVoice << " = " << this->SkipVoice << '\n'
-		<< '\n'
-		<< CMT_DisableDialogSE << '\n'
-		<< STR_DisableDialogSE << " = " << this->DisableDialogSE << '\n'
-		<< '\n'
-		<< CMT_DisableDududu << '\n'
-		<< STR_DisableDududu << " = " << this->DisableDududu << '\n'
-		<< '\n'
-		<< '\n'
-		<< CMT_EnableKeys << '\n'
-		<< STR_EnableKeys << " = " << this->EnableKeys << '\n'
-		<< '\n'
-		<< CMT_SaveChange << '\n'
-		<< STR_SaveChange << " = " << this->SaveChange << '\n'
-		;
+	
+	OUTPUT_VALUE(Volume, ofs);
+	OUTPUT_VALUE(AutoPlay, ofs);
+	OUTPUT_VALUE(SkipVoice, ofs);
+	OUTPUT_VALUE(DisableDialogSE, ofs);
+	OUTPUT_VALUE(DisableDududu, ofs);
+
+	OUTPUT_VALUE(ShowInfo, ofs);
+	OUTPUT_VALUE(FontName, ofs);
+	OUTPUT_VALUE_WFMT(FontColor, ofs, "0x" << setfill('0') << setw(8) << setiosflags(ios::right | ios::uppercase) << hex);
+
+	ofs << '\n';
+
+	OUTPUT_VALUE(EnableKeys, ofs);
+	OUTPUT_VALUE(SaveChange, ofs);
 
 	ofs.close();
 	return true;
@@ -114,14 +124,18 @@ bool Config::SaveConfig(const char * configFn) const
 
 void Config::load_default(bool all)
 {
-	this->Volume = DFT_Volume;
-	this->AutoPlay = DFT_AutoPlay;
-	this->SkipVoice = DFT_SkipVoice;
-	this->DisableDialogSE = DFT_DisableDialogSE;
-	this->DisableDududu = DFT_DisableDududu;
+	SET_DEFAULT(Volume);
+	SET_DEFAULT(AutoPlay);
+	SET_DEFAULT(SkipVoice);
+	SET_DEFAULT(DisableDialogSE);
+	SET_DEFAULT(DisableDududu);
+
+	SET_DEFAULT(ShowInfo);
+	SET_DEFAULT_STR(FontName);
+	SET_DEFAULT(FontColor);
 
 	if (all) {
-		this->EnableKeys = DFT_EnableKeys;
-		this->SaveChange = DFT_SaveChange;
+		SET_DEFAULT(EnableKeys);
+		SET_DEFAULT(SaveChange);
 	}
 }
