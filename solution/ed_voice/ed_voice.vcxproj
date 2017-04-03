@@ -52,6 +52,10 @@
       <PreprocessorDefinitions>_SVDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link />
+    <Link>
+      <AdditionalDependencies>d3d8.lib;d3dx8.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libci.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -66,19 +70,27 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>d3d8.lib;d3dx8.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libci.lib</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\ed_voice.h" />
-    <ClInclude Include="..\..\src\ed_voice_type.h" />
+    <ClInclude Include="..\..\src\HookD3d.h" />
+    <ClInclude Include="..\..\src\message.h" />
+    <ClInclude Include="..\..\src\SoraVoice.h" />
+    <ClInclude Include="..\..\src\InitParam.h" />
     <ClInclude Include="..\..\src\Log.h" />
     <ClInclude Include="..\..\src\mapping.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\config.cpp" />
     <ClCompile Include="..\..\src\ed_voice.cpp" />
+    <ClCompile Include="..\..\src\HookD3d.cpp" />
     <ClCompile Include="..\..\src\Log.cpp" />
+    <ClCompile Include="..\..\src\SoraVoice.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

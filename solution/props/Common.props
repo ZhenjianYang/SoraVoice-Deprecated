@@ -4,10 +4,11 @@
   <PropertyGroup Label="UserMacros">
     <SrcDir>$(SolutionDir)..\src\</SrcDir>
     <ExtlibsHome>$(SolutionDir)..\extlibs\</ExtlibsHome>
-    <ExtIncDirs>$(ExtlibsHome)include;$(ExtlibsHome)include\WTL</ExtIncDirs>
+    <ExtIncDirs>$(ExtlibsHome)include</ExtIncDirs>
     <ExtLibsDirs>$(ExtlibsHome)lib</ExtLibsDirs>
     <ExtBinsDirs>$(ExtlibsHome)bin</ExtBinsDirs>
-    <ExtLibs>dxguid.lib;dsound.lib;libvorbis.lib;libvorbisfile.lib</ExtLibs>
+    <ExtLibs>
+    </ExtLibs>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
@@ -16,10 +17,11 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link />
     <Link>
-      <AdditionalDependencies>$(Extlibs);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ExtLibs);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

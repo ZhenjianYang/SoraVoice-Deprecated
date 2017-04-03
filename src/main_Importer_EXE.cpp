@@ -36,6 +36,7 @@ const char import_names[][16] = {
 	"_Play@8",
 	"_Stop@4",
 	"_Input@4",
+	"_D3DCreate@8"
 };
 const int NumImport = sizeof(import_names) / sizeof(*import_names);
 
@@ -45,12 +46,15 @@ const string str_addr_jmp = "addr_jmp_";
 const string str_addr_jmpto = "addr_jmpto_";
 const string str_addr_call = "addr_call_";
 const string str_addr_callto = "addr_";
+const string str_addr_callapi = "addr_callapi_";
+const string str_addr_api = "addr_api_";
 
 const byte opjmp = 0xE9;
-
-
+const byte opcall = 0xE8;
 
 const string macps[] = {
+	"p_hwnd",
+
 	"p_ov_open_callbacks",
 	"p_ov_info",
 	"p_ov_read",
@@ -61,13 +65,14 @@ const string macps[] = {
 };
 
 const map<string, int> map_sn_roff = {
-	{ "text", 0x40 },
+	{ "d3d", 0x40 },
+	{ "text", 0x60 },
 	{ "dududu", 0xC0 },
 	{ "dlgse", 0x140 },
 	{ "input", 0x200 },
 };
 const int roff_base = 0x200;
-const int roff_macp = roff_base + 0x10;
+const int roff_macp = roff_base + 0x0C;
 
 static_assert(sizeof(import_names[0]) % 2 == 0, "Size of import_name must be even");
 
@@ -334,8 +339,8 @@ int main(int argc, char* argv[])
 		auto mv = GetMacroValues(path_macro);
 
 		for (const auto& it : mv) {
-			if (it.first.find(str_addr_jmp) == 0) {
-				string sn = it.first.substr(str_addr_jmp.size());
+			if (it.first.find(str_addr_jmp) == 0 || it.first.find(str_addr_callapi) == 0) {
+				string sn = it.first.substr(1 + it.first.rfind('_'));
 				auto it2 = map_sn_roff.find(sn);
 				if (it2 == map_sn_roff.end() || it2->second == 0) continue;
 
@@ -345,7 +350,7 @@ int main(int argc, char* argv[])
 				int len_jmp = rva_jmpto - rva_jmp - 5;
 				int off_jmp = GetOffFromRVA(rva_jmp);
 
-				if (buff[off_jmp] != opjmp) {
+				if (buff[off_jmp] != opjmp && buff[off_jmp] != opcall) {
 					off_jmp++;
 					len_jmp--;
 				}
