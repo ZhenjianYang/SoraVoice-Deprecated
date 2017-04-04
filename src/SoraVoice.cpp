@@ -17,52 +17,52 @@
 #include <list>
 #include <set>
 
-#define CONFIG_FILE "ed_voice.ini"
-#define VOICEFILE_PREFIX "voice\\ch"
-#define VOICEFILE_ATTR	".ogg"
+const GUID IID_IDirectSoundNotify = { 0xb0210783, 0x89cd, 0x11d0, 0xaf, 0x8, 0x0, 0xa0, 0xc9, 0x25, 0xcd, 0x16 };
 
-#define MAX_OGG_FILENAME_LEN 25
-#define NUM_AUDIO_BUF 2
-#define NUM_NOTIFY_PER_BUFF 8
-#define NUM_NOTIFY (NUM_AUDIO_BUF * NUM_NOTIFY_PER_BUFF)
+constexpr char CONFIG_FILE[] = "ed_voice.ini";
+constexpr char VOICEFILE_PREFIX[] = "voice\\ch";
+constexpr char VOICEFILE_ATTR[] = ".ogg";
 
-static const GUID IID_IDirectSoundNotify = { 0xb0210783, 0x89cd, 0x11d0, 0xaf, 0x8, 0x0, 0xa0, 0xc9, 0x25, 0xcd, 0x16 };
+constexpr int MAX_OGG_FILENAME_LEN = 25;
+constexpr int NUM_AUDIO_BUF = 2;
+constexpr int NUM_NOTIFY_PER_BUFF = 8;
+constexpr int NUM_NOTIFY = (NUM_AUDIO_BUF * NUM_NOTIFY_PER_BUFF);
 
-static const int VOLUME_STEP = 1;
-static const int VOLUME_STEP_BIG = 5;
+constexpr int VOLUME_STEP = 1;
+constexpr int VOLUME_STEP_BIG = 5;
 
-static const int TIME_BUF = 1;
+constexpr int TIME_BUF = 1;
 
-static const int KEY_MIN = DIK_5;
-static const int KEY_MAX = DIK_EQUALS;
-static const int KEYS_NUM = KEY_MAX - KEY_MIN + 1;
+constexpr int KEY_MIN = DIK_5;
+constexpr int KEY_MAX = DIK_EQUALS;
+constexpr int KEYS_NUM = KEY_MAX - KEY_MIN + 1;
 
-static const int KEY_VOLUME_UP = DIK_EQUALS;
-static const int KEY_VOLUME_DOWN = DIK_MINUS;
-static const int KEY_VOLUME_0 = DIK_0;
-static const int KEY_VOLUME_BIGSTEP1 = DIK_LSHIFT;
-static const int KEY_VOLUME_BIGSTEP2 = DIK_RSHIFT;
+constexpr int KEY_VOLUME_UP = DIK_EQUALS;
+constexpr int KEY_VOLUME_DOWN = DIK_MINUS;
+constexpr int KEY_VOLUME_0 = DIK_0;
+constexpr int KEY_VOLUME_BIGSTEP1 = DIK_LSHIFT;
+constexpr int KEY_VOLUME_BIGSTEP2 = DIK_RSHIFT;
 
-static const int KEY_AUTOPLAY = DIK_9;
-static const int KEY_SKIPVOICE = DIK_8;
-static const int KEY_DLGSE = DIK_7;
-static const int KEY_DU = DIK_6;
-static const int KEY_INFO = DIK_5;
+constexpr int KEY_AUTOPLAY = DIK_9;
+constexpr int KEY_SKIPVOICE = DIK_8;
+constexpr int KEY_DLGSE = DIK_7;
+constexpr int KEY_DU = DIK_6;
+constexpr int KEY_INFO = DIK_5;
 
-static const int MAX_TEXT_BUF = 63;
+constexpr int MAX_TEXT_BUF = 63;
 
-static const int MIN_FONT_SIZE = 25;
-static const int TEXT_NUM_SCRH = 25;
+constexpr int MIN_FONT_SIZE = 25;
+constexpr int TEXT_NUM_SCRH = 25;
 
-static const double BOUND_WIDTH_RATE = 0.5;
-static const double LINE_SPACE_RATE = 0.15;
-static const double TEXT_SHADOW_POS_RATE = 0.08;
+constexpr double BOUND_WIDTH_RATE = 0.5;
+constexpr double LINE_SPACE_RATE = 0.15;
+constexpr double TEXT_SHADOW_POS_RATE = 0.08;
 
-static const int INFO_TIME = 2000;
-static const int HELLO_TIME = 6000;
-static const int INFINITY_TIME = 0;
-static const int REMAIN_TIME = 3000;
-static const unsigned SHADOW_COLOR = 0x40404040;
+constexpr int INFO_TIME = 2000;
+constexpr int HELLO_TIME = 6000;
+constexpr int INFINITY_TIME = 0;
+constexpr int REMAIN_TIME = 3000;
+constexpr unsigned SHADOW_COLOR = 0x40404040;
 
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
@@ -162,7 +162,9 @@ struct Info {
 
 		TimePoint dead;
 	};
-	std::list<std::unique_ptr<InfoText>> texts;
+	using InfoTextPtr = std::unique_ptr<InfoText>;
+	using InfoTextList = std::list<InfoTextPtr>;
+	InfoTextList texts;
 
 	Info(InitParam* ip, const Config* config)
 		:font(nullptr),  width(0), height(0), fontColor((unsigned)config->FontColor), showing(ip->status.showing), hwnd(*(HWND*)ip->pHwnd)
@@ -203,7 +205,7 @@ struct Info {
 
 		if (it == texts.end()) {
 			LOG("Create new Text.");
-			texts.push_back(std::unique_ptr<InfoText>(new InfoText));
+			texts.push_back(InfoTextPtr(new InfoText));
 			it = --texts.end();
 		}
 		(*it)->type = type;
@@ -215,7 +217,7 @@ struct Info {
 		va_start(argptr, text);
 		vsnprintf((*it)->text, sizeof((*it)->text), text, argptr);
 		va_end(argptr);
-		int text_width = (int)(strlen((*it)->text) * h * 0.65);
+		int text_width = (int)(strlen((*it)->text) * h * 0.6);
 		LOG("Text is %s", (*it)->text);
 		LOG("Text width is %d", text_width);
 
@@ -251,11 +253,11 @@ struct Info {
 
 		if ((*it)->format & DT_RIGHT) {
 			rect.right = width - bound;
-			rect.left = width - text_width;
+			rect.left = rect.right - text_width;
 		}
 		else {
 			rect.left = bound;
-			rect.right = text_width;
+			rect.right = rect.left + text_width;
 		}
 
 		LOG("top = %d, bottom = %d, left = %d, right = %d", rect.top, rect.bottom, rect.left, rect.right);
@@ -268,18 +270,15 @@ struct Info {
 			texts.clear();
 		}
 		else {
-			texts.remove_if([&type](const std::unique_ptr<InfoText>& t) { return t->type == type; });
+			texts.remove_if([&type](const InfoTextPtr& t) { return t->type == type; });
 		}
 		showing = texts.size() > 0;
 	}
 
 	void removeDead() {
 		TimePoint now = Clock::now();
-		for (auto it = texts.begin(); it != texts.end(); ++it) {
-			if ((*it)->dead < now) {
-				texts.erase(it);
-			}
-		}
+		texts.remove_if([&now](const InfoTextPtr& t) { return t->dead < now; });
+
 		showing = texts.size() > 0;
 	}
 
@@ -352,7 +351,7 @@ SoraVoice::SoraVoice(InitParam* initParam)
 
 void SoraVoice::Play(const char* t)
 {
-	if (*t != '#') return;
+	if (*t != '#' || !dsd->pDS) return;
 
 	int idx = sizeof(VOICEFILE_PREFIX) - 1;
 	t++;
@@ -455,6 +454,9 @@ void SoraVoice::Input()
 
 				if (config->AutoPlay && config->ShowInfo == 2 && status->playing) {
 					inf->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+				}
+				else {
+					inf->removeText(InfoType::AutoPlayMark);
 				}
 			}
 			else {
@@ -600,7 +602,7 @@ void SoraVoice::Input()
 			th->mt_text.unlock();
 
 			LOG("Set ShowInfo : %d", config->ShowInfo);
-		}//if(KEY_DU)
+		}//if(KEY_INFO)
 	}
 
 	if (needsetvolume) {
@@ -706,7 +708,7 @@ int SoraVoice::readSoundData(char * buff, int size)
 	for (int i = 0; i < size; i++) buff[i] = 0;
 	int total = 0;
 
-	static const int block = 4096;
+	constexpr int block = 4096;
 	int bitstream = 0;
 
 	while (total < size)

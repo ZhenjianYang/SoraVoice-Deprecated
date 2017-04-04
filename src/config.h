@@ -37,11 +37,11 @@
 									static constexpr char CMT_##name[] = _CMT_##name;\
 
 #define DEFINE_CONFIG(name, dft) int name; \
-								static const int DFT_##name = dft;\
+								static constexpr int DFT_##name = dft;\
 								DEFINE_CONFIG_COMMON(name);
 
 #define DEFINE_CONFIG_WMAX(name, dft, max) DEFINE_CONFIG(name, dft)\
-											static const int MAX_##name = max;
+											static constexpr int MAX_##name = max;
 
 #define DEFINE_STRCONFIG(name, dft, len) char name[len+1]; \
 										static constexpr char DFT_##name[] = dft;\
