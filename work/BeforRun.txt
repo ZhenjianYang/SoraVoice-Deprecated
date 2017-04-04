@@ -1,9 +1,9 @@
 put this folder 'work' in the root of the project 'SoraVoice'
 
 put FC_main.exe,SC_main.exe,3RD_main.exe in work\main\
-put nasm.exe(an 80x86 assembler, please use a stable version) in work\main\
+put nasm.exe(an 80x86 assembler, please use a stable version) in work\nasm\
 compile Importer_EXE and put it in work\ (this folder)
 
 run 'run.bat'
 
-then you will get FC_voice.exe, SC_voice.exe, 3RD_voice.exe under work\new\
+then you will get fc_voice.exe, sc_voice.exe, 3rd_voice.exe under work\new\
