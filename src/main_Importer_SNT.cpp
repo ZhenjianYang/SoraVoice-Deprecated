@@ -10,6 +10,7 @@
 
 #define ATTR_SNT "._SN.txt"
 #define ATTR_IPT ".txt"
+#define REP_NAME "import_snt_report.txt"
 
 #define MAXCH_ONELINE 2048
 #define MAX_LINENO_LEN 9
@@ -32,7 +33,7 @@
 
 using namespace std;
 
-static void GetMapLineVid(map<int, string>& map_line_vid, const string& fn_snt_exp, const string& fn_mbin_exp)
+static void GetMapLineVid(map<int, string>& map_line_vid, const string& fn_snt_exp, const string& fn_mbin_exp, ofstream& ofs_rp)
 {
 	ifstream ifs_snt(fn_snt_exp);
 	ifstream ifs_mbin(fn_mbin_exp);
@@ -71,8 +72,13 @@ static void GetMapLineVid(map<int, string>& map_line_vid, const string& fn_snt_e
 				}
 			}
 		}
+		if (map_line_vid[line_no].empty()) {
+			if (!vid.empty()) map_line_vid[line_no] = vid;
+		}
+		else {
+			ofs_rp << ">>【警告】行 " << line_no << " ：在SNT.OUT中发现重复的该行号。" << endl;
+		}
 
-		if (!vid.empty()) map_line_vid[line_no] = vid;
 	}
 
 	ifs_snt.close();
@@ -138,16 +144,17 @@ int main(int argc, char* argv[])
 	vector<string> fn_snts;
 	Sora::SearchFiles(dir_snt + "*" ATTR_SNT, fn_snts);
 
+	ofstream ofs_rp(REP_NAME);
 	for (const auto &fn_snt : fn_snts) {
 		string name = fn_snt.substr(0, fn_snt.rfind(ATTR_SNT));
 		for_each(name.begin(), name.end(), [](char& c) { c = toupper(c); });
-		cout << "处理" << fn_snt << "..." << endl;
+		ofs_rp << "处理" << fn_snt << "..." << endl;
 
 		bool enbaleMapping = enbaleMappingGlobal && exception_list.find(name) == exception_list.end()
 			|| !enbaleMappingGlobal && exception_list.find(name) != exception_list.end();
 
 		map<int, string> map_line_vid;
-		GetMapLineVid(map_line_vid, dir_snt_exp + name + ATTR_IPT, dir_mbin_exp + name + ATTR_IPT);
+		GetMapLineVid(map_line_vid, dir_snt_exp + name + ATTR_IPT, dir_mbin_exp + name + ATTR_IPT, ofs_rp);
 		map_line_vid.insert({ MAX_LINENO,"" });
 
 		auto it_mlv = map_line_vid.cbegin();
@@ -160,22 +167,25 @@ int main(int argc, char* argv[])
 			ifs.getline(buff, sizeof(buff)).good();
 			line_no++)
 		{
-			if (buff[0] == '\t' && buff[1] == '\t' && buff[2] == '\t' && buff[3] == '\t'
-				&& line_no == it_mlv->first) {
+			if (line_no == it_mlv->first) {
+				if (buff[0] == '\t' && buff[1] == '\t' && buff[2] == '\t' && buff[3] == '\t') {
+					auto it_mapping = map_vid.cend();
+					if (enbaleMapping) {
+						it_mapping = map_vid.find(it_mlv->second);
+					}
 
-				auto it_mapping = map_vid.cend();
-				if (enbaleMapping) {
-					it_mapping = map_vid.find(it_mlv->second);
-				}
+					if (it_mapping != map_vid.cend()) {
+						ofs << STR_4TBL << '#' << it_mapping->second << 'V' << buff + 4 << '\n';
+					}
+					else {
+						ofs << STR_4TBL << '#' << it_mlv->second << 'V' << buff + 4 << '\n';
+					}
 
-				if (it_mapping != map_vid.cend()) {
-					ofs << STR_4TBL << '#' << it_mapping->second << 'V' << buff + 4 << '\n';
 				}
 				else {
-					ofs << STR_4TBL << '#' << it_mlv->second << 'V' << buff + 4 << '\n';
+					ofs_rp << ">>【警告】行 " << line_no << " ：在SNT的该行没有发现有效文本。" << endl;
+					ofs << buff << '\n';
 				}
-
-
 				it_mlv++;
 			}
 			else {
@@ -186,6 +196,7 @@ int main(int argc, char* argv[])
 		ifs.close();
 		ofs.close();
 	}
+	ofs_rp.close();
 
 	return 0;
 }
