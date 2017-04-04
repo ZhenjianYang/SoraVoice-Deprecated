@@ -187,7 +187,7 @@ struct Info {
 
 	void addText(InfoType type, int time, const char* text, ...) {
 		TimePoint now = Clock::now();
-		TimePoint dead = time == 0 ? TimePoint::max() : now + TimeUnit(time);
+		TimePoint dead = time == INFINITY_TIME ? TimePoint::max() : now + TimeUnit(time);
 
 		LOG("Add text, type = %d", type);
 		const int h = lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight;
@@ -464,7 +464,7 @@ void SoraVoice::Input()
 			}
 			th->mt_text.unlock();
 		}
-	} //if(KEY_VOLUME_UP | KEY_VOLUME_DOWN | KEY_VOLUME_0)
+	} //if(KEY_VOLUME_UP & KEY_VOLUME_DOWN)
 	else {
 		if (keys[KEY_VOLUME_UP] && !last[KEY_VOLUME_UP - KEY_MIN] && !keys[KEY_VOLUME_DOWN] && !keys[KEY_VOLUME_0]) {
 			if (keys[KEY_VOLUME_BIGSTEP1] || keys[KEY_VOLUME_BIGSTEP2]) config->Volume += VOLUME_STEP_BIG;
@@ -624,7 +624,7 @@ void SoraVoice::Input()
 
 void SoraVoice::Show(void * D3DD)
 {
-	if (!D3DD) return;
+	if (!D3DD || !status->showing) return;
 	IDirect3DDevice8* d3dd = (IDirect3DDevice8*)D3DD;
 
 	inf->removeDead();
@@ -739,11 +739,6 @@ void SoraVoice::threadReadData()
 					stopPlaying();
 					if (config->AutoPlay) {
 						order->autoPlay = 1;
-						th->mt_text.lock();
-						if (config->ShowInfo == 2) {
-							inf->addText(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
-						}
-						th->mt_text.unlock();
 						SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 					}
 				}
@@ -921,4 +916,10 @@ void SoraVoice::stopPlaying()
 	order->skipVoice = 0;
 
 	ogg->ov_clear(&ogg->ovf);
+
+	th->mt_text.lock();
+	if (config->ShowInfo == 2) {
+		inf->addText(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
+	}
+	th->mt_text.unlock();
 }
