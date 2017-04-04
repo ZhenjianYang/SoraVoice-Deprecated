@@ -88,16 +88,18 @@ int main(int argc, char* argv[])
 					j++;
 					}*/
 					while (j < end) {
-						if (j < end - 1 && buff[j] == 2 && (buff[j + 1] == 3 || buff[j + 1] == 0)) {
+						if (j < end - 1 && buff[j] == 2 && (buff[j + 1] == 3 || buff[j + 1] == 0 || buff[j + 1] == 1)) {
 							if (buff[j + 1] == 3) {
 								text.append("\\2\\3");
+							}
+							else if (buff[j + 1] == 1) {
+								text.append("\\2\\1");
 							}
 							else if (buff[j + 1] == 0) {
 								text.append("\\2");
 							}
 							break;
 						}
-						if (j < end - 1 && buff[j] == 2 && (buff[j + 1] == 3 || buff[j + 1] == 0)) break;
 						if (buff[j] == 1) text.append("\\1\\n");
 						else if(buff[j] >= 0x20 && buff[j] < 0xFF) text.push_back(buff[j]);
 						j++;
