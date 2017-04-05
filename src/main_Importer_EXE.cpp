@@ -392,7 +392,7 @@ int main(int argc, char* argv[])
 					ifstream ifs_bin(path_bin, ios::binary);
 					if (!ifs_bin) {
 						cout << "Open file failed, skip: " << path_bin << endl;
-						return 0;
+						continue;
 					}
 
 					ifs_bin.seekg(0, ios::end);
