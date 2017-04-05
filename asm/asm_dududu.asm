@@ -10,33 +10,19 @@
 
 [BITS 32]
 section dududu vstart=vs_dududu
-	push    eax
-	
-	mov     al, byte [ptr_flag_disable_du]
-	test    al, al
-	je      short return
 
-	mov     eax, dword [ptr_volume]
-	mov     dword [ptr_tmp], eax
-	mov     eax, dword [ptr_volume0]
-	mov     dword [ptr_tmp + 4], eax
-	mov     dword [ptr_volume], 0
-	mov     dword [ptr_volume0], volume_lowest
+	cmp     byte [ptr_flag_disable_du], 0
+	je      short return
 	
-	pop     eax
+	cmp     byte [ptr_mute], 0
+	jne     short return
+
+	mov     byte [ptr_mute], 1
 	call    addr_dududu
-	
-	push    eax
-	mov     eax, dword [ptr_tmp]
-	mov     dword [ptr_volume], eax
-	mov     eax, dword [ptr_tmp + 4]
-	mov     dword [ptr_volume0], eax
-	pop     eax
-	
+	mov     byte [ptr_mute], 0
+
 	jmp     addr_call_dududu+5
 
 return:
-	pop     eax
 	call    addr_dududu
 	jmp     addr_call_dududu+5
-	

@@ -1,5 +1,6 @@
 %define addr_voice 0x033F9000
 
+%define ptr_mute 0x02DD503F
 %define ptr_volume 0x005BB344
 %define ptr_volume0 0x005BB34C
 

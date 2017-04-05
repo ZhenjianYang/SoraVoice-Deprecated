@@ -10,47 +10,27 @@
 
 [BITS 32]
 section dlgse vstart=vs_dlgse
-	push    eax
-	
-	mov     al, byte [ptr_flag_skipvoice]
-	test    al, al
+
+	cmp     byte [ptr_flag_skipvoice], 0
 	je      short callend
-	
-	push    ebx
-	push    ecx
-	push    edx
+
 	push    ptr_initparam
 	call    dword [ptr_voice_stop]
-	pop     edx
-	pop     ecx
-	pop     ebx
-	
-callend:
-	mov     al, byte [ptr_flag_disable_dlgse]
-	mov     byte [ptr_flag_disable_dlgse], 0
-	test    al, al
-	je      short return
 
-	mov     eax, dword [ptr_volume]
-	mov     dword [ptr_tmp], eax
-	mov     eax, dword [ptr_volume0]
-	mov     dword [ptr_tmp + 4], eax
-	mov     dword [ptr_volume], 0
-	mov     dword [ptr_volume0], volume_lowest
-	
-	pop     eax
+callend:
+	cmp     byte [ptr_flag_disable_dlgse], 0 
+	je      short return
+	mov     byte [ptr_flag_disable_dlgse], 0
+
+	cmp     byte [ptr_mute], 0
+	jne     short return
+
+	mov     byte [ptr_mute], 1
 	call    addr_dlgse
-	
-	push    eax
-	mov     eax, dword [ptr_tmp]
-	mov     dword [ptr_volume], eax
-	mov     eax, dword [ptr_tmp + 4]
-	mov     dword [ptr_volume0], eax
-	pop     eax
-	
+	mov     byte [ptr_mute], 0
+
 	jmp     addr_call_dlgse+5
-	
+
 return:
-	pop     eax
 	call    addr_dlgse
 	jmp     addr_call_dlgse+5
