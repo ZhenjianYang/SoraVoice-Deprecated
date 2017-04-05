@@ -17,7 +17,7 @@ private:
 	struct DSD* const dsd;
 	struct Thread* const th;
 	struct InputData* const ipt;
-	struct Info* const inf;
+	struct D3D* const d3d;
 
 private:
 	void init();
@@ -34,7 +34,7 @@ public:
 	void Play(const char* v);
 	void Stop();
 	void Input();
-	void Show(void *D3DD);
+	void Show();
 };
 
 

@@ -36,7 +36,6 @@ const char import_names[][16] = {
 	"_Play@8",
 	"_Stop@4",
 	"_Input@4",
-	"_D3DCreate@8"
 };
 const int NumImport = sizeof(import_names) / sizeof(*import_names);
 
@@ -46,33 +45,32 @@ const string str_addr_jmp = "addr_jmp_";
 const string str_addr_jmpto = "addr_jmpto_";
 const string str_addr_call = "addr_call_";
 const string str_addr_callto = "addr_";
-const string str_addr_callapi = "addr_callapi_";
-const string str_addr_api = "addr_api_";
+//const string str_addr_callapi = "addr_callapi_";
+//const string str_addr_api = "addr_api_";
 
 const byte opjmp = 0xE9;
 const byte opcall = 0xE8;
 
-const string macps[] = {
-	"p_hwnd",
+const map<string, int> map_ptr_roff = {
+	{"p_ov_open_callbacks",0x18 },
+	{"p_ov_info",0x1C},
+	{"p_ov_read",0x20},
+	{"p_ov_clear",0x24},
 
-	"p_ov_open_callbacks",
-	"p_ov_info",
-	"p_ov_read",
-	"p_ov_clear",
-
-	"p_keys",
-	"p_pDS",
+	{"p_d3dd",0x40},
+	{"p_hwnd",0x44},
+	{"p_pDS",0x48},
+	{"p_keys",0x4C}
 };
 
-const map<string, int> map_sn_roff = {
-	{ "d3d", 0x40 },
-	{ "text", 0x60 },
-	{ "dududu", 0xC0 },
-	{ "dlgse", 0x140 },
-	{ "input", 0x200 },
+const map<string, int> map_vs_roff = {
+	{ "text",0x00 },
+	{ "dududu",0x80 },
+	{ "dlgse",0x100 },
+	{ "input",0x1C0 },
 };
-const int roff_base = 0x200;
-const int roff_macp = roff_base + 0x0C;
+const int roff_base_ptr = 0x240;
+const int roff_base_vs = roff_base_ptr + 0xC0;
 
 static_assert(sizeof(import_names[0]) % 2 == 0, "Size of import_name must be even");
 
@@ -339,13 +337,13 @@ int main(int argc, char* argv[])
 		auto mv = GetMacroValues(path_macro);
 
 		for (const auto& it : mv) {
-			if (it.first.find(str_addr_jmp) == 0 || it.first.find(str_addr_callapi) == 0) {
+			if (it.first.find(str_addr_jmp) == 0) {
 				string sn = it.first.substr(1 + it.first.rfind('_'));
-				auto it2 = map_sn_roff.find(sn);
-				if (it2 == map_sn_roff.end() || it2->second == 0) continue;
+				auto it2 = map_vs_roff.find(sn);
+				if (it2 == map_vs_roff.end()) continue;
 
 				int rva_jmp = it.second - Base;
-				int rva_jmpto = it2->second + roff_base + si_new.vAddr;
+				int rva_jmpto = it2->second + roff_base_vs + si_new.vAddr;
 
 				int len_jmp = rva_jmpto - rva_jmp - 5;
 				int off_jmp = GetOffFromRVA(rva_jmp);
@@ -358,11 +356,11 @@ int main(int argc, char* argv[])
 			}
 			else if (it.first.find(str_addr_call) == 0) {
 				string sn = it.first.substr(str_addr_call.size());
-				auto it2 = map_sn_roff.find(sn);
-				if (it2 == map_sn_roff.end() || it2->second == 0) continue;
+				auto it2 = map_vs_roff.find(sn);
+				if (it2 == map_vs_roff.end()) continue;
 
 				int rva_call = it.second - Base;
-				int rva_callto = it2->second + roff_base + si_new.vAddr;
+				int rva_callto = it2->second + roff_base_vs + si_new.vAddr;
 
 				int len_call = rva_callto - rva_call - 5;
 				int off_call = GetOffFromRVA(rva_call);
@@ -373,14 +371,14 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		for (int i = 0; i < sizeof(macps) / sizeof(*macps); i++) {
-			int roff = roff_macp + i * 4;
-			int off = roff + si_new.Off;
+		for(auto & it : map_ptr_roff) {
+			int roff = it.second;
+			int off = roff + roff_base_ptr + si_new.Off;
 
-			auto it = mv.find(macps[i]);
-			if (it == mv.end() || it->second == 0) continue;
+			auto it2 = mv.find(it.first);
+			if (it2 == mv.end() || it2->second == 0) continue;
 
-			int value = it->second;
+			int value = it2->second;
 			PUT(value, buff_new + off);
 		}
 	}
@@ -389,8 +387,8 @@ int main(int argc, char* argv[])
 		for (const auto& path_bin : path_bins) {
 			string name_bin = path_bin.substr(path_bin.rfind('\\') + 1);
 			
-			for (const auto& sn_roff : map_sn_roff) {
-				if (name_bin.find(sn_roff.first) != string::npos) {
+			for (const auto& vs_roff : map_vs_roff) {
+				if (name_bin.find(vs_roff.first) != string::npos) {
 					ifstream ifs_bin(path_bin, ios::binary);
 					if (!ifs_bin) {
 						cout << "Open file failed, skip: " << path_bin << endl;
@@ -405,7 +403,7 @@ int main(int argc, char* argv[])
 					const byte* const buff_bin = sbuff_bin.get();
 					ifs_bin.close();
 
-					int off = roff_base + sn_roff.second + si_new.Off;
+					int off = roff_base_vs + vs_roff.second + si_new.Off;
 					for (int i = 0; i < len_bin; i++) {
 						buff_new[off + i] = buff_bin[i];
 					}

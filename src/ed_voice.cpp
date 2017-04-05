@@ -1,7 +1,6 @@
 #include "ed_voice.h"
 #include "SoraVoice.h"
 #include "Log.h"
-#include "HookD3d.h"
 
 SVDECL void SVCALL Init(void *p)
 {
@@ -44,11 +43,3 @@ SVDECL void SVCALL Input(void *p)
 	((SoraVoice *)ip->sv)->Input();
 }
 
-SVDECL void* D3DCALL D3DCreate(void *p, unsigned SDKVersion)
-{
-	LOG_OPEN;
-	if (p) {
-		InitHook(p);
-	}
-	return HK_Direct3D_Create8(SDKVersion);
-}

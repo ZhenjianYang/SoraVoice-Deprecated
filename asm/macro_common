@@ -1,28 +1,29 @@
 
 %define ptr_impaddr_table (addr_voice + 0x170)
 
-%define addr_codebase (addr_voice + 0x200)
-%define ptr_initparam (addr_voice + 0x200)
+%define ptr_initparam (addr_voice + 0x240)
+%define addr_codebase (ptr_initparam + 0xC0)
 
 %define ptr_sv					ptr_initparam
+
 %define ptr_flag_ended			(ptr_initparam + 0x04)
 %define ptr_flag_playing		(ptr_initparam + 0x05)
-%define ptr_flag_disable_du		(ptr_initparam + 0x08)
-%define ptr_flag_disable_dlgse	(ptr_initparam + 0x09)
-%define ptr_flag_skipvoice		(ptr_initparam + 0x0A)
-%define ptr_flag_autoplay		(ptr_initparam + 0x0B)
 
-%define ptr_p_keys				(ptr_initparam + 0x20)
-%define ptr_keys_old			(ptr_initparam + 0x28)
+%define ptr_flag_disable_du		(ptr_initparam + 0x10)
+%define ptr_flag_disable_dlgse	(ptr_initparam + 0x11)
+%define ptr_flag_skipvoice		(ptr_initparam + 0x12)
+%define ptr_flag_autoplay		(ptr_initparam + 0x13)
 
-%define ptr_tmp (ptr_initparam + 0x30)
+%define ptr_p_keys				(ptr_initparam + 0x4C)
+%define ptr_keys_old			(ptr_initparam + 0x50)
+
+%define ptr_tmp (ptr_initparam + 0x80)
 
 %define ptr_voice_init		(ptr_impaddr_table + 0x00)
 %define ptr_voice_end		(ptr_impaddr_table + 0x04)
 %define ptr_voice_play		(ptr_impaddr_table + 0x08)
 %define ptr_voice_stop		(ptr_impaddr_table + 0x0C)
 %define ptr_voice_input		(ptr_impaddr_table + 0x10)
-%define ptr_voice_d3d		(ptr_impaddr_table + 0x14)
 
 %define volume_lowest -10000
 
@@ -34,10 +35,9 @@
 
 %define dik_press	0x80
 
-%define vs_d3d			(addr_codebase + 0x40)
-%define vs_text			(addr_codebase + 0x60)
-%define vs_dududu		(addr_codebase + 0xC0)
-%define vs_dlgse		(addr_codebase + 0x140)
-%define vs_input		(addr_codebase + 0x200)
+%define vs_text			(addr_codebase + 0x00)
+%define vs_dududu		(addr_codebase + 0x80)
+%define vs_dlgse		(addr_codebase + 0x100)
+%define vs_input		(addr_codebase + 0x1C0)
 
 

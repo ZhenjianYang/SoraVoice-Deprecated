@@ -15,17 +15,16 @@
 %define addr_jmp_input 0x00454C2A
 %define addr_jmpto_input 0x004549B0
 
-%define addr_callapi_d3d 0x00449DC5
-%define addr_api_d3d 0x004FA114
-
-%define p_hwnd					0x019417A4
 
 %define p_ov_open_callbacks		0x01612028
 %define p_ov_info				0x01611D18
 %define p_ov_read				0x01612020
 %define p_ov_clear				0x01611D1C
 
-%define p_keys					0x01610848
+%define p_d3dd					0x014E1028
+%define p_hwnd					0x019417A4
 %define p_pDS					0x01613940
+%define p_keys					0x01610848
+
 
 

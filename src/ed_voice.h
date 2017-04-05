@@ -23,8 +23,6 @@ extern "C" {
 	SVDECL void SVCALL Stop(void*);
 
 	SVDECL void SVCALL Input(void*);
-
-	SVDECL void* D3DCALL D3DCreate(void *, unsigned);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
