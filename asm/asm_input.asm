@@ -13,19 +13,17 @@ section input vstart=vs_input
 	cmp byte [ptr_flag_ended], 0
 	jne short return
 	
+	push ecx
+
 	cmp dword [ptr_sv], 0
 	jne short check_input
 	
-	push ecx
 	push edx
 	push ptr_initparam
 	call [ptr_voice_init]
-	pop ecx
 	pop ebx
-	
+
 check_input:
-	push ecx
-	
 	mov eax, [ptr_p_keys]
 	add eax, dik_beg
 	mov cl, dik_end - dik_beg + 1
