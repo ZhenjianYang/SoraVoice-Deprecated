@@ -2,6 +2,10 @@
 
 class Message {
 public:
+	static constexpr char Title[] = "《空之轨迹》语音补丁";
+	static constexpr char Version[] = "版本 %s";
+	static constexpr char VersionNum[] = "0.4.0";
+
 	static constexpr char On[] = "开";
 	static constexpr char Off[] = "关";
 	static constexpr const char* Switch[] = { Off, On };
@@ -20,9 +24,6 @@ public:
 	static constexpr char ShowInfoAuto[] = "开(显示自动播放符号)";
 	static constexpr const char* ShowInfoSwitch[] = {Off, On, ShowInfoAuto};
 	
-	static constexpr char Title[] = "《空之轨迹》语音补丁";
-	static constexpr char Version[] = "版本 %s";
-
 	static constexpr char AutoPlayMark[] = "AUTO";
 };
 

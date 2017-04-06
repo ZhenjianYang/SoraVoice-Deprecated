@@ -1,6 +1,7 @@
 #define NOMINMAX 1
 
 #include "SoraVoice.h"
+#include "InitParam.h"
 #include "Log.h"
 #include "mapping.h"
 #include "config.h"
@@ -59,103 +60,41 @@ constexpr double BOUND_WIDTH_RATE = 0.5;
 constexpr double LINE_SPACE_RATE = 0.15;
 constexpr double TEXT_SHADOW_POS_RATE = 0.08;
 
-constexpr int INFO_TIME = 2000;
-constexpr int HELLO_TIME = 6000;
-constexpr int INFINITY_TIME = 0;
-constexpr int REMAIN_TIME = 3000;
+constexpr unsigned INFO_TIME = 2000;
+constexpr unsigned HELLO_TIME = 6000;
+constexpr unsigned INFINITY_TIME = 0;
+constexpr unsigned REMAIN_TIME = 3000;
 constexpr unsigned SHADOW_COLOR = 0x40404040;
+
+constexpr unsigned TIME_MAX = 0xFFFFFFFF;
 
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
 using TimeUnit = std::chrono::milliseconds;
 
-enum class InfoType
+class SoraVoiceImpl : private SoraVoice
 {
-	Hello,
-	InfoOnoff,
-	AutoPlayMark,
-	
-	Volume,
-	AutoPlay,
-	SkipVoice,
-	DisableDialogSE,
-	DisableDududu,
+	friend SoraVoice;
 
-	ConfigReset,
+private:
+	enum class InfoType
+	{
+		Hello,
+		InfoOnoff,
+		AutoPlayMark,
 
-	All
-};
+		Volume,
+		AutoPlay,
+		SkipVoice,
+		DisableDialogSE,
+		DisableDududu,
 
-struct Ogg {
-	decltype(::ov_open_callbacks)* const ov_open_callbacks;
-	decltype(::ov_info)* const ov_info;
-	decltype(::ov_read)* const ov_read;
-	decltype(::ov_clear)* const ov_clear;
+		ConfigReset,
 
-	OggVorbis_File ovf;
-	char oggFn[MAX_OGG_FILENAME_LEN + 1];
+		All
+	};
 
-	Ogg(InitParam* ip)
-		:ov_open_callbacks((decltype(ov_open_callbacks))*ip->p_ov_open_callbacks),
-		ov_info((decltype(ov_info))*ip->p_ov_info),
-		ov_read((decltype(ov_read))*ip->p_ov_read),
-		ov_clear((decltype(ov_clear))*ip->p_ov_clear) {
-		memset(&ovf, 0, sizeof(ovf));
-		memcpy(oggFn, VOICEFILE_PREFIX, sizeof(VOICEFILE_PREFIX));
-		memset(oggFn + sizeof(VOICEFILE_PREFIX), 0, sizeof(oggFn) - sizeof(VOICEFILE_PREFIX));
-	}
-};
-struct DSD {
-	const LPDIRECTSOUND pDS;
-	LPDIRECTSOUNDBUFFER pDSBuff;
-	WAVEFORMATEX waveFormatEx;
-	DSBUFFERDESC dSBufferDesc;
-	DSBPOSITIONNOTIFY dSNotifies[NUM_NOTIFY];
-
-	int buffSize;
-	int notifySize;
-	int halfNotifySize;
-
-	DSD(InitParam* ip)
-		: pDS((decltype(pDS))*ip->p_pDS), pDSBuff(nullptr),
-		buffSize(0), notifySize(0), halfNotifySize(0) {
-		memset(&waveFormatEx, 0, sizeof(waveFormatEx));
-		memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
-		memset(dSNotifies, 0, sizeof(dSNotifies));
-	}
-};
-struct Thread {
-	HANDLE hEvents[NUM_NOTIFY];
-	HANDLE hEventEnd;
-	std::thread th_read;
-	std::mutex mt_play;
-	std::mutex mt_text;
-	int playEnd;
-	Thread(InitParam* ip) : playEnd(-1), hEventEnd(NULL) {
-		memset(hEvents, 0, sizeof(hEvents));
-	}
-};
-struct InputData {
-	char* const keys;
-	char* const last;
-	InputData(InitParam* ip) : keys(ip->p_Keys), last(ip->keysOld) {
-	}
-};
-struct D3D {
-	const HWND hwnd;
-	IDirect3DDevice8* const d3dd;
-	ID3DXFont *font;
-	LOGFONT lf;
-
-	int width;
-	int height;
-	int bound;
-	int linespace;
-	int shadow;
-	unsigned fontColor;
-	byte& showing;
-
-	struct InfoText
+	struct Info
 	{
 		char text[MAX_TEXT_BUF + 1];
 		RECT rect;
@@ -163,164 +102,303 @@ struct D3D {
 		unsigned format;
 		InfoType type;
 
-		TimePoint dead;
+		unsigned dead;
 	};
-	using InfoTextPtr = std::unique_ptr<InfoText>;
-	using InfoTextList = std::list<InfoTextPtr>;
-	InfoTextList texts;
+	using PtrInfo = std::unique_ptr<Info>;
+	using PtrInfoList = std::list<PtrInfo>;
 
-	D3D(InitParam* ip, const Config* config)
-		:hwnd(*(HWND*)ip->p_Hwnd), d3dd(*(decltype(d3dd)*)ip->p_d3dd), font(nullptr), 
-		width(0), height(0), fontColor((unsigned)config->FontColor), showing(ip->status.showing)
+	byte& ended;
+
+	InitParam::Status* const status;
+	InitParam::Order* const order;
+
+	Config _config;
+
+	struct Time
 	{
-		constexpr int len_cfn = std::extent<decltype(config->FontName)>::value;
-		constexpr int len_lffn = std::extent<decltype(lf.lfFaceName)>::value;
-		static_assert(len_cfn == len_lffn, "Font names' length not match");
+		const TimePoint base;
+		unsigned &now;
+		unsigned &recent;
 
-		memset(&lf, 0, sizeof(lf));
-		lf.lfHeight = -MIN_FONT_SIZE;
-		lf.lfWeight = FW_NORMAL;
-		lf.lfCharSet = DEFAULT_CHARSET;
-		lf.lfOutPrecision = OUT_OUTLINE_PRECIS;
-		lf.lfQuality = CLEARTYPE_QUALITY;
+		void UpdateTime() {
+			TimePoint newNow = Clock::now();
+			recent = now;
+			now = (unsigned)std::chrono::duration_cast<TimeUnit>(newNow - base).count();
 
-		memcpy(lf.lfFaceName, config->FontName, len_lffn);
-		lf.lfFaceName[len_lffn - 1] = 1;
-	}
-	~D3D() { if (font) font->Release(); }
+			LOG("Current time : %d", now);
+		}
 
-	void addText(InfoType type, int time, const char* text, ...) {
-		TimePoint now = Clock::now();
-		TimePoint dead = time == INFINITY_TIME ? TimePoint::max() : now + TimeUnit(time);
+		Time(InitParam *ip) : now(ip->now), recent(ip->recent), base(Clock::now()) {
+			now = recent = 0;
+		}
+	} _tm;
 
-		LOG("Add text, type = %d", type);
-		const int h = lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight;
+	struct Ogg {
+		decltype(::ov_open_callbacks)* const ov_open_callbacks;
+		decltype(::ov_info)* const ov_info;
+		decltype(::ov_read)* const ov_read;
+		decltype(::ov_clear)* const ov_clear;
 
-		auto it = texts.end();
+		OggVorbis_File ovf;
+		char oggFn[MAX_OGG_FILENAME_LEN + 1];
 
-		if (type != InfoType::Hello) {
-			for (it = texts.begin(); it != texts.end(); ++it) {
-				if ((*it)->type == type) {
-					LOG("No need to Create new Text.");
-					break;
+		Ogg(InitParam* ip)
+			:ov_open_callbacks((decltype(ov_open_callbacks))*ip->p_ov_open_callbacks),
+			ov_info((decltype(ov_info))*ip->p_ov_info),
+			ov_read((decltype(ov_read))*ip->p_ov_read),
+			ov_clear((decltype(ov_clear))*ip->p_ov_clear) {
+			memset(&ovf, 0, sizeof(ovf));
+			memcpy(oggFn, VOICEFILE_PREFIX, sizeof(VOICEFILE_PREFIX));
+			memset(oggFn + sizeof(VOICEFILE_PREFIX), 0, sizeof(oggFn) - sizeof(VOICEFILE_PREFIX));
+		}
+
+		int readOggData(char * buff, int size)
+		{
+			if (buff == nullptr || size <= 0) return 0;
+
+			for (int i = 0; i < size; i++) buff[i] = 0;
+			int total = 0;
+
+			constexpr int block = 4096;
+			int bitstream = 0;
+
+			while (total < size)
+			{
+				int request = size - total < block ? size - total : block;
+				int read = ov_read(&ovf, buff + total, request, 0, 2, 1, &bitstream);
+				if (read <= 0) return total;
+
+				total += read;
+			}
+
+			return total;
+		}
+	} _ogg;
+
+	struct DSD {
+		const LPDIRECTSOUND pDS;
+		LPDIRECTSOUNDBUFFER pDSBuff;
+		WAVEFORMATEX waveFormatEx;
+		DSBUFFERDESC dSBufferDesc;
+		DSBPOSITIONNOTIFY dSNotifies[NUM_NOTIFY];
+
+		int buffSize;
+		int notifySize;
+		int halfNotifySize;
+
+		DSD(InitParam* ip)
+			:pDS((decltype(pDS))*ip->p_pDS), pDSBuff(nullptr),
+			buffSize(0), notifySize(0), halfNotifySize(0) {
+			memset(&waveFormatEx, 0, sizeof(waveFormatEx));
+			memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
+			memset(dSNotifies, 0, sizeof(dSNotifies));
+		}
+	} _dsd;
+
+	struct Thread {
+		HANDLE hEvents[NUM_NOTIFY];
+		HANDLE hEventEnd;
+		std::thread th_read;
+		std::mutex mt_play;
+		std::mutex mt_text;
+		int playEnd;
+		Thread(InitParam* ip)
+			:playEnd(-1), hEventEnd(NULL) {
+			memset(hEvents, 0, sizeof(hEvents));
+		}
+	} _th;
+
+	struct IPT {
+		char* const keys;
+		char* const last;
+		IPT(InitParam* ip)
+			:keys(ip->p_Keys), last(ip->keysOld) {
+		}
+	} _ipt;
+
+	struct D3D {
+		byte& showing;
+		unsigned& now;
+
+		const HWND hwnd;
+		IDirect3DDevice8* const d3dd;
+		ID3DXFont *font;
+		LOGFONT lf;
+
+		int width;
+		int height;
+		int bound;
+		int linespace;
+		int shadow;
+		unsigned fontColor;
+
+		PtrInfoList infos;
+
+		D3D(InitParam* ip)
+			:showing(ip->status.showing), now(ip->now), 
+			hwnd(*(HWND*)ip->p_Hwnd), d3dd(*(decltype(d3dd)*)ip->p_d3dd), font(nullptr),
+			lf{ 0 }, width(0), height(0)
+		{
+		}
+		~D3D() { if (font) font->Release(); }
+
+		void drawInfos() {
+			if (width == 0 || !d3dd) return;
+
+			d3dd->BeginScene();
+
+			if (!font) {
+				D3DXCreateFontIndirect(d3dd, &lf, &font);
+			}
+
+			if (font) {
+				RECT rect_shadow;
+
+				for (const auto& info : infos) {
+					rect_shadow = info->rect;
+					if (info->format & DT_RIGHT) rect_shadow.right += shadow;
+					else rect_shadow.left += shadow;
+					if (info->format & DT_BOTTOM) rect_shadow.bottom += shadow;
+					else rect_shadow.top += shadow;
+
+					unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (((info->color >> 24) * 3 / 4) << 24);
+					font->DrawTextA(info->text, -1, &rect_shadow, info->format, color_shadow);
+				}
+
+				for (const auto& info : infos) {
+					font->DrawTextA(info->text, -1, &info->rect, info->format, info->color);
 				}
 			}
+
+			d3dd->EndScene();
+			//if(font) font->Release();
 		}
 
-		if (it == texts.end()) {
-			LOG("Create new Text.");
-			texts.push_back(InfoTextPtr(new InfoText));
-			it = --texts.end();
-		}
-		(*it)->type = type;
-		(*it)->color = fontColor;
-		(*it)->dead = dead;
-		(*it)->format = type == InfoType::AutoPlayMark ? DT_BOTTOM | DT_LEFT : DT_TOP | DT_LEFT;
+		void addInfo(InfoType type, unsigned time, const char* text, ...) {
+			unsigned dead = time == INFINITY_TIME ? TIME_MAX : now + time;
 
-		va_list argptr;
-		va_start(argptr, text);
-		vsnprintf((*it)->text, sizeof((*it)->text), text, argptr);
-		va_end(argptr);
-		int text_width = (int)(strlen((*it)->text) * h * 0.6);
-		LOG("Text is %s", (*it)->text);
-		LOG("Text width is %d", text_width);
+			LOG("Add text, type = %d", type);
+			const int h = lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight;
 
-		auto& rect = (*it)->rect;
-		memset(&rect, 0, sizeof(rect));
+			auto it = infos.end();
 
-		std::set<int> invalid_bottom, invalid_top;
-		for (auto it2 = texts.begin(); it2 != texts.end(); ++it2) {
-			if (it == it2) continue;
-			invalid_top.insert((*it2)->rect.top);
-			invalid_bottom.insert((*it2)->rect.bottom);
-		}
-
-		if ((*it)->format & DT_BOTTOM) {
-			for (int bottom = height - bound; ; bottom -= h + bound) {
-				if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
-					rect.bottom = bottom;
-					break;
-				}
-			}
-			rect.top = rect.bottom - h - linespace;
-		}
-		else {
-			for (int top = bound; ; top += h + linespace) {
-				if (invalid_top.find(top) == invalid_top.end()) {
-					rect.top = top;
-					break;
+			if (type != InfoType::Hello) {
+				for (it = infos.begin(); it != infos.end(); ++it) {
+					if ((*it)->type == type) {
+						LOG("No need to Create new Text.");
+						break;
+					}
 				}
 			}
 
-			rect.bottom = rect.top + h + linespace;
-		}
+			if (it == infos.end()) {
+				LOG("Create new Text.");
+				infos.push_back(PtrInfo(new Info));
+				it = --infos.end();
+			}
+			(*it)->type = type;
+			(*it)->color = fontColor;
+			(*it)->dead = dead;
+			(*it)->format = type == InfoType::AutoPlayMark ? DT_BOTTOM | DT_LEFT : DT_TOP | DT_LEFT;
 
-		if ((*it)->format & DT_RIGHT) {
-			rect.right = width - bound;
-			rect.left = rect.right - text_width;
-		}
-		else {
-			rect.left = bound;
-			rect.right = rect.left + text_width;
-		}
+			va_list argptr;
+			va_start(argptr, text);
+			vsnprintf((*it)->text, sizeof((*it)->text), text, argptr);
+			va_end(argptr);
+			int text_width = (int)(strlen((*it)->text) * h * 0.6);
+			LOG("Text is %s", (*it)->text);
+			LOG("Text width is %d", text_width);
 
-		LOG("top = %d, bottom = %d, left = %d, right = %d", rect.top, rect.bottom, rect.left, rect.right);
+			auto& rect = (*it)->rect;
+			memset(&rect, 0, sizeof(rect));
 
-		showing = texts.size() > 0;
-	}
-
-	void removeText(InfoType type) {
-		if (type == InfoType::All) {
-			texts.clear();
-		}
-		else {
-			texts.remove_if([&type](const InfoTextPtr& t) { return t->type == type; });
-		}
-		showing = texts.size() > 0;
-	}
-
-	void removeDead(TimePoint now) {
-		if (texts.empty()) {
-			showing = 0; 
-			return;
-		}
-
-		texts.remove_if([&now](const InfoTextPtr& t) { return t->dead < now; });
-
-		showing = texts.size() > 0;
-	}
-
-	void drawTexts() {
-		if (width == 0 || !d3dd) return;
-
-		d3dd->BeginScene();
-
-		if (!font) {
-			D3DXCreateFontIndirect(d3dd, &lf, &font);
-		}
-
-		if (font) {
-			RECT rect_shadow;
-
-			for (const auto& text : texts) {
-				rect_shadow = text->rect;
-				if (text->format & DT_RIGHT) rect_shadow.right += shadow;
-				else rect_shadow.left += shadow;
-				if (text->format & DT_BOTTOM) rect_shadow.bottom += shadow;
-				else rect_shadow.top += shadow;
-
-				unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (((text->color >> 24) * 3 / 4) << 24);
-				font->DrawTextA(text->text, -1, &rect_shadow, text->format, color_shadow);
+			std::set<int> invalid_bottom, invalid_top;
+			for (auto it2 = infos.begin(); it2 != infos.end(); ++it2) {
+				if (it == it2) continue;
+				invalid_top.insert((*it2)->rect.top);
+				invalid_bottom.insert((*it2)->rect.bottom);
 			}
 
-			for (const auto& text : texts) {
-				font->DrawTextA(text->text, -1, &text->rect, text->format, text->color);
+			if ((*it)->format & DT_BOTTOM) {
+				for (int bottom = height - bound; ; bottom -= h + bound) {
+					if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
+						rect.bottom = bottom;
+						break;
+					}
+				}
+				rect.top = rect.bottom - h - linespace;
 			}
+			else {
+				for (int top = bound; ; top += h + linespace) {
+					if (invalid_top.find(top) == invalid_top.end()) {
+						rect.top = top;
+						break;
+					}
+				}
+
+				rect.bottom = rect.top + h + linespace;
+			}
+
+			if ((*it)->format & DT_RIGHT) {
+				rect.right = width - bound;
+				rect.left = rect.right - text_width;
+			}
+			else {
+				rect.left = bound;
+				rect.right = rect.left + text_width;
+			}
+
+			LOG("top = %d, bottom = %d, left = %d, right = %d", rect.top, rect.bottom, rect.left, rect.right);
+
+			showing = infos.size() > 0;
 		}
 
-		d3dd->EndScene();
-		//if(font) font->Release();
-	}
+		void removeInfo(InfoType type) {
+			if (type == InfoType::All) {
+				infos.clear();
+			}
+			else {
+				infos.remove_if([&type](const PtrInfo& t) { return t->type == type; });
+			}
+			showing = infos.size() > 0;
+		}
+
+		void removeDeadInfos() {
+			if (infos.empty()) {
+				showing = 0;
+				return;
+			}
+
+			infos.remove_if([this](const PtrInfo& t) { return t->dead < now; });
+
+			showing = infos.size() > 0;
+		}
+	} _d3d;
+
+	Config* const config = &_config;
+	Ogg* const ogg = &_ogg;
+	DSD* const dsd = &_dsd;
+	Thread* const th = &_th;
+	IPT* const ipt = &_ipt;
+	D3D* const d3d = &_d3d;
+	Time* const tm = &_tm;
+
+private:
+	void init();
+	void destory();
+
+	void threadReadData();
+	
+	void playSoundFile();
+	void stopPlaying();
+
+	SoraVoiceImpl(InitParam* initParam);
+	~SoraVoiceImpl() override { this->destory(); }
+public:
+	void Play(const char* v) override;
+	void Stop() override;
+	void Input() override;
+	void Show() override;
 };
 
 static inline int TO_DSVOLUME(int volume) {
@@ -329,14 +407,17 @@ static inline int TO_DSVOLUME(int volume) {
 		(int)(2000 * log10(double(volume) / Config::MAX_Volume));
 }
 
-SoraVoice::SoraVoice(InitParam* initParam)
+SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	:ended(initParam->status.ended), status(&initParam->status), order(&initParam->order),
-	config(new Config(CONFIG_FILE)), ogg(new Ogg(initParam)), dsd(new DSD(initParam)),
-	th(new Thread(initParam)), ipt(new InputData(initParam)), d3d(new D3D(initParam, config))
+	_config(CONFIG_FILE),
+	_tm(initParam), _ogg(initParam), _dsd(initParam),
+	_th(initParam), _ipt(initParam), _d3d(initParam)
 {
 	static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
 	static_assert(sizeof(initParam->keysOld) >= KEY_MAX - KEY_MIN + 1, "Size of keys old is not enough");
 	static_assert(D3D_SDK_VERSION == 220, "SDKVersion must be 220");
+
+	LOG_OPEN;
 
 	LOG("p = 0x%08X", initParam);
 	LOG("p->pHwnd = 0x%08X", initParam->p_Hwnd);
@@ -354,10 +435,23 @@ SoraVoice::SoraVoice(InitParam* initParam)
 	LOG("ov_read = 0x%08X", *initParam->p_ov_read);
 	LOG("ov_clear = 0x%08X", *initParam->p_ov_clear);
 
+	LOG("Config loaded");
+	LOG("config.Volume = %d", config->Volume);
+	LOG("config.AutoPlay = %d", config->AutoPlay);
+	LOG("config.SkipVoice = %d", config->SkipVoice);
+	LOG("config.DisableDududu = %d", config->DisableDududu);
+	LOG("config.DisableDialogSE = %d", config->DisableDialogSE);
+	LOG("config.ShowInfo = %d", config->ShowInfo);
+	LOG("config.FontName = %s", config->FontName);
+	LOG("config.FontColor = 0x%08X", config->FontColor);
+
+	LOG("config.EnableKeys = %d", config->EnableKeys);
+	LOG("config.SaveChange = %d", config->SaveChange);
+
 	init();
 }
 
-void SoraVoice::Play(const char* t)
+void SoraVoiceImpl::Play(const char* t)
 {
 	if (*t != '#' || !dsd->pDS) return;
 
@@ -409,7 +503,7 @@ void SoraVoice::Play(const char* t)
 	playSoundFile();
 }
 
-void SoraVoice::Stop()
+void SoraVoiceImpl::Stop()
 {
 	LOG("Force stopping is called.");
 
@@ -418,7 +512,7 @@ void SoraVoice::Stop()
 	th->mt_play.unlock();
 }
 
-void SoraVoice::Input()
+void SoraVoiceImpl::Input()
 {
 	if (!config->EnableKeys) return;
 
@@ -453,22 +547,22 @@ void SoraVoice::Input()
 			th->mt_text.lock();
 			if (config->ShowInfo) {
 				//inf->addText(InfoType::ConfigReset, INFO_TIME, Message::Reset);
-				d3d->addText(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
-				d3d->addText(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::Switch[config->AutoPlay]);
-				d3d->addText(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
-				d3d->addText(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
-				d3d->addText(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
-				d3d->addText(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+				d3d->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::Switch[config->AutoPlay]);
+				d3d->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+				d3d->addInfo(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+				d3d->addInfo(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+				d3d->addInfo(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
 
 				if (config->AutoPlay && config->ShowInfo == 2 && status->playing) {
-					d3d->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+					d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
 				}
 				else {
-					d3d->removeText(InfoType::AutoPlayMark);
+					d3d->removeInfo(InfoType::AutoPlayMark);
 				}
 			}
 			else {
-				d3d->removeText(InfoType::All);
+				d3d->removeInfo(InfoType::All);
 			}
 			th->mt_text.unlock();
 		}
@@ -488,7 +582,7 @@ void SoraVoice::Input()
 
 			th->mt_text.lock();
 			if (config->ShowInfo) {
-				d3d->addText(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
 			}
 			th->mt_text.unlock();
 
@@ -504,7 +598,7 @@ void SoraVoice::Input()
 
 			th->mt_text.lock();
 			if (config->ShowInfo) {
-				d3d->addText(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
 			}
 			th->mt_text.unlock();
 
@@ -516,10 +610,10 @@ void SoraVoice::Input()
 
 			th->mt_text.lock();
 			if (config->ShowInfo && status->mute) {
-				d3d->addText(InfoType::Volume, INFO_TIME, Message::Mute);
+				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Mute);
 			}
 			else {
-				d3d->addText(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
 			}
 			th->mt_text.unlock();
 
@@ -532,12 +626,12 @@ void SoraVoice::Input()
 
 			th->mt_text.lock();
 			if (config->ShowInfo) {
-				d3d->addText(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::Switch[config->AutoPlay]);
+				d3d->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::Switch[config->AutoPlay]);
 				if (config->AutoPlay && config->ShowInfo == 2 && status->playing) {
-					d3d->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+					d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
 				}
 				else {
-					d3d->removeText(InfoType::AutoPlayMark);
+					d3d->removeInfo(InfoType::AutoPlayMark);
 				}
 			}
 			th->mt_text.unlock();
@@ -554,7 +648,7 @@ void SoraVoice::Input()
 
 			th->mt_text.lock();
 			if (config->ShowInfo) {
-				d3d->addText(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+				d3d->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 			}
 			th->mt_text.unlock();
 
@@ -570,7 +664,7 @@ void SoraVoice::Input()
 
 			th->mt_text.lock();
 			if (config->ShowInfo) {
-				d3d->addText(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+				d3d->addInfo(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
 			}
 			th->mt_text.unlock();
 
@@ -586,7 +680,7 @@ void SoraVoice::Input()
 
 			th->mt_text.lock();
 			if (config->ShowInfo) {
-				d3d->addText(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+				d3d->addInfo(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
 			}
 			th->mt_text.unlock();
 
@@ -600,13 +694,13 @@ void SoraVoice::Input()
 			th->mt_text.lock();
 			if (config->ShowInfo) {
 				if (config->ShowInfo == 2 && config->AutoPlay && status->playing) {
-					d3d->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+					d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
 				}
 			}
 			else {
-				d3d->removeText(InfoType::All);
+				d3d->removeInfo(InfoType::All);
 			}
-			d3d->addText(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+			d3d->addInfo(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
 			th->mt_text.unlock();
 
 			LOG("Set ShowInfo : %d", config->ShowInfo);
@@ -630,30 +724,21 @@ void SoraVoice::Input()
 	memcpy(last, keys + KEY_MIN, KEYS_NUM);
 }
 
-void SoraVoice::Show()
+void SoraVoiceImpl::Show()
 {
-	TimePoint now = Clock::now();
-	
+	tm->UpdateTime();
+
 	if (status->showing) {
-		d3d->drawTexts();
-		d3d->removeDead(now);
+		d3d->drawInfos();
+		d3d->removeDeadInfos();
 	}
 }
 
-void SoraVoice::init()
+void SoraVoiceImpl::init()
 {
-	LOG("Config loaded");
-	LOG("config.Volume = %d", config->Volume);
-	LOG("config.AutoPlay = %d", config->AutoPlay);
-	LOG("config.SkipVoice = %d", config->SkipVoice);
-	LOG("config.DisableDududu = %d", config->DisableDududu);
-	LOG("config.DisableDialogSE = %d", config->DisableDialogSE);
-	LOG("config.ShowInfo = %d", config->ShowInfo);
-	LOG("config.FontName = %s", config->FontName);
-	LOG("config.FontColor = 0x%08X", config->FontColor);
-
-	LOG("config.EnableKeys = %d", config->EnableKeys);
-	LOG("config.SaveChange = %d", config->SaveChange);
+	constexpr int len_cfn = std::extent<decltype(config->FontName)>::value;
+	constexpr int len_lffn = std::extent<decltype(d3d->lf.lfFaceName)>::value;
+	static_assert(len_cfn == len_lffn, "Font names' length not match");
 
 	for (int i = 0; i < NUM_NOTIFY; i++) {
 		th->hEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -664,30 +749,9 @@ void SoraVoice::init()
 
 	ended = 0;
 
-	th->th_read = std::thread(&SoraVoice::threadReadData, this);
+	th->th_read = std::thread(&SoraVoiceImpl::threadReadData, this);
 	th->th_read.detach();
 	LOG("Thread created!");
-
-	RECT rect;
-	if (GetClientRect(d3d->hwnd, &rect)) {
-		d3d->width = rect.right - rect.left;
-		d3d->height = rect.bottom - rect.top;
-		int fontSize = d3d->height / TEXT_NUM_SCRH;
-		if (fontSize < MIN_FONT_SIZE) fontSize = MIN_FONT_SIZE;
-		d3d->lf.lfHeight = -fontSize;
-		d3d->bound = (int)(fontSize * BOUND_WIDTH_RATE + 0.5);
-		d3d->shadow = (int)(fontSize * TEXT_SHADOW_POS_RATE + 0.5);
-		d3d->linespace = (int)(fontSize * LINE_SPACE_RATE + 0.5);
-
-		LOG("screen width = %d", d3d->width);
-		LOG("screen height = %d", d3d->height);
-		LOG("Font Size = %d", fontSize);
-
-		if (config->ShowInfo) {
-			d3d->addText(InfoType::Hello, 5000, Message::Title);
-			d3d->addText(InfoType::Hello, 5000, Message::Version, VERSION);
-		}
-	}
 
 	void* pPresent = Hook_IDirect3DDevice8_Present(d3d->d3dd, this);
 	if (pPresent) {
@@ -696,49 +760,55 @@ void SoraVoice::init()
 	else {
 		LOG("Hook Present failed.");
 	}
+
+	RECT rect;
+	if (GetClientRect(d3d->hwnd, &rect)) {
+		d3d->width = rect.right - rect.left;
+		d3d->height = rect.bottom - rect.top;
+
+		int fontSize = d3d->height / TEXT_NUM_SCRH;
+		if (fontSize < MIN_FONT_SIZE) fontSize = MIN_FONT_SIZE;
+		d3d->lf.lfHeight = -fontSize;
+		d3d->lf.lfWeight = FW_NORMAL;
+		d3d->lf.lfCharSet = DEFAULT_CHARSET;
+		d3d->lf.lfOutPrecision = OUT_OUTLINE_PRECIS;
+		d3d->lf.lfQuality = CLEARTYPE_QUALITY;
+
+		memcpy(d3d->lf.lfFaceName, config->FontName, len_lffn);
+		d3d->lf.lfFaceName[len_lffn - 1] = 0;
+
+		d3d->fontColor = config->FontColor;
+		d3d->bound = (int)(fontSize * BOUND_WIDTH_RATE + 0.5);
+		d3d->shadow = (int)(fontSize * TEXT_SHADOW_POS_RATE + 0.5);
+		d3d->linespace = (int)(fontSize * LINE_SPACE_RATE + 0.5);
+
+		LOG("screen width = %d", d3d->width);
+		LOG("screen height = %d", d3d->height);
+		LOG("Font Size = %d", fontSize);
+		LOG("Font Name = %s", d3d->lf.lfFaceName);
+
+		if (config->ShowInfo) {
+			d3d->addInfo(InfoType::Hello, 5000, Message::Title);
+			d3d->addInfo(InfoType::Hello, 5000, Message::Version, Message::VersionNum);
+		}
+	}
 }
 
-void SoraVoice::destory()
+void SoraVoiceImpl::destory()
 {
-	Stop();
+	th->mt_play.lock();
+	stopPlaying();
+	th->mt_play.unlock();
 
 	memset(order, 0, sizeof(*order));
 	ended = 1;
 
 	SetEvent(th->hEvents[0]);
 	WaitForSingleObject(th->hEventEnd, INFINITE);
-
-	delete config;
-	delete ogg;
-	delete dsd;
-	delete th;
-	delete ipt;
-	delete d3d;
 }
 
-int SoraVoice::readSoundData(char * buff, int size)
-{
-	if (buff == nullptr || size <= 0) return 0;
 
-	for (int i = 0; i < size; i++) buff[i] = 0;
-	int total = 0;
-
-	constexpr int block = 4096;
-	int bitstream = 0;
-
-	while (total < size)
-	{
-		int request = size - total < block ? size - total : block;
-		int read = ogg->ov_read(&ogg->ovf, buff + total, request, 0, 2, 1, &bitstream);
-		if (read <= 0) return total;
-
-		total += read;
-	}
-
-	return total;
-}
-
-void SoraVoice::threadReadData()
+void SoraVoiceImpl::threadReadData()
 {
 	auto &playEnd = th->playEnd;
 	while (!ended)
@@ -774,8 +844,8 @@ void SoraVoice::threadReadData()
 						int read = 0;
 
 						if (DS_OK == dsd->pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
-							read = readSoundData((char*)AP1, AB1);
-							if (AP2) read += readSoundData((char*)AP2, AB2);
+							read = ogg->readOggData((char*)AP1, AB1);
+							if (AP2) read += ogg->readOggData((char*)AP2, AB2);
 							dsd->pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 						}
 
@@ -793,7 +863,7 @@ void SoraVoice::threadReadData()
 	SetEvent(th->hEventEnd);
 }
 
-void SoraVoice::playSoundFile()
+void SoraVoiceImpl::playSoundFile()
 {
 	LOG("Start playing: %s", ogg->oggFn);
 
@@ -854,8 +924,8 @@ void SoraVoice::playSoundFile()
 	void *AP1, *AP2;
 	DWORD AB1, AB2;
 	if (DS_OK == pDSBuff->Lock(0, dsd->buffSize * (NUM_AUDIO_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
-		readSoundData((char*)AP1, AB1);
-		if (AP2) readSoundData((char*)AP2, AB2);
+		ogg->readOggData((char*)AP1, AB1);
+		if (AP2) ogg->readOggData((char*)AP2, AB2);
 		pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 	}
 	else {
@@ -907,7 +977,7 @@ void SoraVoice::playSoundFile()
 	if (config->SkipVoice) order->skipVoice = 1;
 	th->mt_text.lock();
 	if (config->AutoPlay && config->ShowInfo == 2) {
-		d3d->addText(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+		d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
 	}
 	th->mt_text.unlock();
 	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
@@ -916,7 +986,7 @@ void SoraVoice::playSoundFile()
 	LOG("Playing...");
 }
 
-void SoraVoice::stopPlaying()
+void SoraVoiceImpl::stopPlaying()
 {
 	if (!status->playing) return;
 
@@ -934,7 +1004,20 @@ void SoraVoice::stopPlaying()
 
 	th->mt_text.lock();
 	if (config->ShowInfo == 2) {
-		d3d->addText(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
+		d3d->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
 	}
 	th->mt_text.unlock();
 }
+
+
+SoraVoice * SoraVoice::CreateInstance(InitParam * initParam)
+{
+	return new SoraVoiceImpl(initParam);
+}
+
+void SoraVoice::DestoryInstance(SoraVoice * sv)
+{
+	delete sv;
+}
+
+SoraVoice::~SoraVoice() {}

@@ -53,6 +53,9 @@ struct InitParam
 
 	//0x50
 	char keysOld[8];
+	//0x58
+	unsigned now;
+	unsigned recent;
 };
 #pragma pack(pop)
 

@@ -1,13 +1,13 @@
 #include "ed_voice.h"
 #include "SoraVoice.h"
-#include "Log.h"
+#include "InitParam.h"
 
 SVDECL void SVCALL Init(void *p)
 {
 	InitParam* ip = (InitParam*)p;
 	if (!ip || ip->sv) return;
 
-	ip->sv = new SoraVoice(ip);
+	ip->sv = SoraVoice::CreateInstance(ip);
 }
 
 SVDECL void SVCALL End(void *p)
@@ -15,7 +15,7 @@ SVDECL void SVCALL End(void *p)
 	InitParam* ip = (InitParam*)p;
 	if (!ip || !ip->sv) return;
 
-	delete ip->sv;
+	SoraVoice::DestoryInstance((SoraVoice*)ip->sv);
 	ip->sv = nullptr;
 }
 
