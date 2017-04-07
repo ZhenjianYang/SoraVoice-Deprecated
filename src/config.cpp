@@ -83,7 +83,12 @@ bool Config::LoadConfig(const char * configFn)
 	}
 
 	GET_VALUE_MAXFIX(Volume, kv);
-	GET_VALUE_BOOLFIX(AutoPlay, kv);
+
+	GET_VALUE_MAXFIX(AutoPlay, kv);
+	GET_VALUE(WaitTimePerChar, kv);
+	GET_VALUE(WaitTimeDialog, kv);
+	GET_VALUE(WaitTimeDialogVoice, kv);
+
 	GET_VALUE_BOOLFIX(SkipVoice, kv);
 	GET_VALUE_BOOLFIX(DisableDialogSE, kv);
 	GET_VALUE_BOOLFIX(DisableDududu, kv);
@@ -104,15 +109,22 @@ bool Config::SaveConfig(const char * configFn) const
 	if (!ofs) return false;
 	
 	OUTPUT_VALUE(Volume, ofs);
+	ofs << '\n';
+
 	OUTPUT_VALUE(AutoPlay, ofs);
+	OUTPUT_VALUE(WaitTimePerChar, ofs);
+	OUTPUT_VALUE(WaitTimeDialog, ofs);
+	OUTPUT_VALUE(WaitTimeDialogVoice, ofs);
+	ofs << '\n';
+
 	OUTPUT_VALUE(SkipVoice, ofs);
 	OUTPUT_VALUE(DisableDialogSE, ofs);
 	OUTPUT_VALUE(DisableDududu, ofs);
-
 	OUTPUT_VALUE(ShowInfo, ofs);
+	ofs << '\n';
+
 	OUTPUT_VALUE(FontName, ofs);
 	OUTPUT_VALUE_WFMT(FontColor, ofs, "0x" << setfill('0') << setw(8) << setiosflags(ios::right | ios::uppercase) << hex);
-
 	ofs << '\n';
 
 	OUTPUT_VALUE(EnableKeys, ofs);
@@ -125,7 +137,12 @@ bool Config::SaveConfig(const char * configFn) const
 void Config::load_default(bool all)
 {
 	SET_DEFAULT(Volume);
+
 	SET_DEFAULT(AutoPlay);
+	SET_DEFAULT(WaitTimePerChar);
+	SET_DEFAULT(WaitTimeDialog);
+	SET_DEFAULT(WaitTimeDialogVoice);
+
 	SET_DEFAULT(SkipVoice);
 	SET_DEFAULT(DisableDialogSE);
 	SET_DEFAULT(DisableDududu);

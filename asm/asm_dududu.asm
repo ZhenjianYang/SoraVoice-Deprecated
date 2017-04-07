@@ -11,6 +11,15 @@
 [BITS 32]
 section dududu vstart=vs_dududu
 
+	mov     eax, dword [ptr_count_ch]
+	inc     eax
+	mov     dword [ptr_count_ch], eax
+	cmp     eax, 1
+	jne     disabledududu
+	mov     eax, dword [ptr_now]
+	mov     dword [ptr_time_textbeg], eax
+
+disabledududu:
 	cmp     byte [ptr_flag_disable_du], 0
 	je      short return
 	

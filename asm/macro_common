@@ -9,6 +9,8 @@
 %define ptr_flag_ended			(ptr_initparam + 0x04)
 %define ptr_flag_playing		(ptr_initparam + 0x05)
 
+%define ptr_flag_wait			(ptr_initparam + 0x0C)
+
 %define ptr_flag_disable_du		(ptr_initparam + 0x10)
 %define ptr_flag_disable_dlgse	(ptr_initparam + 0x11)
 %define ptr_flag_skipvoice		(ptr_initparam + 0x12)
@@ -16,6 +18,10 @@
 
 %define ptr_p_keys				(ptr_initparam + 0x4C)
 %define ptr_keys_old			(ptr_initparam + 0x50)
+
+%define ptr_now					(ptr_initparam + 0x5C)
+%define ptr_time_textbeg		(ptr_initparam + 0x60)
+%define ptr_count_ch			(ptr_initparam + 0x64)
 
 %define ptr_tmp (ptr_initparam + 0x80)
 
@@ -39,5 +45,5 @@
 %define vs_dududu		(addr_codebase + 0x80)
 %define vs_dlgse		(addr_codebase + 0x100)
 %define vs_input		(addr_codebase + 0x1C0)
-
+%define vs_wait		(addr_codebase + 0x280)
 

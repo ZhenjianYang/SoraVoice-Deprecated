@@ -1,16 +1,27 @@
 #pragma once
 
-#define _CMT_Volume				"#音量，范围为0~100，默认为100(最大值)"
-#define _CMT_AutoPlay			"#自动播放，仅在有语音时有效。默认为1(启用此项功能)"
+#define _CMT_Volume					"#音量，范围为0~100，默认为100(最大值)"
+
+#define _CMT_AutoPlay				"#自动播放。模式罗列如下：\n"\
+									";    0    关闭\n"\
+									";    1    仅在有语音时启用自动播放\n"\
+									";    2    对所有字幕启用自动播放\n"\
+									";接下来的3个参数为设置自动播放时间的选项。\n"\
+									"#默认为2";
+#define _CMT_WaitTimePerChar		"#无语音时，为每个字分配的等待时间。默认为60(单位毫秒，下同)。";
+#define _CMT_WaitTimeDialog			"#无语音时，为对话框分配的额外等待时间。默认为800。\n"\
+									"#则在默认配置下，一个20字的对话框的等待时间为800+20x60=2000毫秒";
+#define _CMT_WaitTimeDialogVoice	"#有语音时，语音播放结束后额外的等待时间。默认为100"
+
 #define _CMT_SkipVoice			"#对话框关闭时，终止语音。默认为1(启用此项功能)"
 #define _CMT_DisableDialogSE	"#在语音播放时，禁用对话框关闭(切换)时的音效。默认为1(启用此项功能)"
 #define _CMT_DisableDududu		"#在语音播放时，禁用文字显示的嘟嘟声。默认为1(启用此项功能)"
-
 #define _CMT_ShowInfo	"#显示信息。模式罗列如下：\n"\
 						";    0    关闭，不显示信息\n"\
 						";    1    配置变化时，显示信息\n"\
 						";    2    配置变化时，显示信息；同时在播放语音的情况下显示自动播放的符号(若启用了自动播放)\n"\
 						"#默认为1"
+
 #define _CMT_FontName	"#信息字体名(非路径)。必须为已在系统中安装的字体。默认为黑体"
 #define _CMT_FontColor	"#信息字体颜色。格式为0xAARRGGBB。默认为0xFFFFFFFF(白色)"
 
@@ -49,12 +60,26 @@
 
 struct Config
 {
+	static constexpr int ShowInfo_Off = 0;
+	static constexpr int ShowInfo_On = 1;
+	static constexpr int ShowInfo_WithMark = 2;
+
+	static constexpr int AutoPlay_Off = 0;
+	static constexpr int AutoPlay_Voice = 1;
+	static constexpr int AutoPlay_ALL = 2;
+
 	DEFINE_CONFIG_WMAX(Volume, 100, 100);
-	DEFINE_CONFIG(AutoPlay, 1);
+
+	DEFINE_CONFIG_WMAX(AutoPlay, AutoPlay_ALL, 2);
+	DEFINE_CONFIG(WaitTimePerChar, 60);
+	DEFINE_CONFIG(WaitTimeDialog, 800);
+	DEFINE_CONFIG(WaitTimeDialogVoice, 100);
+
 	DEFINE_CONFIG(SkipVoice, 1);
 	DEFINE_CONFIG(DisableDialogSE, 1);
 	DEFINE_CONFIG(DisableDududu, 1);
-	DEFINE_CONFIG_WMAX(ShowInfo, 1, 2);
+	DEFINE_CONFIG_WMAX(ShowInfo, ShowInfo_On, 2);
+
 	DEFINE_STRCONFIG(FontName, "黑体", 31);
 	DEFINE_CONFIG(FontColor, 0xFFFFFFFF);
 

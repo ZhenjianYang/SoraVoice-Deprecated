@@ -16,7 +16,10 @@ struct InitParam
 		byte mute;
 		byte showing;
 
-		byte reserved_status[4];
+	//0x0C
+		byte wait;
+		byte waitv;
+		byte reserved_status[2];
 	} status;
 
 	//0x10
@@ -26,6 +29,7 @@ struct InitParam
 		byte skipVoice;
 		byte autoPlay;
 
+	//0x14
 		byte reserved_order[4];
 	} order;
 
@@ -54,8 +58,13 @@ struct InitParam
 	//0x50
 	char keysOld[8];
 	//0x58
-	unsigned now;
 	unsigned recent;
+	//0x5C
+	unsigned now;
+	//0x60
+	unsigned time_textbeg;
+	//0x64
+	unsigned count_ch;
 };
 #pragma pack(pop)
 

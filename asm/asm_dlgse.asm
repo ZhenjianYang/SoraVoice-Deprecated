@@ -11,9 +11,6 @@
 [BITS 32]
 section dlgse vstart=vs_dlgse
 
-	cmp     byte [ptr_flag_skipvoice], 0
-	je      short callend
-
 	push    ptr_initparam
 	call    dword [ptr_voice_stop]
 

@@ -63,7 +63,7 @@ constexpr double TEXT_SHADOW_POS_RATE = 0.08;
 constexpr unsigned INFO_TIME = 2000;
 constexpr unsigned HELLO_TIME = 6000;
 constexpr unsigned INFINITY_TIME = 0;
-constexpr unsigned REMAIN_TIME = 3000;
+constexpr unsigned REMAIN_TIME = 1000;
 constexpr unsigned SHADOW_COLOR = 0x40404040;
 
 constexpr unsigned TIME_MAX = 0xFFFFFFFF;
@@ -124,8 +124,6 @@ private:
 			TimePoint newNow = Clock::now();
 			recent = now;
 			now = (unsigned)std::chrono::duration_cast<TimeUnit>(newNow - base).count();
-
-			LOG("Current time : %d", now);
 		}
 
 		Time(InitParam *ip) : now(ip->now), recent(ip->recent), base(Clock::now()) {
@@ -200,7 +198,7 @@ private:
 		HANDLE hEventEnd;
 		std::thread th_read;
 		std::mutex mt_play;
-		std::mutex mt_text;
+		std::mutex mt_autoplay;
 		int playEnd;
 		Thread(InitParam* ip)
 			:playEnd(-1), hEventEnd(NULL) {
@@ -375,6 +373,23 @@ private:
 		}
 	} _d3d;
 
+	struct AutoPlay {
+		const unsigned &now;
+
+		unsigned &count_ch;
+		byte &wait;
+		unsigned &time_textbeg;
+		unsigned time_autoplay;
+		
+		byte &waitv;
+		unsigned time_autoplayv;
+		
+		AutoPlay(InitParam* ip)
+		:now(ip->now), count_ch(ip->count_ch), wait(ip->status.wait), time_textbeg(ip->time_textbeg),
+		time_autoplay(0), waitv(ip->status.waitv), time_autoplayv(0){
+		}
+	} _aup;
+
 	Config* const config = &_config;
 	Ogg* const ogg = &_ogg;
 	DSD* const dsd = &_dsd;
@@ -382,6 +397,7 @@ private:
 	IPT* const ipt = &_ipt;
 	D3D* const d3d = &_d3d;
 	Time* const tm = &_tm;
+	AutoPlay* const aup = &_aup;
 
 private:
 	void init();
@@ -394,6 +410,14 @@ private:
 
 	SoraVoiceImpl(InitParam* initParam);
 	~SoraVoiceImpl() override { this->destory(); }
+
+private:
+	bool isAutoPlaying() {
+		return aup->count_ch
+			&& (config->AutoPlay == Config::AutoPlay_ALL
+				|| config->AutoPlay == Config::AutoPlay_Voice && (status->playing || aup->waitv));
+	}
+
 public:
 	void Play(const char* v) override;
 	void Stop() override;
@@ -411,7 +435,8 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	:ended(initParam->status.ended), status(&initParam->status), order(&initParam->order),
 	_config(CONFIG_FILE),
 	_tm(initParam), _ogg(initParam), _dsd(initParam),
-	_th(initParam), _ipt(initParam), _d3d(initParam)
+	_th(initParam), _ipt(initParam), _d3d(initParam),
+	_aup(initParam)
 {
 	static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
 	static_assert(sizeof(initParam->keysOld) >= KEY_MAX - KEY_MIN + 1, "Size of keys old is not enough");
@@ -438,6 +463,9 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	LOG("Config loaded");
 	LOG("config.Volume = %d", config->Volume);
 	LOG("config.AutoPlay = %d", config->AutoPlay);
+	LOG("config.WaitTimePerChar = %d", config->WaitTimePerChar);
+	LOG("config.WaitTimeDialog = %d", config->WaitTimeDialog);
+	LOG("config.WaitTimeDialogVoice = %d", config->WaitTimeDialogVoice);
 	LOG("config.SkipVoice = %d", config->SkipVoice);
 	LOG("config.DisableDududu = %d", config->DisableDududu);
 	LOG("config.DisableDialogSE = %d", config->DisableDialogSE);
@@ -505,11 +533,24 @@ void SoraVoiceImpl::Play(const char* t)
 
 void SoraVoiceImpl::Stop()
 {
-	LOG("Force stopping is called.");
+	LOG("Stop is called.");
 
-	th->mt_play.lock();
-	stopPlaying();
-	th->mt_play.unlock();
+	if (config->SkipVoice) {
+		th->mt_play.lock();
+		stopPlaying();
+		th->mt_play.unlock();
+	}
+	
+	if (config->ShowInfo == Config::ShowInfo_WithMark) {
+		d3d->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
+	}
+
+	aup->count_ch = 0;
+	aup->time_textbeg = 0;
+	aup->time_autoplay = 0;
+	aup->wait = 0;
+	aup->waitv = 0;
+	aup->time_autoplayv = 0;
 }
 
 void SoraVoiceImpl::Input()
@@ -544,17 +585,16 @@ void SoraVoiceImpl::Input()
 			}
 			LOG("Reset config");
 
-			th->mt_text.lock();
 			if (config->ShowInfo) {
 				//inf->addText(InfoType::ConfigReset, INFO_TIME, Message::Reset);
 				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
-				d3d->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::Switch[config->AutoPlay]);
+				d3d->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
 				d3d->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 				d3d->addInfo(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
 				d3d->addInfo(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
 				d3d->addInfo(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
 
-				if (config->AutoPlay && config->ShowInfo == 2 && status->playing) {
+				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
 					d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
 				}
 				else {
@@ -564,7 +604,6 @@ void SoraVoiceImpl::Input()
 			else {
 				d3d->removeInfo(InfoType::All);
 			}
-			th->mt_text.unlock();
 		}
 	} //if(KEY_VOLUME_UP & KEY_VOLUME_DOWN)
 	else {
@@ -580,11 +619,9 @@ void SoraVoiceImpl::Input()
 			needsetvolume = volume_old != config->Volume;
 			needsave = needsetvolume;
 
-			th->mt_text.lock();
 			if (config->ShowInfo) {
 				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
 			}
-			th->mt_text.unlock();
 
 			LOG("Set Volume : %d", config->Volume);
 		} //if(KEY_VOLUME_UP)
@@ -596,11 +633,9 @@ void SoraVoiceImpl::Input()
 			needsetvolume = volume_old != config->Volume;
 			needsave = needsetvolume;
 
-			th->mt_text.lock();
 			if (config->ShowInfo) {
 				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
 			}
-			th->mt_text.unlock();
 
 			LOG("Set Volume : %d", config->Volume);
 		}//if(KEY_VOLUME_DOWN)
@@ -608,33 +643,29 @@ void SoraVoiceImpl::Input()
 			status->mute = 1 - status->mute;
 			needsetvolume = true;
 
-			th->mt_text.lock();
 			if (config->ShowInfo && status->mute) {
 				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Mute);
 			}
 			else {
 				d3d->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
 			}
-			th->mt_text.unlock();
 
 			LOG("Set mute : %d", status->mute);
 		}//if(KEY_VOLUME_0)
 
 		if (keys[KEY_AUTOPLAY] && !last[KEY_AUTOPLAY - KEY_MIN]) {
-			config->AutoPlay = 1 - config->AutoPlay;
+			(config->AutoPlay += 1) %= (Config::MAX_AutoPlay + 1);
 			needsave = true;
 
-			th->mt_text.lock();
 			if (config->ShowInfo) {
-				d3d->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::Switch[config->AutoPlay]);
-				if (config->AutoPlay && config->ShowInfo == 2 && status->playing) {
+				d3d->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
 					d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
 				}
 				else {
 					d3d->removeInfo(InfoType::AutoPlayMark);
 				}
 			}
-			th->mt_text.unlock();
 
 			LOG("Set AutoPlay : %d", config->AutoPlay);
 		}//if(KEY_AUTOPLAY)
@@ -645,12 +676,10 @@ void SoraVoiceImpl::Input()
 			if (status->playing) {
 				order->skipVoice = config->SkipVoice;
 			}
-
-			th->mt_text.lock();
+;
 			if (config->ShowInfo) {
 				d3d->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 			}
-			th->mt_text.unlock();
 
 			LOG("Set SkipVoice : %d", config->SkipVoice);
 		}//if(KEY_SKIPVOICE)
@@ -662,11 +691,9 @@ void SoraVoiceImpl::Input()
 			}
 			needsave = true;
 
-			th->mt_text.lock();
 			if (config->ShowInfo) {
 				d3d->addInfo(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
 			}
-			th->mt_text.unlock();
 
 			LOG("Set DisableDialogSE : %d", config->DisableDialogSE);
 		}//if(KEY_DLGSE)
@@ -678,11 +705,9 @@ void SoraVoiceImpl::Input()
 			}
 			needsave = true;
 
-			th->mt_text.lock();
 			if (config->ShowInfo) {
 				d3d->addInfo(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
 			}
-			th->mt_text.unlock();
 
 			LOG("Set DisableDududu : %d", config->DisableDududu);
 		}//if(KEY_DU)
@@ -691,7 +716,6 @@ void SoraVoiceImpl::Input()
 			config->ShowInfo = (config->ShowInfo + 1) % (Config::MAX_ShowInfo + 1);
 			needsave = true;
 
-			th->mt_text.lock();
 			if (config->ShowInfo) {
 				if (config->ShowInfo == 2 && config->AutoPlay && status->playing) {
 					d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
@@ -701,7 +725,6 @@ void SoraVoiceImpl::Input()
 				d3d->removeInfo(InfoType::All);
 			}
 			d3d->addInfo(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
-			th->mt_text.unlock();
 
 			LOG("Set ShowInfo : %d", config->ShowInfo);
 		}//if(KEY_INFO)
@@ -731,6 +754,50 @@ void SoraVoiceImpl::Show()
 	if (status->showing) {
 		d3d->drawInfos();
 		d3d->removeDeadInfos();
+	}
+
+	if (aup->count_ch == 1) {
+		if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
+			d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+		}
+	}
+
+	if (!status->playing) {
+		if (aup->wait && !aup->time_autoplay) {
+			aup->time_autoplay = aup->time_textbeg 
+				+ aup->count_ch * config->WaitTimePerChar + config->WaitTimeDialog;
+		}
+
+		if (aup->waitv && aup->time_autoplayv <= aup->now
+			|| !aup->waitv && aup->wait && aup->time_autoplay <= aup->now) {
+			LOG("now = %d", aup->now);
+			LOG("waitv = %d", aup->waitv);
+			LOG("autoplayv = %d", aup->time_autoplayv);
+
+			LOG("wait = %d", aup->wait);
+			LOG("time_textbeg = %d", aup->time_textbeg);
+			LOG("cnt = %d", aup->count_ch);
+			LOG("autoplay = %d", aup->time_autoplay);
+
+			if (isAutoPlaying()) {
+				order->autoPlay = 1;
+
+				if (config->ShowInfo == Config::ShowInfo_WithMark) {
+					d3d->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
+				}
+
+				SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+
+				LOG("Auto play set.");
+			}
+
+			aup->count_ch = 0;
+			aup->wait = 0;
+			aup->time_autoplay = 0;
+			aup->time_textbeg = 0;
+			aup->waitv = 0;
+			aup->time_autoplayv = 0;
+		}
 	}
 }
 
@@ -821,11 +888,14 @@ void SoraVoiceImpl::threadReadData()
 				const int id = rst - WAIT_OBJECT_0;
 				if (id == playEnd) {
 					LOG("Voice end, stop!");
+					
+					aup->waitv = 1;
+					aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice;
+
+					LOG("now = %d", tm->now);
+					LOG("time_autoplayv = %d", aup->time_autoplayv);
+
 					stopPlaying();
-					if (config->AutoPlay) {
-						order->autoPlay = 1;
-						SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-					}
 				}
 				else {
 					const int buff_no = id / NUM_NOTIFY_PER_BUFF;
@@ -975,11 +1045,6 @@ void SoraVoiceImpl::playSoundFile()
 	if (config->DisableDududu) order->disableDududu = 1;
 	if (config->DisableDialogSE) order->disableDialogSE = 1;
 	if (config->SkipVoice) order->skipVoice = 1;
-	th->mt_text.lock();
-	if (config->AutoPlay && config->ShowInfo == 2) {
-		d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
-	}
-	th->mt_text.unlock();
 	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
 	th->mt_play.unlock();
 
@@ -1001,13 +1066,8 @@ void SoraVoiceImpl::stopPlaying()
 	order->skipVoice = 0;
 
 	ogg->ov_clear(&ogg->ovf);
-
-	th->mt_text.lock();
-	if (config->ShowInfo == 2) {
-		d3d->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
-	}
-	th->mt_text.unlock();
 }
+
 
 
 SoraVoice * SoraVoice::CreateInstance(InitParam * initParam)

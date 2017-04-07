@@ -68,6 +68,7 @@ const map<string, int> map_vs_roff = {
 	{ "dududu",0x80 },
 	{ "dlgse",0x100 },
 	{ "input",0x1C0 },
+	{ "wait",0x280 },
 };
 const int roff_base_ptr = 0x240;
 const int roff_base_vs = roff_base_ptr + 0xC0;
