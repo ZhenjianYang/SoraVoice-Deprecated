@@ -68,6 +68,7 @@ constexpr unsigned INFINITY_TIME = 0;
 constexpr unsigned REMAIN_TIME = 1000;
 
 constexpr unsigned TIME_PREC = 16;
+constexpr unsigned TIME_PRECV = 62;
 
 constexpr unsigned TIME_MAX = 0xFFFFFFFF;
 
@@ -893,7 +894,7 @@ void SoraVoiceImpl::threadReadData()
 					LOG("Voice end, stop!");
 					
 					aup->waitv = 1;
-					aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice - TIME_PREC / 2;
+					aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice - TIME_PRECV / 2;
 
 					LOG("now = %d", tm->now);
 					LOG("time_autoplayv = %d", aup->time_autoplayv);
