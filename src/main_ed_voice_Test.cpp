@@ -42,6 +42,9 @@ int main(int argc, char* argv[])
 	HWND hWnd = GetHwnd();
 	pDS->SetCooperativeLevel(hWnd, DSSCL_PRIORITY);
 
+	p.p_Hwnd = &hWnd;
+	p.p_d3dd = &p.p_Hwnd;
+
 	Init(&p);
 
 	string cmd;
