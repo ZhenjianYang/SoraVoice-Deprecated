@@ -12,7 +12,6 @@ for %%i in (fc sc 3rd) do (
 %nasm% -i%dir_asm%\ -o %dir_bin%\%%i_dududu -Dsora_%%i %dir_asm%\asm_dududu.asm
 %nasm% -i%dir_asm%\ -o %dir_bin%\%%i_dlgse -Dsora_%%i %dir_asm%\asm_dlgse.asm
 %nasm% -i%dir_asm%\ -o %dir_bin%\%%i_input -Dsora_%%i %dir_asm%\asm_input.asm
-%nasm% -i%dir_asm%\ -o %dir_bin%\%%i_wait -Dsora_%%i %dir_asm%\asm_wait.asm
 
-Importer_EXE %dir_new%\%%i_voice.exe  %dir_main%\%%i_main.exe -r zrep_%%i.txt -m %dir_asm%\macro_%%i -b %dir_bin%\%%i_text %dir_bin%\%%i_dududu %dir_bin%\%%i_dlgse %dir_bin%\%%i_input %dir_bin%\%%i_wait
+Importer_EXE %dir_new%\%%i_voice.exe  %dir_main%\%%i_main.exe -r zrep_%%i.txt -m %dir_asm%\macro_%%i -b %dir_bin%\%%i_text %dir_bin%\%%i_dududu %dir_bin%\%%i_dlgse %dir_bin%\%%i_input
 )

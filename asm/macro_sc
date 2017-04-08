@@ -4,8 +4,8 @@
 %define ptr_volume 0x00560490
 %define ptr_volume0 0x00560498
 
-%define addr_jmp_text 0x00498B54
-%define addr_jmpto_text 0x00498F2C
+%define addr_jae_text 0x00498B54
+%define addr_jaeto_text 0x00498F2C
 
 %define addr_call_dududu 0x0049A4AD
 %define addr_dududu 0x00469220

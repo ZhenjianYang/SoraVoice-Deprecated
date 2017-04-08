@@ -10,7 +10,7 @@ public:
 	virtual void Input() = 0;
 	virtual void Show() = 0;
 
-	virtual ~SoraVoice() = 0;
+	virtual ~SoraVoice() {};
 
 	static SoraVoice* CreateInstance(InitParam* initParam);
 	static void DestoryInstance(SoraVoice* sv);

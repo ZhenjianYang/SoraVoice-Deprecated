@@ -416,9 +416,9 @@ private:
 
 private:
 	bool isAutoPlaying() {
-		return aup->count_ch
-			&& (config->AutoPlay == Config::AutoPlay_ALL
-				|| config->AutoPlay == Config::AutoPlay_Voice && (status->playing || aup->waitv));
+		return aup->count_ch 
+			&& (config->AutoPlay && (status->playing || aup->waitv)
+				|| config->AutoPlay == Config::AutoPlay_ALL);
 	}
 
 public:
@@ -538,22 +538,21 @@ void SoraVoiceImpl::Stop()
 {
 	LOG("Stop is called.");
 
+	if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
+		d3d->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
+	}
+
 	if (config->SkipVoice) {
 		th->mt_play.lock();
 		stopPlaying();
 		th->mt_play.unlock();
 	}
 	
-	if (config->ShowInfo == Config::ShowInfo_WithMark) {
-		d3d->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
-	}
-
-	aup->count_ch = 0;
-	aup->time_textbeg = 0;
-	aup->time_autoplay = 0;
+	status->code5 = 0;
 	aup->wait = 0;
 	aup->waitv = 0;
-	aup->time_autoplayv = 0;
+	aup->count_ch = 0;
+	aup->time_autoplay = 0;
 }
 
 void SoraVoiceImpl::Input()
@@ -783,23 +782,22 @@ void SoraVoiceImpl::Show()
 			LOG("autoplay = %d", aup->time_autoplay);
 
 			if (isAutoPlaying()) {
-				order->autoPlay = 1;
+				if (!status->code5) {
+					order->autoPlay = 1;
+					LOG("Auto play set.");
+
+					SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+				}
 
 				if (config->ShowInfo == Config::ShowInfo_WithMark) {
 					d3d->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
 				}
-
-				SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-
-				LOG("Auto play set.");
 			}
 
 			aup->count_ch = 0;
 			aup->wait = 0;
-			aup->time_autoplay = 0;
-			aup->time_textbeg = 0;
 			aup->waitv = 0;
-			aup->time_autoplayv = 0;
+			aup->time_autoplay = 0;
 		}
 	}
 }
@@ -1051,6 +1049,12 @@ void SoraVoiceImpl::playSoundFile()
 	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
 	th->mt_play.unlock();
 
+	status->code5 = 0;
+	aup->wait = 0;
+	aup->waitv = 0;
+	aup->count_ch = 0;
+	aup->time_autoplay = 0;
+
 	LOG("Playing...");
 }
 
@@ -1083,4 +1087,3 @@ void SoraVoice::DestoryInstance(SoraVoice * sv)
 	delete sv;
 }
 
-SoraVoice::~SoraVoice() {}

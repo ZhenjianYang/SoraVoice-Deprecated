@@ -45,11 +45,12 @@ const string str_addr_jmp = "addr_jmp_";
 const string str_addr_jmpto = "addr_jmpto_";
 const string str_addr_call = "addr_call_";
 const string str_addr_callto = "addr_";
-//const string str_addr_callapi = "addr_callapi_";
-//const string str_addr_api = "addr_api_";
+const string str_addr_jae = "addr_jae_";
+const string str_addr_jaeto = "addr_jaeto_";
 
 const byte opjmp = 0xE9;
 const byte opcall = 0xE8;
+const byte opnop = 0x90;
 
 const map<string, int> map_ptr_roff = {
 	{"p_ov_open_callbacks",0x18 },
@@ -67,8 +68,7 @@ const map<string, int> map_vs_roff = {
 	{ "text",0x00 },
 	{ "dududu",0x80 },
 	{ "dlgse",0x100 },
-	{ "input",0x1C0 },
-	{ "wait",0x280 },
+	{ "input",0x1C0 }
 };
 const int roff_base_ptr = 0x240;
 const int roff_base_vs = roff_base_ptr + 0xC0;
@@ -349,10 +349,6 @@ int main(int argc, char* argv[])
 				int len_jmp = rva_jmpto - rva_jmp - 5;
 				int off_jmp = GetOffFromRVA(rva_jmp);
 
-				if (buff[off_jmp] != opjmp && buff[off_jmp] != opcall) {
-					off_jmp++;
-					len_jmp--;
-				}
 				PUT(len_jmp, buff_new + off_jmp + 1);
 			}
 			else if (it.first.find(str_addr_call) == 0) {
@@ -369,6 +365,22 @@ int main(int argc, char* argv[])
 
 				PUT(code, buff_new + off_call);
 				PUT(len_call, buff_new + off_call + 1);
+			}
+			else if (it.first.find(str_addr_jae) == 0) {
+				string sn = it.first.substr(1 + it.first.rfind('_'));
+				auto it2 = map_vs_roff.find(sn);
+				if (it2 == map_vs_roff.end()) continue;
+
+				int rva_jae = it.second - Base;
+				int rva_jaeto = it2->second + roff_base_vs + si_new.vAddr;
+
+				int len_jmp = rva_jaeto - rva_jae - 5;
+				int off_jmp = GetOffFromRVA(rva_jae);
+
+				byte code = opjmp, code2 = opnop;
+				PUT(code, buff_new + off_jmp);
+				PUT(len_jmp, buff_new + off_jmp + 1);
+				PUT(code2, buff_new + off_jmp + 5);
 			}
 		}
 

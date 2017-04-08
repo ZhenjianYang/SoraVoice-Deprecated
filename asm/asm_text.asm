@@ -10,6 +10,8 @@
 
 [BITS 32]
 section text vstart=vs_text
+	jb      jcode
+
 	push    eax
 
 	mov     eax, edx 
@@ -37,4 +39,22 @@ loopend:
 
 return:
 	pop     eax
-	jmp     addr_jmpto_text
+	jmp     addr_jaeto_text
+
+jcode:
+	cmp     byte [edx], 5
+	jnz     jcode2
+	mov     byte [ptr_flag_code5], 1
+
+jcode2:
+	cmp     byte [edx], 2
+	jne     short returnb
+	cmp     dword [ptr_count_ch], 0
+	je      short returnb
+	mov     byte [ptr_flag_wait], 1
+
+returnb:
+	jmp     addr_jae_text + 6
+	
+	
+	

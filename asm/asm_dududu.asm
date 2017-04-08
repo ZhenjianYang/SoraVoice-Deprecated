@@ -10,14 +10,24 @@
 
 [BITS 32]
 section dududu vstart=vs_dududu
-
+	cmp     byte [ptr_flag_code5], 0
+	je      code5end
+	push    ptr_initparam
+	call    dword [ptr_voice_stop]
+	
+code5end:
+	cmp     dword [ptr_count_ch], 0
+	je      first
+	
 	mov     eax, dword [ptr_count_ch]
 	inc     eax
 	mov     dword [ptr_count_ch], eax
-	cmp     eax, 1
-	jne     disabledududu
+	jmp     disabledududu
+	
+first:
 	mov     eax, dword [ptr_now]
 	mov     dword [ptr_time_textbeg], eax
+	mov     dword [ptr_count_ch], 1
 
 disabledududu:
 	cmp     byte [ptr_flag_disable_du], 0

@@ -19,7 +19,8 @@ struct InitParam
 	//0x0C
 		byte wait;
 		byte waitv;
-		byte reserved_status[2];
+		byte code5;
+		byte reserved_status[1];
 	} status;
 
 	//0x10
