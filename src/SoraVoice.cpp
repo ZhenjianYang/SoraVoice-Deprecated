@@ -60,11 +60,14 @@ constexpr double BOUND_WIDTH_RATE = 0.5;
 constexpr double LINE_SPACE_RATE = 0.15;
 constexpr double TEXT_SHADOW_POS_RATE = 0.08;
 
+constexpr unsigned SHADOW_COLOR = 0x40404040;
+
 constexpr unsigned INFO_TIME = 2000;
 constexpr unsigned HELLO_TIME = 6000;
 constexpr unsigned INFINITY_TIME = 0;
 constexpr unsigned REMAIN_TIME = 1000;
-constexpr unsigned SHADOW_COLOR = 0x40404040;
+
+constexpr unsigned TIME_PREC = 16;
 
 constexpr unsigned TIME_MAX = 0xFFFFFFFF;
 
@@ -764,8 +767,8 @@ void SoraVoiceImpl::Show()
 
 	if (!status->playing) {
 		if (aup->wait && !aup->time_autoplay) {
-			aup->time_autoplay = aup->time_textbeg 
-				+ aup->count_ch * config->WaitTimePerChar + config->WaitTimeDialog;
+			aup->time_autoplay = aup->time_textbeg
+				+ aup->count_ch * config->WaitTimePerChar + config->WaitTimeDialog - TIME_PREC / 2;
 		}
 
 		if (aup->waitv && aup->time_autoplayv <= aup->now
@@ -890,7 +893,7 @@ void SoraVoiceImpl::threadReadData()
 					LOG("Voice end, stop!");
 					
 					aup->waitv = 1;
-					aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice;
+					aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice - TIME_PREC / 2;
 
 					LOG("now = %d", tm->now);
 					LOG("time_autoplayv = %d", aup->time_autoplayv);
