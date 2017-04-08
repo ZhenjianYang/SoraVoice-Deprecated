@@ -307,3 +307,5 @@ $RECYCLE.BIN/
 
 # zrep
 zrep_*.txt
+
+!extlibs/bin
