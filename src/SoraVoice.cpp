@@ -202,7 +202,6 @@ private:
 		HANDLE hEventEnd;
 		std::thread th_read;
 		std::mutex mt_play;
-		std::mutex mt_autoplay;
 		int playEnd;
 		Thread(InitParam* ip)
 			:playEnd(-1), hEventEnd(NULL) {
