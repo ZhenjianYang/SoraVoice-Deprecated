@@ -100,6 +100,8 @@ bool Config::LoadConfig(const char * configFn)
 	GET_VALUE_BOOLFIX(EnableKeys, kv);
 	GET_VALUE_BOOLFIX(SaveChange, kv);
 
+	if (AutoPlay) SkipVoice = 1;
+
 	return true;
 }
 

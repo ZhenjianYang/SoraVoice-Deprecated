@@ -674,6 +674,13 @@ void SoraVoiceImpl::Input()
 				}
 			}
 
+			if (config->AutoPlay && !config->SkipVoice) {
+				config->SkipVoice = 1;
+				if (config->ShowInfo) {
+					d3d->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+				}
+			}
+
 			LOG("Set AutoPlay : %d", config->AutoPlay);
 		}//if(KEY_AUTOPLAY)
 
@@ -686,6 +693,13 @@ void SoraVoiceImpl::Input()
 ;
 			if (config->ShowInfo) {
 				d3d->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+			}
+
+			if (!config->SkipVoice && config->AutoPlay) {
+				config->AutoPlay = 0;
+				if (config->ShowInfo) {
+					d3d->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+				}
 			}
 
 			LOG("Set SkipVoice : %d", config->SkipVoice);
