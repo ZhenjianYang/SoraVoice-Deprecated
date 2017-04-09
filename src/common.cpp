@@ -5,16 +5,24 @@
 
 using namespace std;
 
-void Sora::SearchFiles(const std::string & seachFileName, std::vector<std::string>& out_filesFound)
+void Sora::SearchFiles(const std::string & seachFileName, std::vector<std::string>& out_filesFound, bool nameOnly /* = true */)
 {
 	WIN32_FIND_DATA wfdp;
 	HANDLE hFindp = FindFirstFile(seachFileName.c_str(), &wfdp);
+	string father;
+	auto idx = seachFileName.find_last_of("\\/");
+	if (idx != string::npos) {
+		father = seachFileName.substr(0, idx + 1);
+	}
 	if (hFindp != INVALID_HANDLE_VALUE) {
 		do
 		{
 			if (!(wfdp.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			{
-				out_filesFound.push_back(wfdp.cFileName);
+				if(nameOnly)
+					out_filesFound.push_back(wfdp.cFileName);
+				else
+					out_filesFound.push_back(father + wfdp.cFileName);
 			}
 		} while (FindNextFile(hFindp, &wfdp));
 		FindClose(hFindp);

@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace Sora {
-	void SearchFiles(const std::string& seachFileName, std::vector<std::string>& out_foundFiles);
+	void SearchFiles(const std::string& seachFileName, std::vector<std::string>& out_foundFiles, bool nameOnly = true);
 	bool MakeDirectory(const std::string& dir);
 }
 
