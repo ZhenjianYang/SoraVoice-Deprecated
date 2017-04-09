@@ -16,8 +16,7 @@
 %define addr_jmp_input 0x00470CEA
 %define addr_jmpto_input 0x00470A70
 
-%define addr_jmp_wait 0x00537D45
-%define addr_jmpto_wait 0x00537BBA
+%define addr_clesi_scode 0x00477C94
 
 %define p_ov_open_callbacks		0x02CA74BC
 %define p_ov_info				0x02CA71A8

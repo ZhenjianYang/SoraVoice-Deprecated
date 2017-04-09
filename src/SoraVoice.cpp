@@ -72,6 +72,11 @@ constexpr unsigned TIME_PRECV = 62;
 
 constexpr unsigned TIME_MAX = 0xFFFFFFFF;
 
+constexpr byte SCODE_TEXT = 0x54;
+constexpr byte SCODE_SAY  = 0x5B;
+constexpr byte SCODE_TALK = 0x5C;
+constexpr byte SCODE_MENU = 0x5D;
+
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
 using TimeUnit = std::chrono::milliseconds;
@@ -765,7 +770,18 @@ void SoraVoiceImpl::Show()
 	}
 
 	if (!status->playing) {
-		if (aup->wait && !aup->time_autoplay) {
+		if (aup->wait 
+			&& status->scode != SCODE_SAY && status->scode != SCODE_TALK && status->scode != SCODE_TEXT) {
+			aup->count_ch = 0;
+			aup->wait = 0;
+			aup->waitv = 0;
+			aup->time_autoplay = 0;
+
+			if (config->ShowInfo == Config::ShowInfo_WithMark) {
+				d3d->removeInfo(InfoType::AutoPlayMark);
+			}
+		}
+		else if (aup->wait && !aup->time_autoplay) {
 			aup->time_autoplay = aup->time_textbeg
 				+ aup->count_ch * config->WaitTimePerChar + config->WaitTimeDialog - TIME_PREC / 2;
 		}

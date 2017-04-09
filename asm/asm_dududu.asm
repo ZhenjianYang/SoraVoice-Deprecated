@@ -16,6 +16,15 @@ section dududu vstart=vs_dududu
 	call    dword [ptr_voice_stop]
 	
 code5end:
+	cmp     byte [ptr_flag_scode], SCODE_TEXT
+	je      count
+	cmp     byte [ptr_flag_scode], SCODE_SAY
+	je      count
+	cmp     byte [ptr_flag_scode], SCODE_TALK
+	je      count
+	jmp     disabledududu
+	
+count:
 	cmp     dword [ptr_count_ch], 0
 	je      first
 	

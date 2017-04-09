@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <algorithm>
 
+#include "common.h"
+
 using namespace std;
 using byte = unsigned char;
 
@@ -47,6 +49,7 @@ const string str_addr_call = "addr_call_";
 const string str_addr_callto = "addr_";
 const string str_addr_jae = "addr_jae_";
 const string str_addr_jaeto = "addr_jaeto_";
+const string str_addr_clesi = "addr_clesi_";
 
 const byte opjmp = 0xE9;
 const byte opcall = 0xE8;
@@ -65,10 +68,11 @@ const map<string, int> map_ptr_roff = {
 };
 
 const map<string, int> map_vs_roff = {
-	{ "text",0x00 },
-	{ "dududu",0x80 },
-	{ "dlgse",0x100 },
-	{ "input",0x1C0 }
+	{ "text",0x000 },
+	{ "dududu",0x100 },
+	{ "dlgse",0x200 },
+	{ "input",0x300 },
+	{ "scode",0x400 }
 };
 const int roff_base_ptr = 0x240;
 const int roff_base_vs = roff_base_ptr + 0xC0;
@@ -366,6 +370,21 @@ int main(int argc, char* argv[])
 				PUT(code, buff_new + off_call);
 				PUT(len_call, buff_new + off_call + 1);
 			}
+			else if (it.first.find(str_addr_clesi) == 0) {
+				string sn = it.first.substr(str_addr_clesi.size());
+				auto it2 = map_vs_roff.find(sn);
+				if (it2 == map_vs_roff.end()) continue;
+
+				int rva_call = it.second - Base;
+				int rva_callto = it2->second + roff_base_vs + si_new.vAddr;
+
+				int len_call = rva_callto - rva_call - 5;
+				int off_call = GetOffFromRVA(rva_call);
+				byte code = opjmp;
+
+				PUT(code, buff_new + off_call);
+				PUT(len_call, buff_new + off_call + 1);
+			}
 			else if (it.first.find(str_addr_jae) == 0) {
 				string sn = it.first.substr(1 + it.first.rfind('_'));
 				auto it2 = map_vs_roff.find(sn);
@@ -396,8 +415,12 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if (!path_bins.empty()) {
-		for (const auto& path_bin : path_bins) {
+	vector<string> path_bins_found;
+	for (const auto& path_bin : path_bins) {
+		Sora::SearchFiles(path_bin, path_bins_found, false);
+	}
+	if (!path_bins_found.empty()) {
+		for (const auto& path_bin : path_bins_found) {
 			string name_bin = path_bin.substr(path_bin.rfind('\\') + 1);
 			
 			for (const auto& vs_roff : map_vs_roff) {

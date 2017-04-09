@@ -1,13 +1,18 @@
-set path=.\nasm
+set nasm=nasm\nasm.exe
+set dir_asm=.
+set dir_bin=bin
 
-set out=..\bin\asm
-md %out%
+md %dir_bin%
+
+setlocal enabledelayedexpansion
 
 for %%i in (fc sc 3rd) do (
-nasm -o %out%\%%i_text -Dsora_%%i asm_text.asm
-nasm -o %out%\%%i_dududu -Dsora_%%i asm_dududu.asm
-nasm -o %out%\%%i_dlgse -Dsora_%%i asm_dlgse.asm
-nasm -o %out%\%%i_input -Dsora_%%i asm_input.asm
+
+for %%j in (%dir_asm%\*.asm) do (
+set p=%%~nj
+%nasm% -i%dir_asm%\ -o %dir_bin%\%%i_!p:asm_=! -Dsora_%%i %%j
+)
+
 )
 
 

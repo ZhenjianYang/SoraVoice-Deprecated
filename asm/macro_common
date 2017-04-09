@@ -2,7 +2,7 @@
 %define ptr_impaddr_table (addr_voice + 0x170)
 
 %define ptr_initparam (addr_voice + 0x240)
-%define addr_codebase (ptr_initparam + 0xC0)
+%define addr_codebase (addr_voice + 0x300)
 
 %define ptr_sv					ptr_initparam
 
@@ -11,6 +11,7 @@
 
 %define ptr_flag_wait			(ptr_initparam + 0x0C)
 %define ptr_flag_code5			(ptr_initparam + 0x0E)
+%define ptr_flag_scode			(ptr_initparam + 0x0F)
 
 %define ptr_flag_disable_du		(ptr_initparam + 0x10)
 %define ptr_flag_disable_dlgse	(ptr_initparam + 0x11)
@@ -41,10 +42,16 @@
 %define dik_beg		dik_5
 %define dik_end		dik_equal
 
+%define SCODE_TEXT   0x54
+%define SCODE_SAY    0x5B
+%define SCODE_TALK   0x5C
+%define SCODE_MENU   0x5D
+
 %define dik_press	0x80
 
-%define vs_text			(addr_codebase + 0x00)
-%define vs_dududu		(addr_codebase + 0x80)
-%define vs_dlgse		(addr_codebase + 0x100)
-%define vs_input		(addr_codebase + 0x1C0)
+%define vs_text			(addr_codebase + 0x000)
+%define vs_dududu		(addr_codebase + 0x100)
+%define vs_dlgse		(addr_codebase + 0x200)
+%define vs_input		(addr_codebase + 0x300)
+%define vs_scode		(addr_codebase + 0x400)
 
