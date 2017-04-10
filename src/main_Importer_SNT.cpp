@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 #define BUFF_LEN 7
 	constexpr int buff_len = BUFF_LEN;
 	static_assert(buff_len >= MAX_VOICEID_LEN_NEED_MAPPING + 1, "buff_len not enougt");
-	char buff_vid[buff_len];
+	char buff_vid[buff_len + 1];
 
 	for (int vid_len = MAX_VOICEID_LEN_NEED_MAPPING; vid_len > 0; vid_len--) {
 		for (int i = VoiceIdAdjustAdder[vid_len]; i < VoiceIdAdjustAdder[vid_len - 1] && i < NUM_MAPPING; i++) {
