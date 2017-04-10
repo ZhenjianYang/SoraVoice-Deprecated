@@ -64,7 +64,7 @@ void _log_empty_line();
 #define LOG_DELPARAM(_param)
 #define LOG_OPEN
 #define LOG_OPEN_WITHPARAM(_param)
-#define LOG_CLOSE _log_close()
+#define LOG_CLOSE
 
 #define LOG_INFO(format, ...)
 #define LOG_DEBUG(format, ...)

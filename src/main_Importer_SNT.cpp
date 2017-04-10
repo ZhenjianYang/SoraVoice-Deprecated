@@ -123,14 +123,19 @@ int main(int argc, char* argv[])
 	}
 
 	map<string, string> map_vid;
-	char format_vid[10], buff_vid[MAX_VOICEID_LEN_NEED_MAPPING + 1];
-	sprintf(format_vid, "%%0%dd", MAX_VOICEID_LEN_NEED_MAPPING);
+#define BUFF_LEN 7
+	constexpr int buff_len = BUFF_LEN;
+	static_assert(buff_len >= MAX_VOICEID_LEN_NEED_MAPPING + 1, "buff_len not enougt");
+	char buff_vid[buff_len];
 
 	for (int vid_len = MAX_VOICEID_LEN_NEED_MAPPING; vid_len > 0; vid_len--) {
 		for (int i = VoiceIdAdjustAdder[vid_len]; i < VoiceIdAdjustAdder[vid_len - 1] && i < NUM_MAPPING; i++) {
 			if (VoiceIdMapping[i][0]) {
-				sprintf(buff_vid, format_vid, i - VoiceIdAdjustAdder[vid_len]);
-				map_vid[VoiceIdMapping[i]] = buff_vid + MAX_VOICEID_LEN_NEED_MAPPING - vid_len;
+				sprintf(buff_vid, "%07d", i - VoiceIdAdjustAdder[vid_len]);
+				auto rst = map_vid.insert({ VoiceIdMapping[i], buff_vid + buff_len - vid_len });
+				if (!rst.second) {
+					cout << "Duplicate voice ID: " << VoiceIdMapping[i] << endl;
+				}
 			}
 		}
 	}

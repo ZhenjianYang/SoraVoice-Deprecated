@@ -2,12 +2,12 @@
 #define MAX_VOICEID_LEN 10
 #define MAX_VOICEID_LEN_NEED_MAPPING (sizeof(VoiceIdAdjustAdder) / sizeof(*VoiceIdAdjustAdder) - 1)
 #define NUM_MAPPING (sizeof(VoiceIdMapping) / sizeof(*VoiceIdMapping))
-static const int VoiceIdAdjustAdder[] = { 111110, 111100, 111000, 110000, 100000, 000000};
-static const char VoiceIdMapping[][MAX_VOICEID_LEN + 1] = {
+#define NUM_IN_SUBFOLDER 500
+#define LEN_SUBFOLDER_NAME 3
+const int VoiceIdAdjustAdder[] = { 111110, 111100, 111000, 110000, 100000, 000000};
+const char VoiceIdMapping[][MAX_VOICEID_LEN + 1] = {
 "0010000001","0010000002","0010000003","0010000004","0010000005","0010000007","0010000010","0010000011",
-"0010000012",
-"0010000015",
-"0010000016",
+"0010000012","0010000015","0010000016",
 "0010000019",
 "0010000020",
 "0010000021",

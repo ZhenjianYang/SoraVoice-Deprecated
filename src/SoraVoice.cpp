@@ -18,14 +18,22 @@
 #include <memory>
 #include <list>
 #include <set>
+#include <map>
 
 const GUID IID_IDirectSoundNotify = { 0xb0210783, 0x89cd, 0x11d0, 0xaf, 0x8, 0x0, 0xa0, 0xc9, 0x25, 0xcd, 0x16 };
 
 constexpr char CONFIG_FILE[] = "ed_voice.ini";
-constexpr char VOICEFILE_PREFIX[] = "voice\\ch";
+constexpr char VOICEFILE_DIR[] = "voice\\";
+constexpr char VOICEFILE_PREFIX[] = "ch";
 constexpr char VOICEFILE_ATTR[] = ".ogg";
 
-constexpr int MAX_OGG_FILENAME_LEN = 25;
+constexpr int MAX_OGG_FILENAME_LEN = 30;
+
+constexpr int LEN_PREFIX = sizeof(VOICEFILE_DIR) - 1 + sizeof(VOICEFILE_PREFIX) - 1;
+constexpr int LEN_PREFIX_SUB = LEN_PREFIX + LEN_SUBFOLDER_NAME + 1;
+
+static_assert(LEN_PREFIX_SUB + MAX_VOICEID_LEN + sizeof(VOICEFILE_ATTR) - 1 <= MAX_OGG_FILENAME_LEN, "MAX_OGG_FILENAME_LEN not enought!");
+
 constexpr int NUM_AUDIO_BUF = 2;
 constexpr int NUM_NOTIFY_PER_BUFF = 8;
 constexpr int NUM_NOTIFY = (NUM_AUDIO_BUF * NUM_NOTIFY_PER_BUFF);
@@ -77,6 +85,8 @@ constexpr byte SCODE_SAY  = 0x5B;
 constexpr byte SCODE_TALK = 0x5C;
 constexpr byte SCODE_MENU = 0x5D;
 
+constexpr int INVALID_ADJUESTED_ID = -1;
+
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
 using TimeUnit = std::chrono::milliseconds;
@@ -115,6 +125,7 @@ private:
 	};
 	using PtrInfo = std::unique_ptr<Info>;
 	using PtrInfoList = std::list<PtrInfo>;
+	using MapVid = std::map<std::string, int>;
 
 	byte& ended;
 
@@ -122,6 +133,13 @@ private:
 	InitParam::Order* const order;
 
 	Config _config;
+
+	struct _LOG {
+		_LOG(InitParam* initParam) {
+			LOG_OPEN;
+		}
+		~_LOG() { LOG_CLOSE; }
+	} __log;
 
 	struct Time
 	{
@@ -147,16 +165,47 @@ private:
 		decltype(::ov_clear)* const ov_clear;
 
 		OggVorbis_File ovf;
-		char oggFn[MAX_OGG_FILENAME_LEN + 1];
+		char buff_oggFn[MAX_OGG_FILENAME_LEN + 1];
+		char buff_oggFn_sub[MAX_OGG_FILENAME_LEN + 1];
+		const char* const oggFn;
+		const char* oggFn_sub;
 
 		Ogg(InitParam* ip)
 			:ov_open_callbacks((decltype(ov_open_callbacks))*ip->p_ov_open_callbacks),
 			ov_info((decltype(ov_info))*ip->p_ov_info),
 			ov_read((decltype(ov_read))*ip->p_ov_read),
-			ov_clear((decltype(ov_clear))*ip->p_ov_clear) {
+			ov_clear((decltype(ov_clear))*ip->p_ov_clear),
+			oggFn(buff_oggFn), oggFn_sub(nullptr) {
 			memset(&ovf, 0, sizeof(ovf));
-			memcpy(oggFn, VOICEFILE_PREFIX, sizeof(VOICEFILE_PREFIX));
-			memset(oggFn + sizeof(VOICEFILE_PREFIX), 0, sizeof(oggFn) - sizeof(VOICEFILE_PREFIX));
+
+			strcpy(buff_oggFn, VOICEFILE_DIR);
+			strcpy(buff_oggFn + sizeof(VOICEFILE_DIR) - 1, VOICEFILE_PREFIX);
+
+			strcpy(buff_oggFn_sub, VOICEFILE_DIR);
+			strcpy(buff_oggFn_sub + LEN_SUBFOLDER_NAME + 1 + sizeof(VOICEFILE_DIR) - 1, VOICEFILE_PREFIX);
+			buff_oggFn_sub[LEN_SUBFOLDER_NAME + sizeof(VOICEFILE_DIR) - 1] = '\\';
+		}
+
+		void setOggFileName(const char* str_vid, int sub_id) {
+			int idx = LEN_PREFIX;
+			for (int i = 0; str_vid[i]; i++, idx++) {
+				buff_oggFn[idx] = str_vid[i];
+			}
+			strcpy(buff_oggFn + idx, VOICEFILE_ATTR);
+
+			if (sub_id >= 0) {
+				for (int i = LEN_SUBFOLDER_NAME + sizeof(VOICEFILE_DIR) - 2; 
+					     i >= sizeof(VOICEFILE_DIR) - 1; 
+					     i--) {
+					buff_oggFn_sub[i] = '0' + sub_id % 10;
+					sub_id /= 10;
+				}
+				strcpy(buff_oggFn_sub + LEN_PREFIX_SUB, buff_oggFn + LEN_PREFIX);
+				oggFn_sub = buff_oggFn_sub;
+			}
+			else {
+				oggFn_sub = nullptr;
+			}
 		}
 
 		int readOggData(char * buff, int size)
@@ -224,7 +273,7 @@ private:
 
 	struct D3D {
 		byte& showing;
-		unsigned& now;
+		const unsigned& now;
 
 		const HWND hwnd;
 		IDirect3DDevice8* const d3dd;
@@ -398,6 +447,38 @@ private:
 		}
 	} _aup;
 
+#ifndef FORCE_ADJUEST_VID
+	struct VoiceID {
+		MapVid map_vid;
+
+		VoiceID(){
+			LOG("Creating Voice ID mapping table...");
+			for (int vid_len = MAX_VOICEID_LEN_NEED_MAPPING; vid_len > 0; vid_len--) {
+				for (int i = VoiceIdAdjustAdder[vid_len]; i < VoiceIdAdjustAdder[vid_len - 1] && i < NUM_MAPPING; i++) {
+					if (VoiceIdMapping[i][0]) {
+						auto rst = map_vid.insert({ VoiceIdMapping[i], i });
+#ifndef LOG_NOLOG
+						if (!rst.second) {
+							LOG("Duplicate voice ID: %s", VoiceIdMapping[i]);
+						}
+#endif // !LOG_NOLOG
+					}
+					else {
+						LOG("Empty voice ID at adjusted id :%d", i);
+					}
+				}
+			}
+			LOG("Voice ID mapping table created.");
+		}
+
+		int GetAdjustedID(const std::string& vid) {
+			auto rst = map_vid.find(vid);
+			if (rst == map_vid.end()) return INVALID_ADJUESTED_ID;
+			else return rst->second;
+		}
+	} _vid, *const vid = &_vid;
+#endif // !FORCE_ADJUEST_VID
+
 	Config* const config = &_config;
 	Ogg* const ogg = &_ogg;
 	DSD* const dsd = &_dsd;
@@ -441,6 +522,7 @@ static inline int TO_DSVOLUME(int volume) {
 
 SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	:ended(initParam->status.ended), status(&initParam->status), order(&initParam->order),
+	__log(initParam), 
 	_config(CONFIG_FILE),
 	_tm(initParam), _ogg(initParam), _dsd(initParam),
 	_th(initParam), _ipt(initParam), _d3d(initParam),
@@ -449,8 +531,6 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
 	static_assert(sizeof(initParam->keysOld) >= KEY_MAX - KEY_MIN + 1, "Size of keys old is not enough");
 	static_assert(D3D_SDK_VERSION == 220, "SDKVersion must be 220");
-
-	LOG_OPEN;
 
 	LOG("p = 0x%08X", initParam);
 	LOG("p->pHwnd = 0x%08X", initParam->p_Hwnd);
@@ -490,52 +570,57 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 void SoraVoiceImpl::Play(const char* t)
 {
 	if (*t != '#' || !dsd->pDS) return;
-
-	int idx = sizeof(VOICEFILE_PREFIX) - 1;
 	t++;
 
-	int len_vid = 0;
-	long long vid = 0;
+	std::string str_vid;
+	int num_vid = 0;
 	for (int i = 0; i < MAX_VOICEID_LEN; i++) {
 		if (*t < '0' || *t > '9') break;
-		vid *= 10; vid += *t - '0';
-		ogg->oggFn[idx + len_vid] = *t;
+		num_vid *= 10; num_vid += *t - '0';
+		str_vid.push_back(*t);
 
-		len_vid++; t++;
+		t++;
 	}
-	ogg->oggFn[idx + len_vid] = 0;
-	if (*t != 'V' || len_vid == 0) return;
+	if (*t != 'V' || str_vid.empty()) return;
 
-	LOG("iptut Voice ID is \"%s\"", ogg->oggFn + idx);
+	LOG("iptut Voice ID is \"%s\"", str_vid.c_str());
 	LOG("The max length of voice id need mapping is %d", MAX_VOICEID_LEN_NEED_MAPPING);
 
-	if (len_vid <= MAX_VOICEID_LEN_NEED_MAPPING) {
-		vid += VoiceIdAdjustAdder[len_vid];
-		LOG("Adjusted Voice ID is %d", vid);
+	int sub_folder_id = -1;
+	if (str_vid.length() <= MAX_VOICEID_LEN_NEED_MAPPING) {
+		num_vid += VoiceIdAdjustAdder[str_vid.length()];
+		LOG("Adjusted Voice ID is %d", num_vid);
 		LOG("Number of mapping is %d", NUM_MAPPING);
 
-		if (vid >= NUM_MAPPING) {
+		if (num_vid >= NUM_MAPPING) {
 			LOG("Adjusted Voice ID is out of the range of Mapping", NUM_MAPPING);
 			return;
 		}
 
-		if (VoiceIdMapping[vid][0] == '\0') {
+		str_vid = VoiceIdMapping[num_vid];
+		if (str_vid.empty()) {
 			LOG("Mapping Voice ID is empty");
 			return;
 		}
 
-		for (len_vid = 0; VoiceIdMapping[vid][len_vid]; len_vid++) {
-			ogg->oggFn[idx + len_vid] = VoiceIdMapping[vid][len_vid];
-		}
-		ogg->oggFn[idx + len_vid] = 0;
+		sub_folder_id = num_vid / NUM_IN_SUBFOLDER;
 	}
-	LOG("True Voice ID is \"%s\"", ogg->oggFn + idx);
-	idx += len_vid;
-	for (int i = 0; i < sizeof(VOICEFILE_ATTR); i++) {
-		ogg->oggFn[idx++] = VOICEFILE_ATTR[i];
+	else {
+#ifndef FORCE_ADJUEST_VID
+		int adjId = vid->GetAdjustedID(str_vid.c_str());
+		if (adjId != INVALID_ADJUESTED_ID) {
+			sub_folder_id = num_vid / NUM_IN_SUBFOLDER;
+		}
+#else
+		LOG("Only adjusted ID supported!");
+		return;
+#endif
 	}
 
+	ogg->setOggFileName(str_vid.c_str(), sub_folder_id);
+
 	LOG("Ogg filename: %s", ogg->oggFn);
+	LOG("Ogg filename sub: %s", ogg->oggFn_sub);
 	playSoundFile();
 }
 
@@ -964,18 +1049,24 @@ void SoraVoiceImpl::threadReadData()
 
 void SoraVoiceImpl::playSoundFile()
 {
-	LOG("Start playing: %s", ogg->oggFn);
+	LOG("Now going to play");
 
 	th->mt_play.lock();
 	stopPlaying();
 	th->mt_play.unlock();
 	LOG("Previous playing stopped.");
 
-	FILE* f = fopen(ogg->oggFn, "rb");
+	LOG("Open %s ...", ogg->oggFn_sub);
+	FILE* f = fopen(ogg->oggFn_sub, "rb");
 	if (f == NULL) {
-		LOG("Open file failed!");
-		return;
+		LOG("Failed, try to open %s instead...", ogg->oggFn);
+		f = fopen(ogg->oggFn, "rb");
+		if (f == NULL) {
+			LOG("Failed, return.");
+			return;
+		}
 	}
+	LOG("File opened.");
 
 	auto &ovf = ogg->ovf;
 	if (ogg->ov_open_callbacks(f, &ovf, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
