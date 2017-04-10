@@ -320,7 +320,7 @@ private:
 
 			std::set<int> invalid_bottom, invalid_top;
 			for (auto it2 = infos.begin(); it2 != infos.end(); ++it2) {
-				if (it == it2) continue;
+				if (it == it2 || (((*it)->format & DT_RIGHT) != ((*it2)->format & DT_RIGHT))) continue;
 				invalid_top.insert((*it2)->rect.top);
 				invalid_bottom.insert((*it2)->rect.bottom);
 			}
@@ -620,9 +620,6 @@ void SoraVoiceImpl::Input()
 
 			if (config->Volume > Config::MAX_Volume) config->Volume = Config::MAX_Volume;
 			status->mute = 0;
-			if (dsd->pDSBuff) {
-				dsd->pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
-			}
 			needsetvolume = volume_old != config->Volume;
 			needsave = needsetvolume;
 
@@ -637,6 +634,7 @@ void SoraVoiceImpl::Input()
 			else config->Volume -= VOLUME_STEP;
 
 			if (config->Volume < 0) config->Volume = 0;
+			status->mute = 0;
 			needsetvolume = volume_old != config->Volume;
 			needsave = needsetvolume;
 
@@ -886,8 +884,8 @@ void SoraVoiceImpl::init()
 		LOG("Font Name = %s", d3d->lf.lfFaceName);
 
 		if (config->ShowInfo) {
-			d3d->addInfo(InfoType::Hello, 5000, Message::Title);
-			d3d->addInfo(InfoType::Hello, 5000, Message::Version, Message::VersionNum);
+			d3d->addInfo(InfoType::Hello, HELLO_TIME, Message::Title);
+			d3d->addInfo(InfoType::Hello, HELLO_TIME, Message::Version, Message::VersionNum);
 		}
 	}
 }
