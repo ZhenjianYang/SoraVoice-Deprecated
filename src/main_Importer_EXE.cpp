@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 	ifs.seekg(0, ios::end);
 	int len_old = (int)ifs.tellg();
 	ifs.seekg(0, ios::beg);
-	unique_ptr<byte> sbuff_old(new byte[len_old]);
+	unique_ptr<byte[]> sbuff_old(new byte[len_old]);
 	ifs.read((char*)sbuff_old.get(), len_old);
 	const byte* const buff = sbuff_old.get();
 	ifs.close();
@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
 	}
 	si_new.flag = NewSecFlag;
 
-	unique_ptr<byte> sbuff_new(new byte[len_new]);
+	unique_ptr<byte[]> sbuff_new(new byte[len_new]);
 	byte* const buff_new = sbuff_new.get();
 	for (int i = 0; i < len_old; i++) buff_new[i] = buff[i];
 	
@@ -434,7 +434,7 @@ int main(int argc, char* argv[])
 					ifs_bin.seekg(0, ios::end);
 					int len_bin = (int)ifs_bin.tellg();
 					ifs_bin.seekg(0, ios::beg);
-					unique_ptr<byte> sbuff_bin(new byte[len_bin]);
+					unique_ptr<byte[]> sbuff_bin(new byte[len_bin]);
 					ifs_bin.read((char*)sbuff_bin.get(), len_bin);
 					const byte* const buff_bin = sbuff_bin.get();
 					ifs_bin.close();

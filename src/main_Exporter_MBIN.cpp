@@ -48,11 +48,11 @@ int main(int argc, char* argv[])
 		
 		ifs.seekg(0, ios::end);
 		int len = (int)ifs.tellg();
-		std::unique_ptr<byte> sbuff(new byte[len]);
-		byte* buff = sbuff.get();
+		std::unique_ptr<byte[]> sbuff(new byte[len]);
 		ifs.seekg(0, ios::beg);
-		ifs.read((char*)buff, len);
+		ifs.read((char*)sbuff.get(), len);
 		ifs.close();
+		const byte* const buff = sbuff.get();
 
 		int num = GET_INT(buff);
 		const int base = 4 + num * 8;
