@@ -449,33 +449,51 @@ private:
 
 #ifndef FORCE_ADJUEST_VID
 	struct VoiceID {
-		MapVid map_vid;
+		static constexpr int total = NUM_MAPPING;
+		static constexpr int dft_add = 2000;
 
-		VoiceID(){
-			LOG("Creating Voice ID mapping table...");
-			for (int vid_len = MAX_VOICEID_LEN_NEED_MAPPING; vid_len > 0; vid_len--) {
-				for (int i = VoiceIdAdjustAdder[vid_len]; i < VoiceIdAdjustAdder[vid_len - 1] && i < NUM_MAPPING; i++) {
-					if (VoiceIdMapping[i][0]) {
-						auto rst = map_vid.insert({ VoiceIdMapping[i], i });
-#ifndef LOG_NOLOG
-						if (!rst.second) {
-							LOG("Duplicate voice ID: %s", VoiceIdMapping[i]);
-						}
-#endif // !LOG_NOLOG
-					}
-					else {
-						LOG("Empty voice ID at adjusted id :%d", i);
-					}
-				}
-			}
-			LOG("Voice ID mapping table created.");
-		}
+		VoiceID() : cur(0), finished(false) { }
 
 		int GetAdjustedID(const std::string& vid) {
 			auto rst = map_vid.find(vid);
 			if (rst == map_vid.end()) return INVALID_ADJUESTED_ID;
 			else return rst->second;
 		}
+
+		bool finished;
+		int AddMapping(int cnt = dft_add) {
+			int add_cnt = 0;
+
+			for (int vid_len = MAX_VOICEID_LEN_NEED_MAPPING; vid_len > 0; vid_len--) {
+				while(cur < VoiceIdAdjustAdder[vid_len - 1] && cur < total)
+				{
+					if (VoiceIdMapping[cur][0]) {
+						auto rst = map_vid.insert({ VoiceIdMapping[cur],cur});
+						if (!rst.second) {
+							LOG("Duplicate voice ID: %s", VoiceIdMapping[cur]);
+						}
+					}
+					else {
+						LOG("Empty voice ID at adjusted id :%d", cur);
+					}
+
+					add_cnt++;
+					cur++;
+
+					if (add_cnt == cnt) {
+						vid_len = -1;
+						break;
+					}
+				}
+			}
+			LOG("VIDMapping Added: %d, Total: %d", add_cnt, cur);
+			finished = cur == total;
+			return add_cnt;
+		}
+
+	private:
+		int cur;
+		MapVid map_vid;
 	} _vid, *const vid = &_vid;
 #endif // !FORCE_ADJUEST_VID
 
@@ -910,6 +928,13 @@ void SoraVoiceImpl::Show()
 			aup->time_autoplay = 0;
 		}
 	}
+
+#ifndef	FORCE_ADJUEST_VID
+	if (!vid->finished) {
+		vid->AddMapping();
+	}
+#endif
+
 }
 
 void SoraVoiceImpl::init()

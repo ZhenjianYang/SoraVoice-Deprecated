@@ -1,12 +1,15 @@
+#define CINTERFACE 1
+
 #include <iostream>
 #include <string>
 
 #include "ed_voice.h"
 #include "InitParam.h"
+#include "HookD3d.h"
 
 #include <vorbis\vorbisfile.h>
 #include <dsound.h>
-
+#include <d3d8/d3dx8.h>
 #include <dinput.h>
 
 #include "SoraVoice.h"
@@ -18,6 +21,10 @@ static HWND GetHwnd(void)
 	char pszWindowTitle[1024];
 	GetConsoleTitle(pszWindowTitle, 1024);
 	return FindWindow(NULL, pszWindowTitle);
+}
+
+HRESULT WINAPI Fake_IDirect3DDevice8_Present(IDirect3DDevice8 * D3DD, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion) {
+	return 0;
 }
 
 int main(int argc, char* argv[])
@@ -40,13 +47,26 @@ int main(int argc, char* argv[])
 
 	DirectSoundCreate(NULL, &pDS, NULL);
 	HWND hWnd = GetHwnd();
-	pDS->SetCooperativeLevel(hWnd, DSSCL_PRIORITY);
+	pDS->lpVtbl->SetCooperativeLevel(pDS, hWnd, DSSCL_PRIORITY);
 
 	p.p_Hwnd = &hWnd;
-	p.p_d3dd = &p.p_Hwnd;
+	void* d3d = nullptr;
+	p.p_d3dd = &d3d;
+
+	IDirect3DDevice8 d3dd;
+	IDirect3DDevice8Vtbl vtbl;
+	d3dd.lpVtbl = &vtbl;
+	memset(&vtbl, 0, sizeof(vtbl));
+	vtbl.Present = Fake_IDirect3DDevice8_Present;
 
 	Init(&p);
+	Hook_IDirect3DDevice8_Present(&d3dd, p.sv);
 
+	for (int i = 0; i < 100; i++) {
+		vtbl.Present(&d3dd, 0, 0, 0, 0);
+	}
+
+	vtbl.Present(&d3dd, 0, 0, 0, 0);
 	string cmd;
 	while ((cin >> cmd) && cmd != "exit")
 	{
