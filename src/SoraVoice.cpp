@@ -161,25 +161,33 @@ private:
 		decltype(::ov_clear)* const ov_clear;
 
 		OggVorbis_File ovf;
-		char oggFn[MAX_OGG_FILENAME_LEN + 1];
+		const char* oggFn;
+		char buff_oggFn[MAX_OGG_FILENAME_LEN + 1];
 
 		Ogg(InitParam* ip)
 			:ov_open_callbacks((decltype(ov_open_callbacks))*ip->p_ov_open_callbacks),
 			ov_info((decltype(ov_info))*ip->p_ov_info),
 			ov_read((decltype(ov_read))*ip->p_ov_read),
-			ov_clear((decltype(ov_clear))*ip->p_ov_clear){
+			ov_clear((decltype(ov_clear))*ip->p_ov_clear),
+			oggFn(nullptr) {
 			memset(&ovf, 0, sizeof(ovf));
 
-			strcpy(oggFn, VOICEFILE_DIR);
-			strcpy(oggFn + sizeof(VOICEFILE_DIR) - 1, VOICEFILE_PREFIX);
+			strcpy(buff_oggFn, VOICEFILE_DIR);
+			strcpy(buff_oggFn + sizeof(VOICEFILE_DIR) - 1, VOICEFILE_PREFIX);
 		}
 
-		void setOggFileName(const char* str_vid) {
-			int idx = LEN_PREFIX;
-			for (int i = 0; str_vid[i]; i++, idx++) {
-				oggFn[idx] = str_vid[i];
+		void setOggFileName(const char* str_vid = nullptr) {
+			if (str_vid) {
+				int idx = LEN_PREFIX;
+				for (int i = 0; str_vid[i]; i++, idx++) {
+					buff_oggFn[idx] = str_vid[i];
+				}
+				strcpy(buff_oggFn + idx, VOICEFILE_ATTR);
+				oggFn = buff_oggFn;
 			}
-			strcpy(oggFn + idx, VOICEFILE_ATTR);
+			else {
+				oggFn = nullptr;
+			}
 		}
 
 		int readOggData(char * buff, int size)
@@ -226,14 +234,26 @@ private:
 	} _dsd;
 
 	struct Thread {
+		static constexpr int evEndid_Read = 0;
+		static constexpr int evEndid_Open = 1;
 		HANDLE hEvents[NUM_NOTIFY];
-		HANDLE hEventEnd;
+		HANDLE hEventOpenFile;
+		HANDLE hEventEnd[2];
+		std::thread th_open;
 		std::thread th_read;
 		std::mutex mt_play;
 		int playEnd;
+		enum OpenStatus
+		{
+			Openning,
+			Failed,
+			Succeeded
+		} opening;
 		Thread(InitParam* ip)
-			:playEnd(-1), hEventEnd(NULL) {
+			:hEventOpenFile(NULL),
+			playEnd(-1), opening(Succeeded) {
 			memset(hEvents, 0, sizeof(hEvents));
+			memset(hEventEnd, 0, sizeof(hEventEnd));
 		}
 	} _th;
 
@@ -434,8 +454,8 @@ private:
 	void init();
 	void destory();
 
+	void threadOpenFile();
 	void threadReadData();
-	
 	void playSoundFile();
 	void stopPlaying();
 
@@ -545,10 +565,20 @@ void SoraVoiceImpl::Play(const char* t)
 		}
 	}
 
+	th->opening = th->Openning;
 	ogg->setOggFileName(str_vid.c_str());
-
 	LOG("Ogg filename: %s", ogg->oggFn);
-	playSoundFile();
+
+	th->mt_play.lock();
+	stopPlaying();
+	th->mt_play.unlock();
+	LOG("Previous playing stopped.");
+
+	LOG("Now call opening thread...");
+	SetEvent(th->hEventOpenFile);
+	LOG("Called.");
+
+	if (config->DisableDududu) order->disableDududu = 1;
 }
 
 void SoraVoiceImpl::Stop()
@@ -781,13 +811,27 @@ void SoraVoiceImpl::Input()
 void SoraVoiceImpl::Show()
 {
 	tm->UpdateTime();
+	//LOG("[TIME]Recent time: %d, current time: %d", tm->recent, tm->now);
 
 	if (status->showing) {
 		d3d->drawInfos();
 		d3d->removeDeadInfos();
 	}
 
+	if (ogg->oggFn && th->opening != th->Openning) {
+		ogg->setOggFileName();
+		if (th->opening == th->Succeeded) {
+			LOG("Ogg file opened, now goint to play...");
+			playSoundFile();
+		}
+		else {
+			order->disableDududu = 0;
+			LOG("Ogg file open failed, no need to play.");
+		}
+	}
+
 	if (aup->count_ch == 1) {
+		aup->count_ch++;
 		if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
 			d3d->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
 		}
@@ -807,7 +851,7 @@ void SoraVoiceImpl::Show()
 		}
 		else if (aup->wait && !aup->time_autoplay) {
 			aup->time_autoplay = aup->time_textbeg
-				+ aup->count_ch * config->WaitTimePerChar + config->WaitTimeDialog - TIME_PREC / 2;
+				+ (aup->count_ch - 1) * config->WaitTimePerChar + config->WaitTimeDialog - TIME_PREC / 2;
 		}
 
 		if (aup->waitv && aup->time_autoplayv <= aup->now
@@ -818,7 +862,7 @@ void SoraVoiceImpl::Show()
 
 			LOG("wait = %d", aup->wait);
 			LOG("time_textbeg = %d", aup->time_textbeg);
-			LOG("cnt = %d", aup->count_ch);
+			LOG("cnt = %d", aup->count_ch - 1);
 			LOG("autoplay = %d", aup->time_autoplay);
 
 			if (isAutoPlaying()) {
@@ -852,13 +896,19 @@ void SoraVoiceImpl::init()
 		th->hEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
 		dsd->dSNotifies[i].hEventNotify = th->hEvents[i];
 	}
-	th->hEventEnd = CreateEvent(NULL, FALSE, FALSE, NULL);
+	th->hEventOpenFile = CreateEvent(NULL, FALSE, FALSE, NULL);
+	th->hEventEnd[th->evEndid_Read] = CreateEvent(NULL, TRUE, FALSE, NULL);
+	th->hEventEnd[th->evEndid_Open] = CreateEvent(NULL, TRUE, FALSE, NULL);
 	LOG("Event created!");
 
 	ended = 0;
 
 	th->th_read = std::thread(&SoraVoiceImpl::threadReadData, this);
 	th->th_read.detach();
+
+	th->th_open = std::thread(&SoraVoiceImpl::threadOpenFile, this);
+	th->th_open.detach();
+
 	LOG("Thread created!");
 
 	void* pPresent = Hook_IDirect3DDevice8_Present(d3d->d3dd, this);
@@ -912,9 +962,39 @@ void SoraVoiceImpl::destory()
 	ended = 1;
 
 	SetEvent(th->hEvents[0]);
-	WaitForSingleObject(th->hEventEnd, INFINITE);
+	SetEvent(th->hEventOpenFile);
+	WaitForMultipleObjects(sizeof(th->hEventEnd) / sizeof(*th->hEventEnd), th->hEventEnd, TRUE, 100);
 }
 
+void SoraVoiceImpl::threadOpenFile()
+{
+	while (!ended)
+	{
+		DWORD rst = WaitForSingleObject(th->hEventOpenFile, INFINITE);
+		if (rst == WAIT_OBJECT_0 && !ended) {
+			FILE* f = NULL;
+			LOG("[Thread_Open]Open %s ...", ogg->oggFn);
+			f = fopen(ogg->oggFn, "rb");
+
+			if (f == NULL) {
+				th->opening = th->Failed;
+				LOG("Open file failed.");
+				break;
+			}
+
+			auto &ovf = ogg->ovf;
+			if (ogg->ov_open_callbacks(f, &ovf, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
+				fclose(f);
+				th->opening = th->Failed;
+				LOG("[Thread_Open]Open file as ogg failed!");
+				break;
+			}
+			LOG("[Thread_Open]Ogg file opened");
+			th->opening = th->Succeeded;
+		}
+	}//while
+	SetEvent(th->hEventEnd[th->evEndid_Open]);
+}
 
 void SoraVoiceImpl::threadReadData()
 {
@@ -928,13 +1008,13 @@ void SoraVoiceImpl::threadReadData()
 			if (status->playing) {
 				const int id = rst - WAIT_OBJECT_0;
 				if (id == playEnd) {
-					LOG("Voice end, stop!");
+					LOG("[Thread_Read]Voice end, stop!");
 					
 					aup->waitv = 1;
 					aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice - TIME_PRECV / 2;
 
-					LOG("now = %d", tm->now);
-					LOG("time_autoplayv = %d", aup->time_autoplayv);
+					LOG("[Thread_Read]now = %d", tm->now);
+					LOG("[Thread_Read]time_autoplayv = %d", aup->time_autoplayv);
 
 					stopPlaying();
 				}
@@ -971,36 +1051,12 @@ void SoraVoiceImpl::threadReadData()
 			th->mt_play.unlock();
 		}//if
 	}//while
-	SetEvent(th->hEventEnd);
+	SetEvent(th->hEventEnd[th->evEndid_Read]);
 }
 
 void SoraVoiceImpl::playSoundFile()
 {
-	LOG("Now going to play");
-
-	th->mt_play.lock();
-	stopPlaying();
-	th->mt_play.unlock();
-	LOG("Previous playing stopped.");
-
-	FILE* f = NULL;
-	LOG("Open %s ...", ogg->oggFn);
-	f = fopen(ogg->oggFn, "rb");
-	
-	if (f == NULL) {
-		LOG("Open file failed, return.");
-		return;
-	}
-
-	auto &ovf = ogg->ovf;
-	if (ogg->ov_open_callbacks(f, &ovf, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
-		fclose(f);
-		LOG("Open file as ogg failed!");
-		return;
-	}
-	LOG("Ogg file opened");
-
-	vorbis_info* info = ogg->ov_info(&ovf, -1);
+	vorbis_info* info = ogg->ov_info(&ogg->ovf, -1);
 
 	auto &waveFormatEx = dsd->waveFormatEx;
 	waveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
@@ -1030,7 +1086,7 @@ void SoraVoiceImpl::playSoundFile()
 	auto &pDS = dsd->pDS;
 	if (DS_OK != pDS->CreateSoundBuffer(&dSBufferDesc, &pDSBuff, NULL)) {
 		LOG("Create sound buff failed!");
-		ogg->ov_clear(&ovf);
+		ogg->ov_clear(&ogg->ovf);
 		return;
 	}
 	LOG("Sound buff opened");
@@ -1044,7 +1100,7 @@ void SoraVoiceImpl::playSoundFile()
 	}
 	else {
 		pDSBuff->Release();
-		ogg->ov_clear(&ovf);
+		ogg->ov_clear(&ogg->ovf);
 		LOG("Write first data failed!");
 		return;
 	}
@@ -1060,7 +1116,7 @@ void SoraVoiceImpl::playSoundFile()
 	static LPDIRECTSOUNDNOTIFY pDSN = NULL;
 	if (DS_OK != pDSBuff->QueryInterface(IID_IDirectSoundNotify, (LPVOID*)&pDSN)) {
 		pDSBuff->Release();
-		ogg->ov_clear(&ovf);
+		ogg->ov_clear(&ogg->ovf);
 		LOG("Set notify failed!");
 		return;
 	};
@@ -1068,7 +1124,7 @@ void SoraVoiceImpl::playSoundFile()
 	if (DS_OK != pDSN->SetNotificationPositions(NUM_NOTIFY, dSNotifies)) {
 		pDSN->Release();
 		pDSBuff->Release();
-		ogg->ov_clear(&ovf);
+		ogg->ov_clear(&ogg->ovf);
 		LOG("Set notify failed!");
 		return;
 	}
@@ -1086,7 +1142,6 @@ void SoraVoiceImpl::playSoundFile()
 
 	th->mt_play.lock();
 	status->playing = 1;
-	if (config->DisableDududu) order->disableDududu = 1;
 	if (config->DisableDialogSE) order->disableDialogSE = 1;
 	if (config->SkipVoice) order->skipVoice = 1;
 	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
