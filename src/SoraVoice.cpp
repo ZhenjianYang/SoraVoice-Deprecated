@@ -27,12 +27,10 @@ constexpr char VOICEFILE_DIR[] = "voice\\";
 constexpr char VOICEFILE_PREFIX[] = "ch";
 constexpr char VOICEFILE_ATTR[] = ".ogg";
 
-constexpr int MAX_OGG_FILENAME_LEN = 30;
+constexpr int MAX_OGG_FILENAME_LEN = 25;
 
 constexpr int LEN_PREFIX = sizeof(VOICEFILE_DIR) - 1 + sizeof(VOICEFILE_PREFIX) - 1;
-constexpr int LEN_PREFIX_SUB = LEN_PREFIX + LEN_SUBFOLDER_NAME + 1;
-
-static_assert(LEN_PREFIX_SUB + MAX_VOICEID_LEN + sizeof(VOICEFILE_ATTR) - 1 <= MAX_OGG_FILENAME_LEN, "MAX_OGG_FILENAME_LEN not enought!");
+static_assert(LEN_PREFIX + MAX_VOICEID_LEN + sizeof(VOICEFILE_ATTR) - 1 <= MAX_OGG_FILENAME_LEN, "MAX_OGG_FILENAME_LEN not enought!");
 
 constexpr int NUM_AUDIO_BUF = 2;
 constexpr int NUM_NOTIFY_PER_BUFF = 8;
@@ -84,8 +82,6 @@ constexpr byte SCODE_TEXT = 0x54;
 constexpr byte SCODE_SAY  = 0x5B;
 constexpr byte SCODE_TALK = 0x5C;
 constexpr byte SCODE_MENU = 0x5D;
-
-constexpr int INVALID_ADJUESTED_ID = -1;
 
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
@@ -165,47 +161,25 @@ private:
 		decltype(::ov_clear)* const ov_clear;
 
 		OggVorbis_File ovf;
-		char buff_oggFn[MAX_OGG_FILENAME_LEN + 1];
-		char buff_oggFn_sub[MAX_OGG_FILENAME_LEN + 1];
-		const char* const oggFn;
-		const char* oggFn_sub;
+		char oggFn[MAX_OGG_FILENAME_LEN + 1];
 
 		Ogg(InitParam* ip)
 			:ov_open_callbacks((decltype(ov_open_callbacks))*ip->p_ov_open_callbacks),
 			ov_info((decltype(ov_info))*ip->p_ov_info),
 			ov_read((decltype(ov_read))*ip->p_ov_read),
-			ov_clear((decltype(ov_clear))*ip->p_ov_clear),
-			oggFn(buff_oggFn), oggFn_sub(nullptr) {
+			ov_clear((decltype(ov_clear))*ip->p_ov_clear){
 			memset(&ovf, 0, sizeof(ovf));
 
-			strcpy(buff_oggFn, VOICEFILE_DIR);
-			strcpy(buff_oggFn + sizeof(VOICEFILE_DIR) - 1, VOICEFILE_PREFIX);
-
-			strcpy(buff_oggFn_sub, VOICEFILE_DIR);
-			strcpy(buff_oggFn_sub + LEN_SUBFOLDER_NAME + 1 + sizeof(VOICEFILE_DIR) - 1, VOICEFILE_PREFIX);
-			buff_oggFn_sub[LEN_SUBFOLDER_NAME + sizeof(VOICEFILE_DIR) - 1] = '\\';
+			strcpy(oggFn, VOICEFILE_DIR);
+			strcpy(oggFn + sizeof(VOICEFILE_DIR) - 1, VOICEFILE_PREFIX);
 		}
 
-		void setOggFileName(const char* str_vid, int sub_id) {
+		void setOggFileName(const char* str_vid) {
 			int idx = LEN_PREFIX;
 			for (int i = 0; str_vid[i]; i++, idx++) {
-				buff_oggFn[idx] = str_vid[i];
+				oggFn[idx] = str_vid[i];
 			}
-			strcpy(buff_oggFn + idx, VOICEFILE_ATTR);
-
-			if (sub_id >= 0) {
-				for (int i = LEN_SUBFOLDER_NAME + sizeof(VOICEFILE_DIR) - 2; 
-					     i >= sizeof(VOICEFILE_DIR) - 1; 
-					     i--) {
-					buff_oggFn_sub[i] = '0' + sub_id % 10;
-					sub_id /= 10;
-				}
-				strcpy(buff_oggFn_sub + LEN_PREFIX_SUB, buff_oggFn + LEN_PREFIX);
-				oggFn_sub = buff_oggFn_sub;
-			}
-			else {
-				oggFn_sub = nullptr;
-			}
+			strcpy(oggFn + idx, VOICEFILE_ATTR);
 		}
 
 		int readOggData(char * buff, int size)
@@ -447,56 +421,6 @@ private:
 		}
 	} _aup;
 
-#ifndef FORCE_ADJUEST_VID
-	struct VoiceID {
-		static constexpr int total = NUM_MAPPING;
-		static constexpr int dft_add = 2000;
-
-		VoiceID() : cur(0), finished(false) { }
-
-		int GetAdjustedID(const std::string& vid) {
-			auto rst = map_vid.find(vid);
-			if (rst == map_vid.end()) return INVALID_ADJUESTED_ID;
-			else return rst->second;
-		}
-
-		bool finished;
-		int AddMapping(int cnt = dft_add) {
-			int add_cnt = 0;
-
-			for (int vid_len = MAX_VOICEID_LEN_NEED_MAPPING; vid_len > 0; vid_len--) {
-				while(cur < VoiceIdAdjustAdder[vid_len - 1] && cur < total)
-				{
-					if (VoiceIdMapping[cur][0]) {
-						auto rst = map_vid.insert({ VoiceIdMapping[cur],cur});
-						if (!rst.second) {
-							LOG("Duplicate voice ID: %s", VoiceIdMapping[cur]);
-						}
-					}
-					else {
-						LOG("Empty voice ID at adjusted id :%d", cur);
-					}
-
-					add_cnt++;
-					cur++;
-
-					if (add_cnt == cnt) {
-						vid_len = -1;
-						break;
-					}
-				}
-			}
-			LOG("VIDMapping Added: %d, Total: %d", add_cnt, cur);
-			finished = cur == total;
-			return add_cnt;
-		}
-
-	private:
-		int cur;
-		MapVid map_vid;
-	} _vid, *const vid = &_vid;
-#endif // !FORCE_ADJUEST_VID
-
 	Config* const config = &_config;
 	Ogg* const ogg = &_ogg;
 	DSD* const dsd = &_dsd;
@@ -604,7 +528,6 @@ void SoraVoiceImpl::Play(const char* t)
 	LOG("iptut Voice ID is \"%s\"", str_vid.c_str());
 	LOG("The max length of voice id need mapping is %d", MAX_VOICEID_LEN_NEED_MAPPING);
 
-	int sub_folder_id = -1;
 	if (str_vid.length() <= MAX_VOICEID_LEN_NEED_MAPPING) {
 		num_vid += VoiceIdAdjustAdder[str_vid.length()];
 		LOG("Adjusted Voice ID is %d", num_vid);
@@ -620,22 +543,11 @@ void SoraVoiceImpl::Play(const char* t)
 			LOG("Mapping Voice ID is empty");
 			return;
 		}
-
-		sub_folder_id = num_vid / NUM_IN_SUBFOLDER;
-	}
-	else {
-#ifndef FORCE_ADJUEST_VID
-		int adjId = vid->GetAdjustedID(str_vid.c_str());
-		if (adjId != INVALID_ADJUESTED_ID) {
-			sub_folder_id = num_vid / NUM_IN_SUBFOLDER;
-		}
-#endif
 	}
 
-	ogg->setOggFileName(str_vid.c_str(), sub_folder_id);
+	ogg->setOggFileName(str_vid.c_str());
 
-	LOG("Ogg filename: %s", ogg->oggFn ? ogg->oggFn : "nullptr");
-	LOG("Ogg filename sub: %s", ogg->oggFn_sub ? ogg->oggFn_sub : "nullptr");
+	LOG("Ogg filename: %s", ogg->oggFn);
 	playSoundFile();
 }
 
@@ -928,13 +840,6 @@ void SoraVoiceImpl::Show()
 			aup->time_autoplay = 0;
 		}
 	}
-
-#ifndef	FORCE_ADJUEST_VID
-	if (!vid->finished) {
-		vid->AddMapping();
-	}
-#endif
-
 }
 
 void SoraVoiceImpl::init()
@@ -1079,23 +984,13 @@ void SoraVoiceImpl::playSoundFile()
 	LOG("Previous playing stopped.");
 
 	FILE* f = NULL;
-	if (ogg->oggFn) {
-		LOG("Open %s ...", ogg->oggFn);
-		f = fopen(ogg->oggFn, "rb");
-		LOG(f ? "File opened." : "Failed.");
-	}
-
-	if (!f && ogg->oggFn_sub) {
-		LOG("Open %s ...", ogg->oggFn_sub);
-		f = fopen(ogg->oggFn_sub, "rb");
-		LOG(f ? "File opened." : "Failed.");
-	}
+	LOG("Open %s ...", ogg->oggFn);
+	f = fopen(ogg->oggFn, "rb");
 	
 	if (f == NULL) {
-		LOG("No file opened, return.");
+		LOG("Open file failed, return.");
 		return;
 	}
-
 
 	auto &ovf = ogg->ovf;
 	if (ogg->ov_open_callbacks(f, &ovf, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
@@ -1222,7 +1117,6 @@ void SoraVoiceImpl::stopPlaying()
 
 	ogg->ov_clear(&ogg->ovf);
 }
-
 
 
 SoraVoice * SoraVoice::CreateInstance(InitParam * initParam)
