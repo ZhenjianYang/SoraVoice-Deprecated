@@ -611,16 +611,13 @@ void SoraVoiceImpl::Play(const char* t)
 		if (adjId != INVALID_ADJUESTED_ID) {
 			sub_folder_id = num_vid / NUM_IN_SUBFOLDER;
 		}
-#else
-		LOG("Only adjusted ID supported!");
-		return;
 #endif
 	}
 
 	ogg->setOggFileName(str_vid.c_str(), sub_folder_id);
 
-	LOG("Ogg filename: %s", ogg->oggFn);
-	LOG("Ogg filename sub: %s", ogg->oggFn_sub);
+	LOG("Ogg filename: %s", ogg->oggFn ? ogg->oggFn : "nullptr");
+	LOG("Ogg filename sub: %s", ogg->oggFn_sub ? ogg->oggFn_sub : "nullptr");
 	playSoundFile();
 }
 
@@ -1056,17 +1053,24 @@ void SoraVoiceImpl::playSoundFile()
 	th->mt_play.unlock();
 	LOG("Previous playing stopped.");
 
-	LOG("Open %s ...", ogg->oggFn_sub);
-	FILE* f = fopen(ogg->oggFn_sub, "rb");
-	if (f == NULL) {
-		LOG("Failed, try to open %s instead...", ogg->oggFn);
+	FILE* f = NULL;
+	if (ogg->oggFn) {
+		LOG("Open %s ...", ogg->oggFn);
 		f = fopen(ogg->oggFn, "rb");
-		if (f == NULL) {
-			LOG("Failed, return.");
-			return;
-		}
+		LOG(f ? "File opened." : "Failed.");
 	}
-	LOG("File opened.");
+
+	if (!f && ogg->oggFn_sub) {
+		LOG("Open %s ...", ogg->oggFn_sub);
+		f = fopen(ogg->oggFn_sub, "rb");
+		LOG(f ? "File opened." : "Failed.");
+	}
+	
+	if (f == NULL) {
+		LOG("No file opened, return.");
+		return;
+	}
+
 
 	auto &ovf = ogg->ovf;
 	if (ogg->ov_open_callbacks(f, &ovf, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
