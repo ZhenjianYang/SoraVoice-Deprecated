@@ -531,7 +531,9 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 
 void SoraVoiceImpl::Play(const char* t)
 {
-	if (*t != '#' || !dsd->pDS) return;
+	static bool ogg_fun_ok = ogg->ov_clear && ogg->ov_info && ogg->ov_open_callbacks && ogg->ov_read;
+	if (*t != '#' || !dsd->pDS || !ogg_fun_ok) return;
+	
 	t++;
 
 	std::string str_vid;
@@ -567,7 +569,7 @@ void SoraVoiceImpl::Play(const char* t)
 
 	th->opening = th->Openning;
 	ogg->setOggFileName(str_vid.c_str());
-	LOG("Ogg filename: %s", ogg->oggFn);
+	LOG("Ogg filename: %s", ogg->oggFn ? ogg->oggFn : "nullptr");
 
 	th->mt_play.lock();
 	stopPlaying();
@@ -578,7 +580,16 @@ void SoraVoiceImpl::Play(const char* t)
 	SetEvent(th->hEventOpenFile);
 	LOG("Called.");
 
+	status->playing = 1;
+	status->code5 = 0;
+	aup->wait = 0;
+	aup->waitv = 0;
+	aup->count_ch = 0;
+	aup->time_autoplay = 0;
+
 	if (config->DisableDududu) order->disableDududu = 1;
+	if (config->DisableDialogSE) order->disableDialogSE = 1;
+	if (config->SkipVoice) order->skipVoice = 1;
 }
 
 void SoraVoiceImpl::Stop()
@@ -821,11 +832,14 @@ void SoraVoiceImpl::Show()
 	if (ogg->oggFn && th->opening != th->Openning) {
 		ogg->setOggFileName();
 		if (th->opening == th->Succeeded) {
-			LOG("Ogg file opened, now goint to play...");
+			LOG("Ogg file opened, now going to play...");
 			playSoundFile();
 		}
 		else {
 			order->disableDududu = 0;
+			order->disableDialogSE = 0;
+			order->skipVoice = 0;
+			status->playing = 0;
 			LOG("Ogg file open failed, no need to play.");
 		}
 	}
@@ -1141,17 +1155,8 @@ void SoraVoiceImpl::playSoundFile()
 	}
 
 	th->mt_play.lock();
-	status->playing = 1;
-	if (config->DisableDialogSE) order->disableDialogSE = 1;
-	if (config->SkipVoice) order->skipVoice = 1;
 	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
 	th->mt_play.unlock();
-
-	status->code5 = 0;
-	aup->wait = 0;
-	aup->waitv = 0;
-	aup->count_ch = 0;
-	aup->time_autoplay = 0;
 
 	LOG("Playing...");
 }
