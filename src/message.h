@@ -4,7 +4,7 @@ class Message {
 public:
 	static constexpr char Title[] = "°∂ø’÷ÆπÏº£°∑”Ô“Ù≤π∂°";
 	static constexpr char Version[] = "∞Ê±æ %s";
-	static constexpr char VersionNum[] = "0.4.0";
+	static constexpr char VersionNum[] = "0.4.1";
 
 	static constexpr char On[] = "ø™";
 	static constexpr char Off[] = "πÿ";
