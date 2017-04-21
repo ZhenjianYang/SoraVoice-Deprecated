@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
 							out_cnt++;
 							cnt++;
 							ofs << talk.CodeCh
-								<< setfill('0') << setw(3) << setiosflags(ios::right) << dec << msg_cnt << ","
+								<< setfill('0') << setw(4) << setiosflags(ios::right) << dec << msg_cnt << ","
 								<< setfill('0') << setw(2) << setiosflags(ios::right) << dec << cnt << ","
 								<< setfill('0') << setw(5) << setiosflags(ios::right | ios::uppercase) << hex << idx + str.first << ","
 								<< str.second << "\n\n";

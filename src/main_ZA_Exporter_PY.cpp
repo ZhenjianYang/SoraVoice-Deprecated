@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
 					out_cnt++;
 					ofs << talk[0]
-						<< setfill('0') << setw(3) << setiosflags(ios::right) << msg_cnt << ","
+						<< setfill('0') << setw(4) << setiosflags(ios::right) << msg_cnt << ","
 						<< setfill('0') << setw(2) << setiosflags(ios::right) << cnt << ","
 						<< setfill('0') << setw(5) << setiosflags(ios::right) << line_no << ","
 						<< sout << "\n\n";
