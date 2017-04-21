@@ -11,7 +11,7 @@
 #define ATTR_IPT ".txt"
 #define REP_NAME "import_py_report.txt"
 
-#define MAXCH_ONELINE 2048
+#define MAXCH_ONELINE 100000
 #define MAX_LINENO_LEN 9
 
 #define MAX_LINENO 0x7FFFFFFF

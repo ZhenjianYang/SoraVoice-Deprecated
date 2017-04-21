@@ -1,14 +1,13 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-
 #include "common.h"
 
-#define ATTR_PY ".py"
+#define ATTR_PY ".bin.py"
 #define ATTR_OUT ".txt"
 #define REP_NAME "py_report.txt"
 
-#define MAXCH_ONELINE 2048
+#define MAXCH_ONELINE 100000
 
 constexpr char AnonymousTalk[] = "AnonymousTalk";
 constexpr char ChrTalk[] = "ChrTalk";
@@ -57,6 +56,7 @@ int main(int argc, char* argv[])
 		int cnt = 0;
 
 		int line_no = 0;
+
 		while (ifs.getline(buff, sizeof(buff)))
 		{
 			line_no++;
@@ -65,10 +65,10 @@ int main(int argc, char* argv[])
 				cnt++;
 				string sout;
 
-				size_t idx = s.find_first_of("\"'");
+				size_t idx = s.find('"');
 				while (idx != string::npos)
 				{
-					size_t idx_next = s.find_first_of("\"'", idx + 1);
+					size_t idx_next = s.find('"', idx + 1);
 					if (idx_next != string::npos) {
 						sout += s.substr(idx + 1, idx_next - idx - 1);
 					}
@@ -88,10 +88,13 @@ int main(int argc, char* argv[])
 						<< sout << "\n\n";
 				}
 
-				for (char c : s) {
-					if (c == '(') ++bra_cnt;
-					else if (c == ')') --bra_cnt;
+				if(s.find('"') == string::npos) {
+					for (char c : s) {
+						if (c == '(') ++bra_cnt;
+						else if (c == ')') --bra_cnt;
+					}
 				}
+
 				if (bra_cnt <= 0) {
 					talk.clear();
 
@@ -113,8 +116,9 @@ int main(int argc, char* argv[])
 		ifs.close();
 		if(out_cnt > 0) ofs.close();
 
-		ofs_rp << name << '\t' <<  out_cnt << endl;
+		ofs_rp << name << '\t' <<  msg_cnt << '\t' << out_cnt << endl;
 	}
+
 	ofs_rp.close();
 
 	return 0;
