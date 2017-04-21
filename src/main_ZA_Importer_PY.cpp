@@ -184,14 +184,14 @@ int main(int argc, char* argv[])
 
 				while (key > it->first)
 				{
-					Error("%s, %04d,%02d,%05d,%s: 未找到插入位置！", get<0>(it->second), get<1>(it->second), get<2>(it->second), get<3>(it->second).c_str());
+					Error("%s, %04d,%02d,%05d,%s: 未找到插入位置！", name.c_str(), get<0>(it->second), get<1>(it->second), get<2>(it->second), get<3>(it->second).c_str());
 					++it;
 				}
 
 				if (key == it->first) {
 					auto idx = s.find('"');
 					if (idx == string::npos) {
-						Error("%s, %04d,%02d,%05d: 该行无文本！", name.c_str(), msg_cnt, cnt);
+						Error("%s, %04d,%02d,%05d: 该行无文本！", name.c_str(), line_no, msg_cnt, cnt);
 					}
 					else {
 						s = s.insert(idx + 1, get<3>(it->second));
@@ -215,7 +215,7 @@ int main(int argc, char* argv[])
 
 		while (MAX_LINENO > it->first)
 		{
-			Error("%s, %04d,%02d,%05d,%s: 未找到插入位置！", get<0>(it->second), get<1>(it->second), get<2>(it->second), get<3>(it->second).c_str());
+			Error("%s, %04d,%02d,%05d,%s: 未找到插入位置！", name.c_str(), get<0>(it->second), get<1>(it->second), get<2>(it->second), get<3>(it->second).c_str());
 			++it;
 		}
 
