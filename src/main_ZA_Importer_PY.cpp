@@ -213,6 +213,12 @@ int main(int argc, char* argv[])
 			ofs << s << '\n';
 		}
 
+		while (MAX_LINENO > it->first)
+		{
+			Error("%s, %04d,%02d,%05d,%s: 未找到插入位置！", get<0>(it->second), get<1>(it->second), get<2>(it->second), get<3>(it->second).c_str());
+			++it;
+		}
+
 		ifs.close();
 		ofs.close();
 	}
