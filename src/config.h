@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #define _CMT_Volume					"#音量，范围为0~100，默认为100(最大值)"
 
