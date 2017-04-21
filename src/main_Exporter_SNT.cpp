@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 	ofstream ofs_rp(REP_NAME);
 	for (const auto &fn_snt : fn_snts) {
 		const string name = fn_snt.substr(0, fn_snt.rfind(ATTR_SNT));
-		cout << "´¦Àí" << fn_snt << "..." << endl;
+		cout << "å¤„ç†" << fn_snt << "..." << endl;
 
 		ifstream ifs(dir_snt + fn_snt);
 		ofstream ofs;

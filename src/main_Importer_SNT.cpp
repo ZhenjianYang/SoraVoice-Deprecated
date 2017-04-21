@@ -76,7 +76,7 @@ static void GetMapLineVid(map<int, string>& map_line_vid, const string& fn_snt_e
 			if (!vid.empty()) map_line_vid[line_no] = vid;
 		}
 		else {
-			ofs_rp << ">>¡¾¾¯¸æ¡¿ĞĞ " << line_no << " £ºÔÚSNT.OUTÖĞ·¢ÏÖÖØ¸´µÄ¸ÃĞĞºÅ¡£" << endl;
+			ofs_rp << ">>ã€è­¦å‘Šã€‘è¡Œ " << line_no << " ï¼šåœ¨SNT.OUTä¸­å‘ç°é‡å¤çš„è¯¥è¡Œå·ã€‚" << endl;
 		}
 
 	}
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
 	for (const auto &fn_snt : fn_snts) {
 		string name = fn_snt.substr(0, fn_snt.rfind(ATTR_SNT));
 		for_each(name.begin(), name.end(), [](char& c) { c = toupper(c); });
-		ofs_rp << "´¦Àí" << fn_snt << "..." << endl;
+		ofs_rp << "å¤„ç†" << fn_snt << "..." << endl;
 
 		bool enbaleMapping = enbaleMappingGlobal && exception_list.find(name) == exception_list.end()
 			|| !enbaleMappingGlobal && exception_list.find(name) != exception_list.end();
@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 
 				}
 				else {
-					ofs_rp << ">>¡¾¾¯¸æ¡¿ĞĞ " << line_no << " £ºÔÚSNTµÄ¸ÃĞĞÃ»ÓĞ·¢ÏÖÓĞĞ§ÎÄ±¾¡£" << endl;
+					ofs_rp << ">>ã€è­¦å‘Šã€‘è¡Œ " << line_no << " ï¼šåœ¨SNTçš„è¯¥è¡Œæ²¡æœ‰å‘ç°æœ‰æ•ˆæ–‡æœ¬ã€‚" << endl;
 					ofs << buff << '\n';
 				}
 				it_mlv++;

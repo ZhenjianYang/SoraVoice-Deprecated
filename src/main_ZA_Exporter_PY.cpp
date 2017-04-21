@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 	ofstream ofs_rp(REP_NAME);
 	for (const auto &fn_py : fn_pys) {
 		const string name = fn_py.substr(0, fn_py.rfind(ATTR_PY));
-		cout << "´¦Àí" << fn_py << "..." << endl;
+		cout << "å¤„ç†" << fn_py << "..." << endl;
 
 		ifstream ifs(dir_py + fn_py);
 		ofstream ofs;

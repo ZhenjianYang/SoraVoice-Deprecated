@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 	ofstream ofs_rp(REP_NAME);
 	for (const auto &fn_bin : fn_bins) {
 		const string name = fn_bin.substr(0, fn_bin.rfind(ATTR_BIN));
-		cout << "´¦Àí" << fn_bin << "..." << endl;
+		cout << "å¤„ç†" << fn_bin << "..." << endl;
 
 		ifstream ifs(dir_bin + fn_bin, ios::binary);
 		ofstream ofs;

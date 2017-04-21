@@ -2,30 +2,30 @@
 
 class Message {
 public:
-	static constexpr char Title[] = "¡¶¿ÕÖ®¹ì¼£¡·ÓïÒô²¹¶¡";
-	static constexpr char Version[] = "°æ±¾ %s";
+	static constexpr char Title[] = "ã€Šç©ºä¹‹è½¨è¿¹ã€‹è¯­éŸ³è¡¥ä¸";
+	static constexpr char Version[] = "ç‰ˆæœ¬ %s";
 	static constexpr char VersionNum[] = "0.4.1";
 
-	static constexpr char On[] = "¿ª";
-	static constexpr char Off[] = "¹Ø";
+	static constexpr char On[] = "å¼€";
+	static constexpr char Off[] = "å…³";
 	static constexpr const char* Switch[] = { Off, On };
 	
-	static constexpr char Volume[] = "ÒôÁ¿£º%d";
-	static constexpr char Mute[] = "¾²Òô";
+	static constexpr char Volume[] = "éŸ³é‡ï¼š%d";
+	static constexpr char Mute[] = "é™éŸ³";
 
-	static constexpr char Reset[] = "ÖØÖÃÉèÖÃ";
+	static constexpr char Reset[] = "é‡ç½®è®¾ç½®";
 	
-	static constexpr char AutoPlay[] = "×Ô¶¯²¥·Å£º%s";
-	static constexpr char AutoPlayVoice[] = "ÓĞÓïÒôÊ±¿ªÆô";
-	static constexpr char AutoPlayAll[] = "Ò»ÂÉ¿ªÆô";
+	static constexpr char AutoPlay[] = "è‡ªåŠ¨æ’­æ”¾ï¼š%s";
+	static constexpr char AutoPlayVoice[] = "æœ‰è¯­éŸ³æ—¶å¼€å¯";
+	static constexpr char AutoPlayAll[] = "ä¸€å¾‹å¼€å¯";
 	static constexpr const char* AutoPlaySwitch[] = { Off, AutoPlayVoice, AutoPlayAll };
 
-	static constexpr char SkipVoice[] = "¶Ô»°¿ò¹Ø±ÕÊ±ÖÕÖ¹ÓïÒô£º%s";
-	static constexpr char DisableDialogSE[] = "½ûÓÃ¶Ô»°¿ò¹Ø±ÕÒôĞ§£º%s";
-	static constexpr char DisableDududu[] = "½ûÓÃÎÄ×ÖÏÔÊ¾ÒôĞ§£º%s";
+	static constexpr char SkipVoice[] = "å¯¹è¯æ¡†å…³é—­æ—¶ç»ˆæ­¢è¯­éŸ³ï¼š%s";
+	static constexpr char DisableDialogSE[] = "ç¦ç”¨å¯¹è¯æ¡†å…³é—­éŸ³æ•ˆï¼š%s";
+	static constexpr char DisableDududu[] = "ç¦ç”¨æ–‡å­—æ˜¾ç¤ºéŸ³æ•ˆï¼š%s";
 	
-	static constexpr char ShowInfo[] = "ĞÅÏ¢ÏÔÊ¾£º%s";
-	static constexpr char ShowInfoAuto[] = "¿ª(ÏÔÊ¾×Ô¶¯²¥·Å·ûºÅ)";
+	static constexpr char ShowInfo[] = "ä¿¡æ¯æ˜¾ç¤ºï¼š%s";
+	static constexpr char ShowInfoAuto[] = "å¼€(æ˜¾ç¤ºè‡ªåŠ¨æ’­æ”¾ç¬¦å·)";
 	static constexpr const char* ShowInfoSwitch[] = {Off, On, ShowInfoAuto};
 	
 	static constexpr char AutoPlayMark[] = "AUTO";

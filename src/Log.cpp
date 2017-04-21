@@ -1,4 +1,4 @@
-﻿#include "Log.h"
+#include "Log.h"
 
 #if !LOG_NOLOG
 
