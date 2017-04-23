@@ -2,9 +2,18 @@
 
 class Message {
 public:
-	static constexpr char Title[] = "《空之轨迹》语音补丁";
+	static constexpr char Title_Sora[] = "《空之轨迹》语音补丁";
+	static constexpr char Title_ZA[] = "《零·碧之轨迹》语音补丁";
+#ifdef ZA
+	static constexpr const char* Title = Title_ZA;
+#else
+	static constexpr const char* Title = Title_Sora;
+#endif // ZA
+
 	static constexpr char Version[] = "版本 %s";
 	static constexpr char VersionNum[] = "0.4.1";
+
+	static constexpr char GameTitle[] = "本游戏为：%s";
 
 	static constexpr char On[] = "开";
 	static constexpr char Off[] = "关";

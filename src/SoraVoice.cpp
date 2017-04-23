@@ -1052,6 +1052,7 @@ void SoraVoiceImpl::init()
 		if (config->ShowInfo) {
 			draw->addInfo(InfoType::Hello, HELLO_TIME, Message::Title);
 			draw->addInfo(InfoType::Hello, HELLO_TIME, Message::Version, Message::VersionNum);
+			draw->addInfo(InfoType::Hello, HELLO_TIME, Message::GameTitle, Comment);
 		}
 	}
 }

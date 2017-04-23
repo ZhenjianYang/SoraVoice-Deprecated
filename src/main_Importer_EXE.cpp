@@ -404,7 +404,8 @@ int main(int argc, char* argv[])
 				<< "VA = 0x" << setfill('0') << setw(8) << setiosflags(ios::right) << hex << setiosflags(ios::uppercase) << si_new.vAddr + Base << '\n'
 				<< "RVA = 0x" << setfill('0') << setw(8) << setiosflags(ios::right) << hex << setiosflags(ios::uppercase) << si_new.vAddr << '\n'
 				<< "Offset = 0x" << setfill('0') << setw(8) << setiosflags(ios::right) << hex << setiosflags(ios::uppercase) << si_new.Off << '\n'
-				<< "Size = 0x" << setfill('0') << setw(4) << setiosflags(ios::right) << hex << setiosflags(ios::uppercase) << si_new.Size << '\n';
+				<< "Size = 0x" << setfill('0') << setw(4) << setiosflags(ios::right) << hex << setiosflags(ios::uppercase) << si_new.Size << '\n'
+				<< "Comment = " << (comment ? comment : "") << endl;
 
 			ofsr.close();
 		}
