@@ -11,8 +11,8 @@ section scode vstart=vs
 scode_start:
 	pop     ebx
 	pop     eax
-	sub     ebx, 7 + vs
 	mov     dword [ebx + tmp], eax
+	sub     ebx, 7 + vs
 	pop     eax
 
 	cmp     byte [ebx + scode_TEXT], al
@@ -29,7 +29,7 @@ record_code:
 	mov     byte [ebx + status_scode], al
 
 scode_return:
-%ifdef za
+%ifdef ao
 	mov     esi, esp
 	mov     eax, [ebp+08]
 %else
@@ -41,6 +41,8 @@ scode_return:
 	push    dword [ebx + next(jcs_scode)]
 	mov     ebx, dword [ebx + tmp]
 	ret
+
+times 0x100-($-$$) db 0
 
 %undef tmp
 %undef vs

@@ -11,11 +11,11 @@ section dlgse vstart=vs
 dlgse_start:
 	pop     ebx
 	pop     eax
-	sub     ebx, 7 + vs
 	mov     dword [ebx + tmp], eax
+	sub     ebx, 7 + vs
 	pop     eax
 
-	push    ebx + ptr_initparam
+	push    dword [ebx + ptr_initparam]
 	call    dword [ebx + voice_stop]
 
 callend:
@@ -26,14 +26,12 @@ callend:
 	mov     dword [esp + 0x0C], 0
 	call    dword [ebx + to(order_dlgse)]
 %else
-	mov     ecx, dword [ebx + addr_mute]
-	cmp     byte [ecx], 0
+	cmp     byte [ebx + addr_mute], 0
 	jne     short dlgse_return
 
-	mov     byte [ecx], 1
+	mov     byte [ebx + addr_mute], 1
 	call    dword [ebx + to(jcs_dlgse)]
-	mov     ecx, dword [ebx + addr_mute]
-	mov     byte [ecx], 0
+	mov     byte [ebx + addr_mute], 0
 %endif
 
 	push    dword [ebx + next(jcs_dlgse)]
@@ -45,6 +43,8 @@ dlgse_return:
 	push    dword [ebx + next(jcs_dlgse)]
 	mov     ebx, dword [ebx + tmp]
 	ret
+
+times 0x100-($-$$) db 0
 
 %undef tmp
 %undef vs

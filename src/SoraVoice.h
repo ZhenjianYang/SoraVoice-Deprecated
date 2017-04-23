@@ -1,7 +1,5 @@
 #pragma once
 
-struct InitParam;
-
 class SoraVoice
 {
 public:
@@ -12,7 +10,7 @@ public:
 
 	virtual ~SoraVoice() {};
 
-	static SoraVoice* CreateInstance(InitParam* initParam);
+	static SoraVoice* CreateInstance(void* initParam);
 	static void DestoryInstance(SoraVoice* sv);
 };
 

@@ -1,9 +1,11 @@
 #include "ed_voice.h"
 #include "SoraVoice.h"
 #include "InitParam.h"
+#include "Log.h"
 
 SVDECL void SVCALL Init(void *p)
 {
+	LOG_OPEN;
 	InitParam* ip = (InitParam*)p;
 	if (!ip || ip->sv) return;
 
@@ -17,6 +19,7 @@ SVDECL void SVCALL End(void *p)
 
 	SoraVoice::DestoryInstance((SoraVoice*)ip->sv);
 	ip->sv = nullptr;
+	LOG_CLOSE;
 }
 
 SVDECL void SVCALL Play(void *v, void *p)
@@ -35,11 +38,4 @@ SVDECL void SVCALL Stop(void *p)
 	((SoraVoice *)ip->sv)->Stop();
 }
 
-SVDECL void SVCALL Input(void *p)
-{
-	InitParam* ip = (InitParam*)p;
-	if (!ip || !ip->sv) return;
-
-	((SoraVoice *)ip->sv)->Input();
-}
 

@@ -1,25 +1,13 @@
 %ifndef MACRO_COMMON
 %define MACRO_COMMON
 
-%ifndef fill_code
-%define fill_code 0
-%endif
-
-%ifndef za
-%ifdef zero
-%define za
-%elifdef ao
-%define za
-%endif
-%endif
-
 %define base		0
 
 %define ptr_initparam	(base + 0)
 
 %define base_addr		(base + 0)
-%define addr_mute		(base_addr + 0x20)
-%define addr_keys		(base_addr + 0x24)
+%define addr_mute		(base_addr + 0x24)
+%define addr_keys		(base_addr + 0x28)
 
 %define base_exps		(base + 0x30)
 %define voice_init		(base_exps + 0x00)
@@ -27,14 +15,14 @@
 %define voice_play		(base_exps + 0x08)
 %define voice_stop		(base_exps + 0x0C)
 
-%define next(jc)		(jc)
-%define to(jc)			(jc + 4)
+%define to(jc)			(jc)
+%define next(jc)		(jc + 4)
 %define base_jcs		(base + 0x50)
 %define jcs_text		(base_jcs + 0x00)
 %define jcs_dududu		(base_jcs + 0x08)
 %define jcs_dlgse		(base_jcs + 0x10)
-%define jcs_aup			(base_jcs + 0x18)
-%define jcs_scode		(base_jcs + 0x20)
+%define jcs_scode		(base_jcs + 0x18)
+%define jcs_aup			(base_jcs + 0x20)
 
 %define base_scode		(base + 0x88)
 %define scode_TEXT		(base_scode + 0x00)

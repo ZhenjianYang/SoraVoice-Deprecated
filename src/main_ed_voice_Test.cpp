@@ -1,11 +1,16 @@
 #define CINTERFACE 1
 
 #include <iostream>
+#include <fstream>
 #include <string>
+#include <vector>
+#include <map>
+#include <memory>
 
 #include "ed_voice.h"
 #include "InitParam.h"
-#include "HookD3d.h"
+#include "Hook.h"
+#include "ini.h"
 
 #include <vorbis\vorbisfile.h>
 #include <dsound.h>
@@ -29,6 +34,18 @@ HRESULT WINAPI Fake_IDirect3DDevice8_Present(IDirect3DDevice8 * D3DD, CONST RECT
 
 int main(int argc, char* argv[])
 {
+	INI ini("SoraData.ini");
+	ofstream ofs("NewSoraData.ini");
+	for (int i = 0; i < ini.Num(); i++) {
+		auto& group = ini.GetGroup(i);
+
+		if(i != 0) ofs << "[" << group.Name() << "]" << endl;
+		for (int j = 0; j < group.Num(); j++) {
+			ofs << group.GetKey(j) << " = " << group.GetValue(j) << endl;
+		}
+	}
+	ofs.close();
+
 	InitParam p;
 	memset(&p, 0, sizeof(p));
 
@@ -39,19 +56,19 @@ int main(int argc, char* argv[])
 
 	LPDIRECTSOUND pDS = NULL;
 
-	p.p_pDS = (void**)&pDS;
-	p.p_ov_open_callbacks = &vf_ov_open_callbacks;
-	p.p_ov_info = &vf_ov_info;
-	p.p_ov_read = &vf_ov_read;
-	p.p_ov_clear = &vf_ov_clear;
+	p.addrs.p_pDS = (void**)&pDS;
+	p.addrs.p_ov_open_callbacks = &vf_ov_open_callbacks;
+	p.addrs.p_ov_info = &vf_ov_info;
+	p.addrs.p_ov_read = &vf_ov_read;
+	p.addrs.p_ov_clear = &vf_ov_clear;
 
 	DirectSoundCreate(NULL, &pDS, NULL);
 	HWND hWnd = GetHwnd();
 	pDS->lpVtbl->SetCooperativeLevel(pDS, hWnd, DSSCL_PRIORITY);
 
-	p.p_Hwnd = &hWnd;
+	p.addrs.p_Hwnd = (void**)&hWnd;
 	void* d3d = nullptr;
-	p.p_d3dd = &d3d;
+	p.addrs.p_d3dd = &d3d;
 
 	IDirect3DDevice8 d3dd;
 	IDirect3DDevice8Vtbl vtbl;
@@ -60,7 +77,8 @@ int main(int argc, char* argv[])
 	vtbl.Present = Fake_IDirect3DDevice8_Present;
 
 	Init(&p);
-	Hook_IDirect3DDevice8_Present(&d3dd, p.sv);
+	InitHook_SetInitParam(&p);
+	Hook_D3D_Present(&d3dd);
 
 	for (int i = 0; i < 100; i++) {
 		vtbl.Present(&d3dd, 0, 0, 0, 0);

@@ -11,13 +11,13 @@ section dududu vstart=vs
 dududu_start:
 	pop     ebx
 	pop     eax
-	sub     ebx, 7 + vs
 	mov     dword [ebx + tmp], eax
+	sub     ebx, 7 + vs
 	pop     eax
 
 	cmp     byte [ebx + status_code5], 0
 	je      code5end
-	push    ebx + ptr_initparam
+	push    dword [ebx + ptr_initparam]
 	call    dword [ebx + voice_stop]
 
 code5end:
@@ -40,26 +40,24 @@ count:
 	jmp     disabledududu
 	
 first:
-	mov     eax, dword [ebx + ptr_now]
-	mov     dword [ebx + ptr_ttb], eax
-	mov     dword [ebx + ptr_cnt], 1
+	mov     eax, dword [ebx + ptr_cnt]
+	mov     dword [ebx + ptr_now], eax
+	mov     dword [ebx + ptr_ttb], 1
 
 disabledududu:
 	cmp     byte [ebx + order_dududu], 0
 	je      short dududu_return
 
-%ifdef za
+%ifdef ao
 	mov     dword [esp + 0x0C], 0
 	call    dword [ebx + to(jcs_dududu)]
 %else
-	mov     ecx, dword [ebx + addr_mute]
-	cmp     byte [ecx], 0
+	cmp     byte [ebx + addr_mute], 0
 	jne     short dududu_return
 
-	mov     byte [ecx], 1
+	mov     byte [ebx + addr_mute], 1
 	call    dword [ebx + to(jcs_dududu)]
-	mov     ecx, dword [ebx + addr_mute]
-	mov     byte [ecx], 0
+	mov     byte [ebx + addr_mute], 0
 %endif
 
 	push    dword [ebx + next(jcs_dududu)]
@@ -71,6 +69,8 @@ dududu_return:
 	push    dword [ebx + next(jcs_dududu)]
 	mov     ebx, dword [ebx + tmp]
 	ret
+
+times 0x100-($-$$) db 0
 
 %undef tmp
 %undef vs

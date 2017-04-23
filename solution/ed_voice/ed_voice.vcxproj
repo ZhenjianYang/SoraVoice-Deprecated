@@ -64,7 +64,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LOG_NOLOG;_SVDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>xLOG_NOLOG;_SVDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
@@ -74,13 +74,12 @@
       <AdditionalDependencies>d3dx8.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libci.lib</IgnoreSpecificDefaultLibraries>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
     <ClInclude Include="..\..\src\ed_voice.h" />
-    <ClInclude Include="..\..\src\HookD3d.h" />
+    <ClInclude Include="..\..\src\Hook.h" />
     <ClInclude Include="..\..\src\message.h" />
     <ClInclude Include="..\..\src\SoraVoice.h" />
     <ClInclude Include="..\..\src\InitParam.h" />
@@ -91,7 +90,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\config.cpp" />
     <ClCompile Include="..\..\src\ed_voice.cpp" />
-    <ClCompile Include="..\..\src\HookD3d.cpp" />
+    <ClCompile Include="..\..\src\Hook.cpp" />
     <ClCompile Include="..\..\src\Log.cpp" />
     <ClCompile Include="..\..\src\SoraVoice.cpp" />
   </ItemGroup>

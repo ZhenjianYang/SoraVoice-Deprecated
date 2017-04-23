@@ -3,7 +3,7 @@
 %define tmp tmp0
 %define vs vs_text
 
-%ifdef za
+%ifdef ao
 %define eadx eax
 %else
 %define eadx edx
@@ -17,11 +17,10 @@ section text vstart=vs
 text_start:
 	pop     ebx
 	pop     eax
-	sub     ebx, 7 + vs
 	mov     dword [ebx + tmp], eax
+	sub     ebx, 7 + vs
 	pop     eax
 
-	cmp     al, 0x20
 	jb      jcode
 
 	cmp     byte [eadx], '#'
@@ -43,7 +42,7 @@ loopend:
 	push    eax
 	push    ecx
 	push    edx
-	push    ebx + ptr_initparam
+	push    dword [ebx + ptr_initparam]
 	push    eadx
 	call    dword [ebx + voice_play]
 	pop     edx
@@ -71,6 +70,8 @@ text_returnb:
 	push    dword [ebx + next(jcs_text)]
 	mov     ebx, dword [ebx + tmp]
 	ret
+
+times 0x100-($-$$) db 0
 
 %undef tmp
 %undef vs
