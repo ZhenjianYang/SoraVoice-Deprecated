@@ -17,8 +17,14 @@ dududu_start:
 
 	cmp     byte [ebx + status_code5], 0
 	je      code5end
+	push    eax
+	push    ecx
+	push    edx
 	push    ebx + ptr_initparam
 	call    dword [ebx + voice_stop]
+	pop     edx
+	pop     ecx
+	pop     eax
 
 code5end:
 	mov     al, byte [ebx + status_scode]

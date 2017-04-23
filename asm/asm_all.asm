@@ -1,9 +1,5 @@
 %include "macro_common"
 
-[BITS 32]
-section sbase vstart=base
-times (vs_text-base) db fill_code
-
 %include "asm_text.asm"
 %if ($-$$) % 2 != 0
 	nop

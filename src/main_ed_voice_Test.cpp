@@ -15,7 +15,8 @@
 #include <vorbis\vorbisfile.h>
 #include <dsound.h>
 #include <d3d8/d3dx8.h>
-#include <dinput.h>
+
+#include "Hooked_dinput8.h"
 
 #include "SoraVoice.h"
 
@@ -31,6 +32,17 @@ static HWND GetHwnd(void)
 HRESULT WINAPI Fake_IDirect3DDevice8_Present(IDirect3DDevice8 * D3DD, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion) {
 	return 0;
 }
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+	long SVCALL DirectInput8Create(void* hinst, unsigned dwVersion, void* riidltf, void **ppvOut, void *punkOuter);
+	//long SVCALL DirectInput8Create(void* hinst, unsigned dwVersion, void* riidltf, void **ppvOut, void *punkOuter);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 int main(int argc, char* argv[])
 {
@@ -53,6 +65,10 @@ int main(int argc, char* argv[])
 	void* vf_ov_info = ov_info;
 	void* vf_ov_read = ov_read;
 	void* vf_ov_clear = ov_clear;
+
+	GUID guidf = { 0xBF798030,0x483A,0x4DA2,0xAA,0x99,0x5D,0x64,0xED,0x36,0x97,0x00 };
+	void* pDI;
+	DirectInput8Create(GetModuleHandle(0), 0x800, &guidf, &pDI, 0);
 
 	LPDIRECTSOUND pDS = NULL;
 

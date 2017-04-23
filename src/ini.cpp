@@ -118,11 +118,11 @@ bool INI::Open(std::istream & is)
 			int idx = 1;
 			while (buff[idx] == ' ' || buff[idx] == '\t') idx++;
 			string name = buff + idx;
-			while (!name.empty() && (name.back() == ' ' || name.back() == '\t')) name.pop_back();
+			while (!name.empty() && (name.back() == ' ' || name.back() == '\t' || name.back() == '\r' || name.back() == '\n')) name.pop_back();
 			if (name.back() != ']') continue;
 			name.pop_back();
 
-			while (!name.empty() && (name.back() == ' ' || name.back() == '\t')) name.pop_back();
+			while (!name.empty() && (name.back() == ' ' || name.back() == '\t' || name.back() == '\r' || name.back() == '\n')) name.pop_back();
 			auto it = iniData->map_name_idx.find(name);
 			if (it == iniData->map_name_idx.end()) {
 				iniData->map_name_idx[name] = iniData->groups.size();
@@ -141,12 +141,12 @@ bool INI::Open(std::istream & is)
 			while (*p && *p != '=') key.push_back(*p++);
 			if (*p++ != '=') continue;
 
-			while (!key.empty() && (key.back() == ' ' || key.back() == '\t')) key.pop_back();
+			while (!key.empty() && (key.back() == ' ' || key.back() == '\t' || key.back() == '\r' || key.back() == '\n')) key.pop_back();
 			if (key.empty()) continue;
 
 			while (*p && (*p == ' ' || *p == '\t')) p++;
 			while (*p) value.push_back(*p++);
-			while (!value.empty() && (value.back() == ' ' || value.back() == '\t')) value.pop_back();
+			while (!value.empty() && (value.back() == ' ' || value.back() == '\t' || value.back() == '\r' || value.back() == '\n')) value.pop_back();
 
 			auto it = group->map_name_idx.find(key);
 			if (it == group->map_name_idx.end()) {

@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
 			if (jcs[j].to == 0) continue;
 
 			unsigned off_from = GetOffFromRVA(jcs[j].from - Base);
-			if(off_from > len_old) { ok = false; break; }
+			if(off_from > (unsigned)len_old) { ok = false; break; }
 			int len_op = buff[off_from] == opjmp || buff[off_from] == opcall ? 5 : 6;
 			int jc_len = GET_INT(buff + off_from + len_op - 4);
 
@@ -322,7 +322,7 @@ int main(int argc, char* argv[])
 	ifs_bin.seekg(0, ios::end);
 	int len_bin = (int)ifs_bin.tellg();
 	ifs_bin.seekg(0, ios::beg);
-	ifs_bin.read((char*)(buff_new + si_new.Off + roff_ip), len_bin);
+	ifs_bin.read((char*)(buff_new + si_new.Off + roff_ip + rvalist[0]), len_bin);
 	ifs_bin.close();
 
 	InitParam* ip = (InitParam*)(buff_new + si_new.Off + roff_ip);

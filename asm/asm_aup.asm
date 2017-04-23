@@ -21,12 +21,14 @@ aup_start:
 	cmp dword [ebx + ptr_sv], 0
 	jne short auto_play
 
-	push ecx
-	push edx
+	push    eax
+	push    ecx
+	push    edx
 	push    ebx + ptr_initparam
 	call    dword [ebx + voice_init]
-	pop edx
-	pop ecx
+	pop     edx
+	pop     ecx
+	pop     eax
 
 auto_play:
 	cmp byte [ebx + order_aup], 0
@@ -34,13 +36,18 @@ auto_play:
 	mov byte [ebx + order_aup], 0
 
 %ifdef za
-	call dword [ebx + to(jcs_aup)]
-	mov eax, 1
-
-aup_return:
+	call    dword [ebx + to(jcs_aup)]
+	mov     eax, 1
 	push    dword [ebx + next(jcs_aup)]
 	mov     ebx, dword [ebx + tmp]
 	ret
+
+aup_return:
+	call    dword [ebx + to(jcs_aup)]
+	push    dword [ebx + next(jcs_aup)]
+	mov     ebx, dword [ebx + tmp]
+	ret
+
 %else
 	mov eax, [ebx + addr_keys]
 	mov byte [eax + dik_space], dik_press

@@ -51,6 +51,7 @@ static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
 
 const GUID IID_IDirectSoundNotify = { 0xb0210783, 0x89cd, 0x11d0, 0xaf, 0x8, 0x0, 0xa0, 0xc9, 0x25, 0xcd, 0x16 };
 
+
 #ifdef ZA
 constexpr char CONFIG_FILE[] = "za_voice.ini";
 constexpr char VOICEFILE_PREFIX[] = "v";
@@ -123,8 +124,6 @@ constexpr byte SCODE_SAY = 0x5B;
 constexpr byte SCODE_TALK = 0x5C;
 constexpr byte SCODE_MENU = 0x5D;
 #endif // ZA
-
-
 
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
@@ -399,7 +398,9 @@ private:
 			}
 
 			pD3DD->EndScene();
-			//if(font) font->Release();
+			//if (font) {
+			//	font->Release(); font = NULL;
+			//}
 		}
 
 		void addInfo(InfoType type, unsigned time, const char* text, ...) {
@@ -572,19 +573,25 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
 
 	LOG("p = 0x%08X", initParam);
-	LOG("p->pHwnd = 0x%08X", initParam->addrs.p_Hwnd);
-	LOG("p->p_pDS = 0x%08X", initParam->addrs.p_pDS);
 	LOG("p->p_ov_open_callbacks = 0x%08X", initParam->addrs.p_ov_open_callbacks);
 	LOG("p->p_ov_info = 0x%08X", initParam->addrs.p_ov_info);
 	LOG("p->p_ov_read = 0x%08X", initParam->addrs.p_ov_read);
 	LOG("p->p_ov_clear = 0x%08X", initParam->addrs.p_ov_clear);
+	LOG("p->p_d3dd = 0x%08X", initParam->addrs.p_d3dd);
+	LOG("p->p_did = 0x%08X", initParam->addrs.p_did);
+	LOG("p->p_Hwnd = 0x%08X", initParam->addrs.p_Hwnd);
+	LOG("p->p_pDS = 0x%08X", initParam->addrs.p_pDS);
+	LOG("p->p_mute = 0x%08X", initParam->addrs.p_mute);
+	LOG("p->p_keys = 0x%08X", initParam->addrs.p_keys);
 
-	LOG("Hwnd = 0x%08X", *(unsigned*)initParam->addrs.p_Hwnd);
-	LOG("pDS = 0x%08X", *initParam->addrs.p_pDS);
 	LOG("ov_open_callbacks = 0x%08X", *initParam->addrs.p_ov_open_callbacks);
 	LOG("ov_info = 0x%08X", *initParam->addrs.p_ov_info);
 	LOG("ov_read = 0x%08X", *initParam->addrs.p_ov_read);
 	LOG("ov_clear = 0x%08X", *initParam->addrs.p_ov_clear);
+	LOG("d3dd = 0x%08X", *initParam->addrs.p_d3dd);
+	LOG("did = 0x%08X", *initParam->addrs.p_did);
+	LOG("Hwnd = 0x%08X", *initParam->addrs.p_Hwnd);
+	LOG("pDS = 0x%08X", *initParam->addrs.p_pDS);
 
 	LOG("Config loaded");
 	LOG("config.Volume = %d", config->Volume);
@@ -904,7 +911,6 @@ void SoraVoiceImpl::Input()
 void SoraVoiceImpl::Show()
 {
 	tm->UpdateTime();
-	//LOG("[TIME]Recent time: %d, current time: %d", tm->recent, tm->now);
 
 	if (status->showing) {
 		draw->drawInfos();
@@ -1268,7 +1274,6 @@ void SoraVoiceImpl::stopPlaying()
 
 	ogg->ov_clear(&ogg->ovf);
 }
-
 
 SoraVoice * SoraVoice::CreateInstance(void * initParam)
 {

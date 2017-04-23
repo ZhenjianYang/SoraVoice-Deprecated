@@ -15,16 +15,22 @@ dlgse_start:
 	mov     dword [ebx + tmp], eax
 	pop     eax
 
+	push    eax
+	push    ecx
+	push    edx
 	push    ebx + ptr_initparam
 	call    dword [ebx + voice_stop]
+	pop     edx
+	pop     ecx
+	pop     eax
 
 callend:
 	cmp     byte [ebx + order_dlgse], 0
 	je      short dlgse_return
 
-%ifdef ao
+%ifdef za
 	mov     dword [esp + 0x0C], 0
-	call    dword [ebx + to(order_dlgse)]
+	call    dword [ebx + to(jcs_dlgse)]
 %else
 	mov     ecx, dword [ebx + addr_mute]
 	cmp     byte [ecx], 0

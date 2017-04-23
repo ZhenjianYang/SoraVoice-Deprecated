@@ -21,6 +21,12 @@
     <ClInclude Include="..\..\src\ini.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\rc_hk_dinput8\resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hooked_dinput8_InitVoice.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hooked_dinput8.cpp">
@@ -29,5 +35,18 @@
     <ClCompile Include="..\..\src\ini.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Hooked_dinput8_InitVoice.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\src\rc_hk_dinput8\Hooked_dinput8.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\rc_hk_dinput8\sora_all" />
+    <None Include="..\..\src\rc_hk_dinput8\SoraData.ini" />
+    <None Include="..\..\src\rc_hk_dinput8\za_all" />
   </ItemGroup>
 </Project>

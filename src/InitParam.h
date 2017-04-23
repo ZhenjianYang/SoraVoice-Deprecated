@@ -38,8 +38,8 @@ struct InitParam
 
 	//0x50
 	struct {
-		unsigned to;
 		unsigned next;
+		unsigned to;
 	} jcs[7];
 
 	//0x88

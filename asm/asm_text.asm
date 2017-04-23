@@ -5,8 +5,10 @@
 
 %ifdef za
 %define eadx eax
+%define acl cl
 %else
 %define eadx edx
+%define acl al
 %endif
 
 [BITS 32]
@@ -21,7 +23,7 @@ text_start:
 	mov     dword [ebx + tmp], eax
 	pop     eax
 
-	cmp     al, 0x20
+	cmp     acl, 0x20
 	jb      jcode
 
 	cmp     byte [eadx], '#'
