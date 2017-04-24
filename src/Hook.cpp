@@ -65,7 +65,7 @@ void* Hook_D3D_Present(void* pD3DD)
 		p->lpVtbl->Present = Hooked_Present;
 	}
 
-	return pPresent;
+	return (void*)pPresent;
 }
 
 void * Hook_DI_GetDeviceState(void * pDID)
@@ -80,7 +80,7 @@ void * Hook_DI_GetDeviceState(void * pDID)
 		pGetDeviceState = p->lpVtbl->GetDeviceState;
 		p->lpVtbl->GetDeviceState = Hooked_GetDeviceState;
 	}
-	return pGetDeviceState;
+	return (void*)pGetDeviceState;
 }
 
 void InitHook_SetInitParam(void * ip)

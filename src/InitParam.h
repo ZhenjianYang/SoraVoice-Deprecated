@@ -94,5 +94,6 @@ struct InitParam
 };
 #pragma pack(pop)
 
+static_assert(sizeof(void*) == 4, "32 bits only!");
 static_assert(sizeof(InitParam) <= 0xE0, "Size of InitParam too big!");
 

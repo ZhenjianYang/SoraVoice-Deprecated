@@ -47,8 +47,8 @@
 						"#默认为0(不保存)\n"\
 						"###注意：静音状态不会被保存###";
 
-#define DEFINE_CONFIG_COMMON(name) static constexpr char STR_##name[] = #name;\
-									static constexpr char CMT_##name[] = _CMT_##name;\
+#define DEFINE_CONFIG_COMMON(name) static constexpr const char* STR_##name = #name;\
+									static constexpr const char* CMT_##name = _CMT_##name;\
 
 #define DEFINE_CONFIG(name, dft) int name; \
 								static constexpr int DFT_##name = dft;\
@@ -58,7 +58,7 @@
 											static constexpr int MAX_##name = max;
 
 #define DEFINE_STRCONFIG(name, dft, len) char name[len+1]; \
-										static constexpr char DFT_##name[] = dft;\
+										static constexpr const char* DFT_##name = dft;\
 										DEFINE_CONFIG_COMMON(name);
 
 struct Config

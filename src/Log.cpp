@@ -1,6 +1,6 @@
 #include "Log.h"
 
-#if !LOG_NOLOG
+#ifndef LOG_NOLOG
 
 #include <time.h>
 #include <stdarg.h>
@@ -41,7 +41,7 @@ void _log_delparam(int _param) {
 	_log_setparam(::_param & (~_param));
 }
 void _log_setlogfile(const char* filename) {
-	strcpy_s(filename_buf, filename);
+	strcpy(filename_buf, filename);
 	if (_logopened && (LOG_OUT_FILE & _param)) {
 		_log_ofs.close();
 		_log_ofs.open(filename_buf, std::ofstream::out | std::ofstream::app);
@@ -49,7 +49,7 @@ void _log_setlogfile(const char* filename) {
 }
 void _log_open(int _param) {
 	_log_setparam(_param);
-	if (filename_buf[0] == 0) strcpy_s(filename_buf, LOG_LOGFILE_DFT);
+	if (filename_buf[0] == 0) strcpy(filename_buf, LOG_LOGFILE_DFT);
 	if (LOG_OUT_FILE & _param) _log_ofs.open(filename_buf, std::ofstream::out | std::ofstream::app);
 	_logopened = 1;
 }
@@ -85,7 +85,7 @@ void _log_print(int type, const char* format, ...) {
 
 	int len = 0;
 	if (!(_param & LOG_PARAM_NOPREINFO)) {
-		len = sprintf_s(tbuff, "[%02d-%02d-%02d %02d:%02d:%02d.%03d][%s]",
+		len = sprintf(tbuff, "[%02d-%02d-%02d %02d:%02d:%02d.%03d][%s]",
 			ptm->wYear, ptm->wMonth, ptm->wDay,
 			ptm->wHour, ptm->wMinute, ptm->wSecond, ptm->wMilliseconds,
 			strmark);

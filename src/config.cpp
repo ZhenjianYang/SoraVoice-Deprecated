@@ -3,6 +3,7 @@
 #include <fstream>
 #include <map>
 #include <iomanip>
+#include <cstring>
 
 using namespace std;
 
@@ -35,13 +36,15 @@ static bool _getValue(int& var, const KeyValue& kv, const char* name) {
 	return true;
 }
 
-template<typename ArrayType, typename = std::enable_if<std::is_array<ArrayType>::value>::type>
+template<typename ArrayType, typename = std::enable_if_t<std::is_array<ArrayType>::value>>
 static bool _getValue(ArrayType &var, const KeyValue& kv, const char* name) {
 
 	auto it = kv.find(name);
 	if (it == kv.end()) return false;
 
-	for (int i = 0; i < (int)it->second.length() && i < sizeof(var) / sizeof(&var); i++) {
+	constexpr int len_array = std::extent<ArrayType>::value;
+
+	for (int i = 0; i < (int)it->second.length() && i < len_array; i++) {
 		var[i] = it->second[i];
 	}
 	var[sizeof(var) / sizeof(&var) - 1] = 0;
