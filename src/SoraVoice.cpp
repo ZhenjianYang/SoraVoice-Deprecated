@@ -17,6 +17,8 @@
 #include <dinput.h>
 #define DID IDirectInputDevice8A
 
+#include <dsound.h>
+
 #if DIRECT3D_VERSION == 0x0900
 #define D3D IDirect3D9
 #define D3DD IDirect3DDevice9
@@ -31,14 +33,14 @@ static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
 #endif
 
 #include <vorbis\vorbisfile.h>
-#include <dsound.h>
-
 #include <thread>
 #include <mutex>
 #include <memory>
 #include <list>
 #include <set>
 #include <map>
+#include <string>
+#include <queue>
 
 #ifndef MAX_VOICEID_LEN
 #define MAX_VOICEID_LEN 10
@@ -48,33 +50,26 @@ static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
 #define MAX_VOICEID_LEN_NEED_MAPPING 5
 #endif // !MAX_VOICEID_LEN_NEED_MAPPING
 
-
 const GUID IID_IDirectSoundNotify = { 0xb0210783, 0x89cd, 0x11d0, 0xaf, 0x8, 0x0, 0xa0, 0xc9, 0x25, 0xcd, 0x16 };
-
 
 #ifdef ZA
 constexpr char CONFIG_FILE[] = "za_voice.ini";
-constexpr char VOICEFILE_PREFIX[] = "v";
+constexpr char VOICEFILE_PREFIX[] = "voice\\v";
 #else
 constexpr char CONFIG_FILE[] = "ed_voice.ini";
-constexpr char VOICEFILE_PREFIX[] = "ch";
+constexpr char VOICEFILE_PREFIX[] = "voice\\ch";
 #endif
-constexpr char VOICEFILE_DIR[] = "voice\\";
 constexpr char VOICEFILE_ATTR[] = ".ogg";
-
-constexpr int MAX_OGG_FILENAME_LEN = 25;
-
-constexpr int LEN_PREFIX = sizeof(VOICEFILE_DIR) - 1 + sizeof(VOICEFILE_PREFIX) - 1;
-static_assert(LEN_PREFIX + MAX_VOICEID_LEN + sizeof(VOICEFILE_ATTR) - 1 <= MAX_OGG_FILENAME_LEN, "MAX_OGG_FILENAME_LEN not enought!");
 
 constexpr int NUM_AUDIO_BUF = 2;
 constexpr int NUM_NOTIFY_PER_BUFF = 8;
 constexpr int NUM_NOTIFY = (NUM_AUDIO_BUF * NUM_NOTIFY_PER_BUFF);
+static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Number of notifies exceeds the maxmum value");
 
 constexpr int VOLUME_STEP = 1;
 constexpr int VOLUME_STEP_BIG = 5;
 
-constexpr int TIME_BUF = 1;
+
 
 constexpr int KEY_MIN = DIK_5;
 constexpr int KEY_MAX = DIK_EQUALS;
@@ -92,7 +87,7 @@ constexpr int KEY_DLGSE = DIK_7;
 constexpr int KEY_DU = DIK_6;
 constexpr int KEY_INFO = DIK_5;
 
-constexpr int MAX_TEXT_BUF = 63;
+constexpr int MAX_TEXT_LEN = 63;
 
 constexpr int MIN_FONT_SIZE = 25;
 constexpr int TEXT_NUM_SCRH = 25;
@@ -125,13 +120,15 @@ constexpr byte SCODE_TALK = 0x5C;
 constexpr byte SCODE_MENU = 0x5D;
 #endif // ZA
 
-using Clock = std::chrono::steady_clock;
-using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
-using TimeUnit = std::chrono::milliseconds;
-
 class SoraVoiceImpl : private SoraVoice
 {
 	friend SoraVoice;
+
+	using Clock = std::chrono::steady_clock;
+	using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
+	using TimeUnit = std::chrono::milliseconds;
+
+	using LockGuard = std::lock_guard<std::mutex>;
 
 private:
 	enum class InfoType
@@ -148,22 +145,9 @@ private:
 
 		ConfigReset,
 
-		All
+		All,
+		Dead
 	};
-
-	struct Info
-	{
-		char text[MAX_TEXT_BUF + 1];
-		RECT rect;
-		unsigned color;
-		unsigned format;
-		InfoType type;
-
-		unsigned dead;
-	};
-	using PtrInfo = std::unique_ptr<Info>;
-	using PtrInfoList = std::list<PtrInfo>;
-	using MapVid = std::map<std::string, int>;
 
 	const char* const Comment;
 	byte& ended;
@@ -179,7 +163,7 @@ private:
 		unsigned &now;
 		unsigned &recent;
 
-		void UpdateTime() {
+		void updateTime() {
 			TimePoint newNow = Clock::now();
 			recent = now;
 			now = (unsigned)std::chrono::duration_cast<TimeUnit>(newNow - base).count();
@@ -190,40 +174,38 @@ private:
 		}
 	} _tm;
 
-	struct Ogg {
+	struct Player {
 		decltype(::ov_open_callbacks)* const ov_open_callbacks;
 		decltype(::ov_info)* const ov_info;
 		decltype(::ov_read)* const ov_read;
 		decltype(::ov_clear)* const ov_clear;
 
-		OggVorbis_File ovf;
-		const char* oggFn;
-		char buff_oggFn[MAX_OGG_FILENAME_LEN + 1];
+		struct OggFile {
+			std::string oggFileName;
+			OggVorbis_File ovf;
+		};
+		using PtrOVFile = std::unique_ptr<OggVorbis_File>;
+		using OVFileQueue = std::queue<PtrOVFile>;
+		using OggFnQueue = std::queue<std::string>;
+		
+		OVFileQueue ovFileQueue;
+		std::mutex mt_ovFileQueue;
 
-		Ogg(InitParam* ip)
+		OggFnQueue oggFnQueue;
+		std::mutex mt_oggFnQueue;
+
+		Player(InitParam* ip)
 			:ov_open_callbacks((decltype(ov_open_callbacks))*ip->addrs.p_ov_open_callbacks),
 			ov_info((decltype(ov_info))*ip->addrs.p_ov_info),
 			ov_read((decltype(ov_read))*ip->addrs.p_ov_read),
-			ov_clear((decltype(ov_clear))*ip->addrs.p_ov_clear),
-			oggFn(nullptr) {
-			memset(&ovf, 0, sizeof(ovf));
-
-			strcpy(buff_oggFn, VOICEFILE_DIR);
-			strcpy(buff_oggFn + sizeof(VOICEFILE_DIR) - 1, VOICEFILE_PREFIX);
+			ov_clear((decltype(ov_clear))*ip->addrs.p_ov_clear)
+		{
 		}
 
-		void setOggFileName(const char* str_vid = nullptr) {
-			if (str_vid) {
-				int idx = LEN_PREFIX;
-				for (int i = 0; str_vid[i]; i++, idx++) {
-					buff_oggFn[idx] = str_vid[i];
-				}
-				strcpy(buff_oggFn + idx, VOICEFILE_ATTR);
-				oggFn = buff_oggFn;
-			}
-			else {
-				oggFn = nullptr;
-			}
+		const char* addOggFile(const std::string& str_vid) {
+			LockGuard lock(mt_oggFnQueue);
+			oggFnQueue.emplace(VOICEFILE_PREFIX + str_vid + VOICEFILE_ATTR);
+			return oggFnQueue.back().c_str();
 		}
 
 		int readOggData(char * buff, int size)
@@ -231,21 +213,51 @@ private:
 			if (buff == nullptr || size <= 0) return 0;
 
 			for (int i = 0; i < size; i++) buff[i] = 0;
-			int total = 0;
-
-			constexpr int block = 4096;
+			int read = 0;
 			int bitstream = 0;
-
-			while (total < size)
 			{
-				int request = size - total < block ? size - total : block;
-				int read = ov_read(&ovf, buff + total, request, 0, 2, 1, &bitstream);
-				if (read <= 0) return total;
+				LockGuard lock(mt_ovFileQueue);
+				if (ovFileQueue.empty()) return 0;
+				read = ov_read(ovFileQueue.back().get(), buff, size, 0, 2, 1, &bitstream);
+			}
+			return read;
+		}
 
-				total += read;
+		//return value :
+		//       0  : no more file
+		//       -1 : open file error
+		//       1  : succeeded
+		int openOggFileAtFront() {
+			std::string oggFn;
+			{
+				LockGuard lock(mt_oggFnQueue);
+				if (oggFnQueue.empty()) {
+					LOG("No more ogg files in ogg files queue.");
+					return 0;
+				}
+				oggFn.assign(std::move(oggFnQueue.front()));
+				oggFnQueue.pop();
+			}
+			LOG("Start openning ogg file : %s ...", oggFn.c_str());
+			FILE* f = fopen(oggFn.c_str(), "rb");
+
+			if (f == NULL) {
+				LOG("Open file failed.");
+				return -1;
 			}
 
-			return total;
+			PtrOVFile ovFile(new OggVorbis_File{ 0 });
+			if (this->ov_open_callbacks(f, ovFile.get(), nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
+				fclose(f);
+				LOG("Open file as ogg failed!");
+				return -1;
+			}
+			LOG("Ogg file opened.");
+			{
+				LockGuard lock(mt_ovFileQueue);
+				ovFileQueue.emplace(std::move(ovFile));
+			}
+			return 1;
 		}
 	} _ogg;
 
@@ -260,6 +272,9 @@ private:
 		int notifySize;
 		int halfNotifySize;
 
+		std::mutex mt_play;
+		int playEnd;
+
 		DSD(InitParam* ip)
 			:pDS((decltype(pDS))*ip->addrs.p_pDS), pDSBuff(nullptr),
 			buffSize(0), notifySize(0), halfNotifySize(0) {
@@ -272,13 +287,11 @@ private:
 	struct Thread {
 		static constexpr int evEndid_Read = 0;
 		static constexpr int evEndid_Open = 1;
-		HANDLE hEvents[NUM_NOTIFY];
-		HANDLE hEventOpenFile;
-		HANDLE hEventEnd[2];
+		HANDLE hEvent_ReadOgg[NUM_NOTIFY];
+		HANDLE hEvent_OpenOgg;
+		HANDLE hEvent_End[2];
 		std::thread th_open;
 		std::thread th_read;
-		std::mutex mt_play;
-		int playEnd;
 		enum OpenStatus
 		{
 			Openning,
@@ -286,10 +299,10 @@ private:
 			Succeeded
 		} opening;
 		Thread(InitParam* ip)
-			:hEventOpenFile(NULL),
-			playEnd(-1), opening(Succeeded) {
-			memset(hEvents, 0, sizeof(hEvents));
-			memset(hEventEnd, 0, sizeof(hEventEnd));
+			:hEvent_OpenOgg(NULL),
+			opening(Succeeded) {
+			memset(hEvent_ReadOgg, 0, sizeof(hEvent_ReadOgg));
+			memset(hEvent_End, 0, sizeof(hEvent_End));
 		}
 	} _th;
 
@@ -303,12 +316,25 @@ private:
 	} _ipt;
 
 	struct Draw {
+		struct Info
+		{
+			char text[MAX_TEXT_LEN + 1];
+			RECT rect;
+			unsigned color;
+			unsigned format;
+			InfoType type;
+
+			unsigned deadTime;
+		};
+		using PtrInfo = std::unique_ptr<Info>;
+		using PtrInfoList = std::list<PtrInfo>;
+
 		byte& showing;
 		const unsigned& now;
 
-		const HWND hwnd;
+		const HWND hWnd;
 		D3DD* const pD3DD;
-		ID3DXFont *font;
+		ID3DXFont *pFont;
 
 #if DIRECT3D_VERSION == 0x900
 		D3DXFONT_DESCA desca;
@@ -351,7 +377,7 @@ private:
 
 		Draw(InitParam* ip)
 			:showing(ip->status.showing), now(ip->rcd.now), 
-			hwnd(*(HWND*)ip->addrs.p_Hwnd), pD3DD(*(decltype(pD3DD)*)ip->addrs.p_d3dd), font(nullptr),
+			hWnd(*(HWND*)ip->addrs.p_Hwnd), pD3DD(*(decltype(pD3DD)*)ip->addrs.p_d3dd), pFont(nullptr),
 #if DIRECT3D_VERSION == 0x900
 			desca{ 0 },
 #else
@@ -361,145 +387,25 @@ private:
 			width(0), height(0), bound(0), linespace(0), shadow(0), fontColor(0)
 		{
 		}
-		~Draw() { if (font) font->Release(); }
+		~Draw() { if (pFont) pFont->Release(); }
 
-		void drawInfos() {
-			if (width == 0 || !pD3DD) return;
+		void drawInfos();
 
-			pD3DD->BeginScene();
-			//D3DXFONT_DESCA desca;
-
-			if (!font) {
-#if DIRECT3D_VERSION == 0x900
-				D3DXCreateFontIndirect(pD3DD, &desca, &font);
-#else
-				D3DXCreateFontIndirect(pD3DD, &lf, &font);
-#endif	
-			}
-
-			if (font) {
-				RECT rect_shadow;
-
-				for (const auto& info : infos) {
-					rect_shadow = info->rect;
-					if (info->format & DT_RIGHT) rect_shadow.right += shadow;
-					else rect_shadow.left += shadow;
-					if (info->format & DT_BOTTOM) rect_shadow.bottom += shadow;
-					else rect_shadow.top += shadow;
-
-					unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (((info->color >> 24) * 3 / 4) << 24);
-
-					font->DrawTextA(SPRITE info->text, -1, &rect_shadow, info->format, color_shadow);
-				}
-
-				for (const auto& info : infos) {
-					font->DrawTextA(SPRITE info->text, -1, &info->rect, info->format, fontColor);
-				}
-			}
-
-			pD3DD->EndScene();
-			//if (font) {
-			//	font->Release(); font = NULL;
-			//}
-		}
-
-		void addInfo(InfoType type, unsigned time, const char* text, ...) {
-			unsigned dead = time == INFINITY_TIME ? TIME_MAX : now + time;
-
-			LOG("Add text, type = %d", type);
-			const int h = desca.Height < 0 ? -desca.Height : desca.Height;
-
-			auto it = infos.end();
-
-			if (type != InfoType::Hello) {
-				for (it = infos.begin(); it != infos.end(); ++it) {
-					if ((*it)->type == type) {
-						LOG("No need to Create new Text.");
-						break;
-					}
-				}
-			}
-
-			if (it == infos.end()) {
-				LOG("Create new Text.");
-				infos.push_back(PtrInfo(new Info));
-				it = --infos.end();
-			}
-			(*it)->type = type;
-			(*it)->color = fontColor;
-			(*it)->dead = dead;
-			(*it)->format = type == InfoType::AutoPlayMark ? DT_BOTTOM | DT_LEFT : DT_TOP | DT_LEFT;
-
-			va_list argptr;
-			va_start(argptr, text);
-			vsnprintf((*it)->text, sizeof((*it)->text), text, argptr);
-			va_end(argptr);
-			int text_width = (int)(strlen((*it)->text) * h * 0.6);
-			LOG("Text is %s", (*it)->text);
-			LOG("Text width is %d", text_width);
-
-			auto& rect = (*it)->rect;
-			memset(&rect, 0, sizeof(rect));
-
-			std::set<int> invalid_bottom, invalid_top;
-			for (auto it2 = infos.begin(); it2 != infos.end(); ++it2) {
-				if (it == it2 || (((*it)->format & DT_RIGHT) != ((*it2)->format & DT_RIGHT))) continue;
-				invalid_top.insert((*it2)->rect.top);
-				invalid_bottom.insert((*it2)->rect.bottom);
-			}
-
-			if ((*it)->format & DT_BOTTOM) {
-				for (int bottom = height - bound; ; bottom -= h + bound) {
-					if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
-						rect.bottom = bottom;
-						break;
-					}
-				}
-				rect.top = rect.bottom - h - linespace;
-			}
-			else {
-				for (int top = bound; ; top += h + linespace) {
-					if (invalid_top.find(top) == invalid_top.end()) {
-						rect.top = top;
-						break;
-					}
-				}
-
-				rect.bottom = rect.top + h + linespace;
-			}
-
-			if ((*it)->format & DT_RIGHT) {
-				rect.right = width - bound;
-				rect.left = rect.right - text_width;
-			}
-			else {
-				rect.left = bound;
-				rect.right = rect.left + text_width;
-			}
-
-			LOG("top = %d, bottom = %d, left = %d, right = %d", rect.top, rect.bottom, rect.left, rect.right);
-
-			showing = infos.size() > 0;
-		}
+		void addInfo(InfoType type, unsigned time, const char* text, ...);
 
 		void removeInfo(InfoType type) {
-			if (type == InfoType::All) {
+			switch (type)
+			{
+			case SoraVoiceImpl::InfoType::All:
 				infos.clear();
-			}
-			else {
+				break;
+			case SoraVoiceImpl::InfoType::Dead:
+				infos.remove_if([this](const PtrInfo& t) { return t->deadTime < now; });
+				break;
+			default:
 				infos.remove_if([&type](const PtrInfo& t) { return t->type == type; });
+				break;
 			}
-			showing = infos.size() > 0;
-		}
-
-		void removeDeadInfos() {
-			if (infos.empty()) {
-				showing = 0;
-				return;
-			}
-
-			infos.remove_if([this](const PtrInfo& t) { return t->dead < now; });
-
 			showing = infos.size() > 0;
 		}
 	} _draw;
@@ -522,7 +428,7 @@ private:
 	} _aup;
 
 	Config* const config = &_config;
-	Ogg* const ogg = &_ogg;
+	Player* const ogg = &_ogg;
 	DSD* const dsd = &_dsd;
 	Thread* const th = &_th;
 	IPT* const ipt = &_ipt;
@@ -534,8 +440,8 @@ private:
 	void init();
 	void destory();
 
-	void threadOpenFile();
-	void threadReadData();
+	void thread_openOggFile();
+	void thread_readData();
 	void playSoundFile();
 	void stopPlaying();
 
@@ -562,6 +468,126 @@ static inline int TO_DSVOLUME(int volume) {
 		(int)(2000 * log10(double(volume) / Config::MAX_Volume));
 }
 
+void SoraVoiceImpl::Draw::drawInfos() {
+	if (width == 0 || !pD3DD) return;
+
+	pD3DD->BeginScene();
+	//D3DXFONT_DESCA desca;
+
+	if (!pFont) {
+#if DIRECT3D_VERSION == 0x900
+		D3DXCreateFontIndirect(pD3DD, &desca, &font);
+#else
+		D3DXCreateFontIndirect(pD3DD, &lf, &pFont);
+#endif	
+	}
+
+	if (pFont) {
+		RECT rect_shadow;
+
+		for (const auto& info : infos) {
+			rect_shadow = info->rect;
+			if (info->format & DT_RIGHT) rect_shadow.right += shadow;
+			else rect_shadow.left += shadow;
+			if (info->format & DT_BOTTOM) rect_shadow.bottom += shadow;
+			else rect_shadow.top += shadow;
+
+			unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (((info->color >> 24) * 3 / 4) << 24);
+
+			pFont->DrawTextA(SPRITE info->text, -1, &rect_shadow, info->format, color_shadow);
+		}
+
+		for (const auto& info : infos) {
+			pFont->DrawTextA(SPRITE info->text, -1, &info->rect, info->format, fontColor);
+		}
+	}
+
+	pD3DD->EndScene();
+	//if (font) {
+	//	font->Release(); font = NULL;
+	//}
+}
+
+void SoraVoiceImpl::Draw::addInfo(InfoType type, unsigned time, const char* text, ...) {
+	unsigned dead = time == INFINITY_TIME ? TIME_MAX : now + time;
+
+	LOG("Add text, type = %d", type);
+	const int h = desca.Height < 0 ? -desca.Height : desca.Height;
+
+	auto it = infos.end();
+
+	if (type != InfoType::Hello) {
+		for (it = infos.begin(); it != infos.end(); ++it) {
+			if ((*it)->type == type) {
+				LOG("No need to Create new Text.");
+				break;
+			}
+		}
+	}
+
+	if (it == infos.end()) {
+		LOG("Create new Text.");
+		infos.push_back(PtrInfo(new Info));
+		it = --infos.end();
+	}
+	(*it)->type = type;
+	(*it)->color = fontColor;
+	(*it)->deadTime = dead;
+	(*it)->format = type == InfoType::AutoPlayMark ? DT_BOTTOM | DT_LEFT : DT_TOP | DT_LEFT;
+
+	va_list argptr;
+	va_start(argptr, text);
+	vsnprintf((*it)->text, sizeof((*it)->text), text, argptr);
+	va_end(argptr);
+	int text_width = (int)(strlen((*it)->text) * h * 0.6);
+	LOG("Text is %s", (*it)->text);
+	LOG("Text width is %d", text_width);
+
+	auto& rect = (*it)->rect;
+	memset(&rect, 0, sizeof(rect));
+
+	std::set<int> invalid_bottom, invalid_top;
+	for (auto it2 = infos.begin(); it2 != infos.end(); ++it2) {
+		if (it == it2 || (((*it)->format & DT_RIGHT) != ((*it2)->format & DT_RIGHT))) continue;
+		invalid_top.insert((*it2)->rect.top);
+		invalid_bottom.insert((*it2)->rect.bottom);
+	}
+
+	if ((*it)->format & DT_BOTTOM) {
+		for (int bottom = height - bound; ; bottom -= h + bound) {
+			if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
+				rect.bottom = bottom;
+				break;
+			}
+		}
+		rect.top = rect.bottom - h - linespace;
+	}
+	else {
+		for (int top = bound; ; top += h + linespace) {
+			if (invalid_top.find(top) == invalid_top.end()) {
+				rect.top = top;
+				break;
+			}
+		}
+
+		rect.bottom = rect.top + h + linespace;
+	}
+
+	if ((*it)->format & DT_RIGHT) {
+		rect.right = width - bound;
+		rect.left = rect.right - text_width;
+	}
+	else {
+		rect.left = bound;
+		rect.right = rect.left + text_width;
+	}
+
+	LOG("top = %d, bottom = %d, left = %d, right = %d", rect.top, rect.bottom, rect.left, rect.right);
+
+	showing = infos.size() > 0;
+}
+
+
 SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	:Comment(initParam->Comment),
 	ended(initParam->status.ended), status(&initParam->status), order(&initParam->order), 
@@ -570,8 +596,6 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	_th(initParam), _ipt(initParam), _draw(initParam),
 	_aup(initParam)
 {
-	static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Notifies exceeds the maxmin number");
-
 	LOG("p = 0x%08X", initParam);
 	LOG("p->p_ov_open_callbacks = 0x%08X", initParam->addrs.p_ov_open_callbacks);
 	LOG("p->p_ov_info = 0x%08X", initParam->addrs.p_ov_info);
@@ -656,17 +680,17 @@ void SoraVoiceImpl::Play(const char* t)
 #endif // ZA
 	}
 
-	th->opening = th->Openning;
-	ogg->setOggFileName(str_vid.c_str());
-	LOG("Ogg filename: %s", ogg->oggFn ? ogg->oggFn : "nullptr");
+	const char* oggFileName = ogg->addOggFile(str_vid);
+	LOG("Ogg filename: %s", oggFileName ? oggFileName : "nullptr");
 
-	th->mt_play.lock();
-	stopPlaying();
-	th->mt_play.unlock();
+	{
+		LockGuard lock(dsd->mt_play);
+		stopPlaying();
+	}
 	LOG("Previous playing stopped.");
 
 	LOG("Now call opening thread...");
-	SetEvent(th->hEventOpenFile);
+	SetEvent(th->hEvent_OpenOgg);
 	LOG("Called.");
 
 	status->playing = 1;
@@ -676,9 +700,9 @@ void SoraVoiceImpl::Play(const char* t)
 	aup->count_ch = 0;
 	aup->time_autoplay = 0;
 
-	if (config->DisableDududu) order->disableDududu = 1;
-	if (config->DisableDialogSE) order->disableDialogSE = 1;
-	if (config->SkipVoice) order->skipVoice = 1;
+	order->disableDududu = config->DisableDududu;
+	order->disableDialogSE = config->DisableDialogSE;
+	order->skipVoice = config->SkipVoice;
 }
 
 void SoraVoiceImpl::Stop()
@@ -690,9 +714,8 @@ void SoraVoiceImpl::Stop()
 	}
 
 	if (config->SkipVoice) {
-		th->mt_play.lock();
+		LockGuard lock(dsd->mt_play);
 		stopPlaying();
-		th->mt_play.unlock();
 	}
 	
 	status->code5 = 0;
@@ -813,15 +836,18 @@ void SoraVoiceImpl::Input()
 					draw->removeInfo(InfoType::AutoPlayMark);
 				}
 			}
+			LOG("Set AutoPlay : %d", config->AutoPlay);
 
 			if (config->AutoPlay && !config->SkipVoice) {
 				config->SkipVoice = 1;
+				if (status->playing) {
+					order->skipVoice = config->SkipVoice;
+				}
 				if (config->ShowInfo) {
 					draw->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 				}
+				LOG("Set SkipVoice : %d", config->SkipVoice);
 			}
-
-			LOG("Set AutoPlay : %d", config->AutoPlay);
 		}//if(KEY_AUTOPLAY)
 
 		if (keys[KEY_SKIPVOICE] && !last[KEY_SKIPVOICE - KEY_MIN]) {
@@ -830,19 +856,21 @@ void SoraVoiceImpl::Input()
 			if (status->playing) {
 				order->skipVoice = config->SkipVoice;
 			}
-;
+
 			if (config->ShowInfo) {
 				draw->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 			}
+
+			LOG("Set SkipVoice : %d", config->SkipVoice);
 
 			if (!config->SkipVoice && config->AutoPlay) {
 				config->AutoPlay = 0;
 				if (config->ShowInfo) {
 					draw->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+					draw->removeInfo(InfoType::AutoPlayMark);
 				}
+				LOG("Set AutoPlay : %d", config->AutoPlay);
 			}
-
-			LOG("Set SkipVoice : %d", config->SkipVoice);
 		}//if(KEY_SKIPVOICE)
 
 		if (keys[KEY_DLGSE] && !last[KEY_DLGSE - KEY_MIN]) {
@@ -878,8 +906,11 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (config->ShowInfo) {
-				if (config->ShowInfo == 2 && config->AutoPlay && status->playing) {
+				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
 					draw->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+				}
+				else {
+					draw->removeInfo(InfoType::AutoPlayMark);
 				}
 			}
 			else {
@@ -892,12 +923,11 @@ void SoraVoiceImpl::Input()
 	}
 
 	if (needsetvolume) {
-		th->mt_play.lock();
+		LockGuard lock(dsd->mt_play);
 		if (status->playing) {
 			if (status->mute) dsd->pDSBuff->SetVolume(TO_DSVOLUME(0));
 			else dsd->pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
 		}
-		th->mt_play.unlock();
 	}
 
 	if (needsave && config->SaveChange) {
@@ -910,26 +940,11 @@ void SoraVoiceImpl::Input()
 
 void SoraVoiceImpl::Show()
 {
-	tm->UpdateTime();
+	tm->updateTime();
 
 	if (status->showing) {
 		draw->drawInfos();
-		draw->removeDeadInfos();
-	}
-
-	if (ogg->oggFn && th->opening != th->Openning) {
-		ogg->setOggFileName();
-		if (th->opening == th->Succeeded) {
-			LOG("Ogg file opened, now going to play...");
-			playSoundFile();
-		}
-		else {
-			order->disableDududu = 0;
-			order->disableDialogSE = 0;
-			order->skipVoice = 0;
-			status->playing = 0;
-			LOG("Ogg file open failed, no need to play.");
-		}
+		draw->removeInfo(InfoType::Dead);
 	}
 
 	if (aup->count_ch == 1) {
@@ -995,20 +1010,20 @@ void SoraVoiceImpl::init()
 	static_assert(len_cfn == len_lffn, "Font names' length not match");
 
 	for (int i = 0; i < NUM_NOTIFY; i++) {
-		th->hEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
-		dsd->dSNotifies[i].hEventNotify = th->hEvents[i];
+		th->hEvent_ReadOgg[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
+		dsd->dSNotifies[i].hEventNotify = th->hEvent_ReadOgg[i];
 	}
-	th->hEventOpenFile = CreateEvent(NULL, FALSE, FALSE, NULL);
-	th->hEventEnd[th->evEndid_Read] = CreateEvent(NULL, TRUE, FALSE, NULL);
-	th->hEventEnd[th->evEndid_Open] = CreateEvent(NULL, TRUE, FALSE, NULL);
+	th->hEvent_OpenOgg = CreateEvent(NULL, FALSE, FALSE, NULL);
+	th->hEvent_End[th->evEndid_Read] = CreateEvent(NULL, TRUE, FALSE, NULL);
+	th->hEvent_End[th->evEndid_Open] = CreateEvent(NULL, TRUE, FALSE, NULL);
 	LOG("Event created!");
 
 	ended = 0;
 
-	th->th_read = std::thread(&SoraVoiceImpl::threadReadData, this);
+	th->th_read = std::thread(&SoraVoiceImpl::thread_readData, this);
 	th->th_read.detach();
 
-	th->th_open = std::thread(&SoraVoiceImpl::threadOpenFile, this);
+	th->th_open = std::thread(&SoraVoiceImpl::thread_openOggFile, this);
 	th->th_open.detach();
 
 	LOG("Thread created!");
@@ -1030,7 +1045,7 @@ void SoraVoiceImpl::init()
 	}
 
 	RECT rect;
-	if (GetClientRect(draw->hwnd, &rect)) {
+	if (GetClientRect(draw->hWnd, &rect)) {
 		draw->width = rect.right - rect.left;
 		draw->height = rect.bottom - rect.top;
 
@@ -1065,23 +1080,23 @@ void SoraVoiceImpl::init()
 
 void SoraVoiceImpl::destory()
 {
-	th->mt_play.lock();
-	stopPlaying();
-	th->mt_play.unlock();
-
-	memset(order, 0, sizeof(*order));
 	ended = 1;
-
-	SetEvent(th->hEvents[0]);
-	SetEvent(th->hEventOpenFile);
-	WaitForMultipleObjects(sizeof(th->hEventEnd) / sizeof(*th->hEventEnd), th->hEventEnd, TRUE, 100);
+	{
+		LockGuard lock(dsd->mt_play);
+		stopPlaying();
+	}
+	memset(order, 0, sizeof(*order));
+	
+	SetEvent(th->hEvent_ReadOgg[0]);
+	SetEvent(th->hEvent_OpenOgg);
+	WaitForMultipleObjects(sizeof(th->hEvent_End) / sizeof(*th->hEvent_End), th->hEvent_End, TRUE, 100);
 }
 
-void SoraVoiceImpl::threadOpenFile()
+void SoraVoiceImpl::thread_openOggFile()
 {
 	while (!ended)
 	{
-		DWORD rst = WaitForSingleObject(th->hEventOpenFile, INFINITE);
+		DWORD rst = WaitForSingleObject(th->hEvent_OpenOgg, INFINITE);
 		if (rst == WAIT_OBJECT_0 && !ended) {
 			FILE* f = NULL;
 			LOG("[Thread_Open]Open %s ...", ogg->oggFn);
@@ -1104,15 +1119,15 @@ void SoraVoiceImpl::threadOpenFile()
 			th->opening = th->Succeeded;
 		}
 	}//while
-	SetEvent(th->hEventEnd[th->evEndid_Open]);
+	SetEvent(th->hEvent_End[th->evEndid_Open]);
 }
 
-void SoraVoiceImpl::threadReadData()
+void SoraVoiceImpl::thread_readData()
 {
 	auto &playEnd = th->playEnd;
 	while (!ended)
 	{
-		DWORD rst = WaitForMultipleObjects(NUM_NOTIFY, th->hEvents, FALSE, INFINITE);
+		DWORD rst = WaitForMultipleObjects(NUM_NOTIFY, th->hEvent_ReadOgg, FALSE, INFINITE);
 		if (rst >= WAIT_OBJECT_0 && rst < WAIT_OBJECT_0 + NUM_NOTIFY) {
 			th->mt_play.lock();
 
@@ -1162,12 +1177,19 @@ void SoraVoiceImpl::threadReadData()
 			th->mt_play.unlock();
 		}//if
 	}//while
-	SetEvent(th->hEventEnd[th->evEndid_Read]);
+	SetEvent(th->hEvent_End[th->evEndid_Read]);
 }
 
 void SoraVoiceImpl::playSoundFile()
 {
-	vorbis_info* info = ogg->ov_info(&ogg->ovf, -1);
+	LockGuard lock_play(dsd->mt_play);
+
+	vorbis_info* info = nullptr;
+	{
+		LockGuard lock_ovFile(ogg->mt_ovFileQueue);
+		info = ogg->ov_info(ogg->ovFileQueue.back().get(), -1);
+	}
+	if (!info) return;
 
 	auto &waveFormatEx = dsd->waveFormatEx;
 	waveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
@@ -1197,7 +1219,6 @@ void SoraVoiceImpl::playSoundFile()
 	auto &pDS = dsd->pDS;
 	if (DS_OK != pDS->CreateSoundBuffer(&dSBufferDesc, &pDSBuff, NULL)) {
 		LOG("Create sound buff failed!");
-		ogg->ov_clear(&ogg->ovf);
 		return;
 	}
 	LOG("Sound buff opened");
@@ -1211,7 +1232,6 @@ void SoraVoiceImpl::playSoundFile()
 	}
 	else {
 		pDSBuff->Release();
-		ogg->ov_clear(&ogg->ovf);
 		LOG("Write first data failed!");
 		return;
 	}
@@ -1227,7 +1247,6 @@ void SoraVoiceImpl::playSoundFile()
 	static LPDIRECTSOUNDNOTIFY pDSN = NULL;
 	if (DS_OK != pDSBuff->QueryInterface(IID_IDirectSoundNotify, (LPVOID*)&pDSN)) {
 		pDSBuff->Release();
-		ogg->ov_clear(&ogg->ovf);
 		LOG("Set notify failed!");
 		return;
 	};
@@ -1235,7 +1254,6 @@ void SoraVoiceImpl::playSoundFile()
 	if (DS_OK != pDSN->SetNotificationPositions(NUM_NOTIFY, dSNotifies)) {
 		pDSN->Release();
 		pDSBuff->Release();
-		ogg->ov_clear(&ogg->ovf);
 		LOG("Set notify failed!");
 		return;
 	}
@@ -1261,18 +1279,32 @@ void SoraVoiceImpl::playSoundFile()
 void SoraVoiceImpl::stopPlaying()
 {
 	if (!status->playing) return;
+	status->playing = 0;
 
 	if (dsd->pDSBuff) {
 		dsd->pDSBuff->Stop();
 		dsd->pDSBuff->Release();
 		dsd->pDSBuff = NULL;
 	}
-	status->playing = 0;
-	th->playEnd = -1;
+	
+	dsd->playEnd = -1;
 	order->disableDududu = 0;
 	order->skipVoice = 0;
+	order->disableDialogSE = 0;
 
-	ogg->ov_clear(&ogg->ovf);
+	{
+		LockGuard lock(ogg->mt_oggFnQueue);
+		while (!ogg->oggFnQueue.empty()) {
+			ogg->oggFnQueue.pop();
+		}
+	}
+	{
+		LockGuard lock(ogg->mt_ovFileQueue);
+		while (!ogg->ovFileQueue.empty()) {
+			ov_clear(ogg->ovFileQueue.front().get());
+			ogg->ovFileQueue.pop();
+		}
+	}
 }
 
 SoraVoice * SoraVoice::CreateInstance(void * initParam)
