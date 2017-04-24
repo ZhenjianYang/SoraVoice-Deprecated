@@ -153,14 +153,8 @@ void Init(void* hDll)
 
 			LOG("name : %s", name_list[j]);
 
-			auto vfrom = tmp_group.GetValue(from.c_str());
-			auto vto = tmp_group.GetValue(to.c_str());
-
-			LOG("vfrom : %s", !vfrom ? "nullptr" : vfrom);
-			LOG("vto : %s", !vto ? "nullptr" : vto);
-
-			jcs[j].next = GetUIntFromValue(vfrom);
-			jcs[j].to = GetUIntFromValue(vto);
+			jcs[j].next = GetUIntFromValue(tmp_group.GetValue(from.c_str()));
+			jcs[j].to = GetUIntFromValue(tmp_group.GetValue(to.c_str()));
 
 			LOG("from 0x%08X", jcs[j].next);
 			LOG("to 0x%08X", jcs[j].to);
@@ -289,7 +283,7 @@ void Init(void* hDll)
 
 	if (ip) {
 		memcpy(ip, tp, Size);
-		LOG("Init finished, ip = 0x%08X", ip);
+		LOG("Init finished, ip = 0x%08X", (unsigned)ip);
 	}
 	else {
 		LOG("Alloc new memory failed.");
@@ -316,7 +310,7 @@ void Go()
 		PUT(opjmp, buff);
 		PUT(jc_len, buff + 1);
 
-		LOG("change code at : 0x%08X", from);
+		LOG("change code at : 0x%08X", (unsigned)from);
 		DWORD tmp, tmp2;
 		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &tmp)) {
 			memcpy(from, buff, len_op);

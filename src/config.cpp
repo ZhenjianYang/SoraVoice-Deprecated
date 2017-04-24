@@ -47,7 +47,7 @@ static bool _getValue(ArrayType &var, const KeyValue& kv, const char* name) {
 	for (int i = 0; i < (int)it->second.length() && i < len_array; i++) {
 		var[i] = it->second[i];
 	}
-	var[sizeof(var) / sizeof(&var) - 1] = 0;
+	var[len_array - 1] = 0;
 
 	return true;
 }
