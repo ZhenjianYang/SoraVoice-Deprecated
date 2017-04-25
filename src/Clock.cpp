@@ -1,8 +1,9 @@
-#include "Time.h"
+#include "Clock.h"
 
 #include <chrono>
+#include <thread>
 
-using Clock = std::chrono::steady_clock;
+using StdClock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
 using TimeUnit = std::chrono::milliseconds;
 
@@ -10,21 +11,21 @@ static unsigned* now = nullptr;
 static unsigned* recent = nullptr;
 static TimePoint base;
 
-static void InitClock(unsigned &now, unsigned &recent) {
+void Clock::InitClock(unsigned &now, unsigned &recent) {
 	::now = &now;
 	::recent = &recent;
-	base = Clock::now();
+	base = StdClock::now();
 	now = recent = 0;
 }
 
-static void UpdateTime() {
-	TimePoint newNow = Clock::now();
+void Clock::UpdateTime() {
+	TimePoint newNow = StdClock::now();
 	*recent = *now;
 	*now = (unsigned)std::chrono::duration_cast<TimeUnit>(newNow - base).count();
 }
-static const unsigned& Now() { return now; };
-static const unsigned& Recent() { return recent; };
+const unsigned& Clock::Now() { return *now; };
+const unsigned& Clock::Recent() { return *recent; };
 
-static void Sleep(unsigned sleepTime){
+void Clock::Sleep(unsigned sleepTime){
 	std::this_thread::sleep_for(TimeUnit(sleepTime));
 }

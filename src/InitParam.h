@@ -1,7 +1,5 @@
 #pragma once
 
-typedef unsigned char byte;
-
 #pragma pack(push, 1)
 struct InitParam
 {
@@ -43,7 +41,7 @@ struct InitParam
 	} jcs[7];
 
 	//0x88
-	byte scodes[8];
+	char scodes[8];
 
 	//0x90
 	struct {
@@ -63,30 +61,30 @@ struct InitParam
 	//0xA4
 	struct Status {
 	//0xA4
-		byte ended;
-		byte playing;
-		byte mute;
-		byte showing;
+		char ended;
+		char playing;
+		char mute;
+		char showing;
 
 	//0xA8
-		byte wait;
-		byte waitv;
-		byte code5;
-		byte scode;
+		char wait;
+		char waitv;
+		char code5;
+		char scode;
 
 	//0xAC
-		byte reserved[4];
+		char reserved[4];
 	} status;
 
 	//0xB0
 	struct Order {
-		byte disableDududu;
-		byte disableDialogSE;
-		byte skipVoice;
-		byte autoPlay;
+		char disableDududu;
+		char disableDialogSE;
+		char skipVoice;
+		char autoPlay;
 
 	//0xB4
-		byte reserved[4];
+		char reserved[4];
 	} order;
 
 	//0xB8

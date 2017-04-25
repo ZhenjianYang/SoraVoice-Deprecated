@@ -4,6 +4,7 @@ class Clock
 {
 public:
 	static constexpr int TimeUnitsPerSecond = 1000;
+
 	static void InitClock(unsigned &now, unsigned &recent);
 
 	static void UpdateTime();

@@ -1,46 +1,23 @@
-#define NOMINMAX 1
 
 #include "SoraVoice.h"
 #include "InitParam.h"
 #include "Log.h"
-#include "config.h"
-#include "message.h"
+#include "Config.h"
+#include "Message.h"
 #include "Hook.h"
+#include "Clock.h"
+#include "Draw.h"
+#include "SoundPlayer.h"
 
-#ifdef ZA
-#include <d3dx9.h>
-#else
-#include "mapping.h"
-#include <d3d8/d3dx8.h>
+#ifndef ZA
+#include "Mapping.h"
 #endif
 
 #include <dinput.h>
 #define DID IDirectInputDevice8A
 
-#include <dsound.h>
-
-#if DIRECT3D_VERSION == 0x0900
-#define D3D IDirect3D9
-#define D3DD IDirect3DDevice9
-#define SPRITE NULL,
-#elif DIRECT3D_VERSION == 0x0800
-#define D3D IDirect3D8
-#define D3DD IDirect3DDevice8
-#define SPRITE
-#else
-static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
-	"DIRECT3D_VERSION must be 0x0900 or 0x0800")
-#endif
-
-#include <vorbis\vorbisfile.h>
-#include <thread>
-#include <mutex>
-#include <memory>
-#include <list>
-#include <set>
-#include <map>
 #include <string>
-#include <queue>
+#include <mutex>
 
 #ifndef MAX_VOICEID_LEN
 #define MAX_VOICEID_LEN 10
@@ -49,8 +26,6 @@ static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
 #ifndef MAX_VOICEID_LEN_NEED_MAPPING
 #define MAX_VOICEID_LEN_NEED_MAPPING 5
 #endif // !MAX_VOICEID_LEN_NEED_MAPPING
-
-const GUID IID_IDirectSoundNotify = { 0xb0210783, 0x89cd, 0x11d0, 0xaf, 0x8, 0x0, 0xa0, 0xc9, 0x25, 0xcd, 0x16 };
 
 #ifdef ZA
 constexpr char CONFIG_FILE[] = "za_voice.ini";
@@ -80,346 +55,99 @@ constexpr int KEY_DLGSE = DIK_7;
 constexpr int KEY_DU = DIK_6;
 constexpr int KEY_INFO = DIK_5;
 
-constexpr int MAX_TEXT_LEN = 63;
-
-constexpr int MIN_FONT_SIZE = 25;
-constexpr int TEXT_NUM_SCRH = 25;
-
-constexpr double BOUND_WIDTH_RATE = 0.5;
-constexpr double LINE_SPACE_RATE = 0.15;
-constexpr double TEXT_SHADOW_POS_RATE = 0.08;
-
-constexpr unsigned SHADOW_COLOR = 0x40404040;
+#ifdef ZA
+constexpr char SCODE_TEXT = 0x55;
+constexpr char SCODE_SAY = 0x5C;
+constexpr char SCODE_TALK = 0x5D;
+constexpr char SCODE_MENU = 0x5E;
+#else
+constexpr char SCODE_TEXT = 0x54;
+constexpr char SCODE_SAY = 0x5B;
+constexpr char SCODE_TALK = 0x5C;
+constexpr char SCODE_MENU = 0x5D;
+#endif // ZA
 
 constexpr unsigned INFO_TIME = 2000;
 constexpr unsigned HELLO_TIME = 6000;
-constexpr unsigned INFINITY_TIME = 0;
+constexpr unsigned INFINITY_TIME = Draw::ShowTimeInfinity;
 constexpr unsigned REMAIN_TIME = 1000;
 
 constexpr unsigned TIME_PREC = 16;
-constexpr unsigned TIME_PRECV = 62;
-
-constexpr unsigned TIME_MAX = 0xFFFFFFFF;
-
-#ifdef ZA
-constexpr byte SCODE_TEXT = 0x55;
-constexpr byte SCODE_SAY = 0x5C;
-constexpr byte SCODE_TALK = 0x5D;
-constexpr byte SCODE_MENU = 0x5E;
-#else
-constexpr byte SCODE_TEXT = 0x54;
-constexpr byte SCODE_SAY = 0x5B;
-constexpr byte SCODE_TALK = 0x5C;
-constexpr byte SCODE_MENU = 0x5D;
-#endif // ZA
 
 class SoraVoiceImpl : private SoraVoice
 {
 	friend SoraVoice;
 
 	using LockGuard = std::lock_guard<std::mutex>;
+	using InfoType = Draw::InfoType;
+	using PlayID = SoundPlayer::PlayID;
+	using StopType = SoundPlayer::StopType;
 
 private:
-
-
-	const char* const Comment;
-	byte& ended;
-
-	InitParam::Status* const status;
-	InitParam::Order* const order;
-
 	Config _config;
-
-	struct Time
-	{
-		const TimePoint base;
-		unsigned &now;
-		unsigned &recent;
-
-		void updateTime() {
-			TimePoint newNow = Clock::now();
-			recent = now;
-			now = (unsigned)std::chrono::duration_cast<TimeUnit>(newNow - base).count();
-		}
-
-		Time(InitParam *ip) : now(ip->rcd.now), recent(ip->rcd.recent), base(Clock::now()) {
-			now = recent = 0;
-		}
-	} _tm;
-
-	struct Player {
-		decltype(::ov_open_callbacks)* const ov_open_callbacks;
-		decltype(::ov_info)* const ov_info;
-		decltype(::ov_read)* const ov_read;
-		decltype(::ov_clear)* const ov_clear;
-
-		struct OggFile {
-			std::string oggFileName;
-			OggVorbis_File ovf;
-		};
-		using PtrOVFile = std::unique_ptr<OggVorbis_File>;
-		using OVFileQueue = std::queue<PtrOVFile>;
-		using OggFnQueue = std::queue<std::string>;
-		
-		OVFileQueue ovFileQueue;
-		std::mutex mt_ovFileQueue;
-
-		OggFnQueue oggFnQueue;
-		std::mutex mt_oggFnQueue;
-
-		Player(InitParam* ip)
-			:ov_open_callbacks((decltype(ov_open_callbacks))*ip->addrs.p_ov_open_callbacks),
-			ov_info((decltype(ov_info))*ip->addrs.p_ov_info),
-			ov_read((decltype(ov_read))*ip->addrs.p_ov_read),
-			ov_clear((decltype(ov_clear))*ip->addrs.p_ov_clear)
-		{
-		}
-
-		const char* addOggFile(const std::string& str_vid) {
-			LockGuard lock(mt_oggFnQueue);
-			oggFnQueue.emplace(VOICEFILE_PREFIX + str_vid + VOICEFILE_ATTR);
-			return oggFnQueue.back().c_str();
-		}
-
-		int readOggData(char * buff, int size)
-		{
-			if (buff == nullptr || size <= 0) return 0;
-
-			for (int i = 0; i < size; i++) buff[i] = 0;
-			int read = 0;
-			int bitstream = 0;
-			{
-				LockGuard lock(mt_ovFileQueue);
-				if (ovFileQueue.empty()) return 0;
-				read = ov_read(ovFileQueue.back().get(), buff, size, 0, 2, 1, &bitstream);
-			}
-			return read;
-		}
-
-		//return value :
-		//       0  : no more file
-		//       -1 : open file error
-		//       1  : succeeded
-		int openOggFileAtFront() {
-			std::string oggFn;
-			{
-				LockGuard lock(mt_oggFnQueue);
-				if (oggFnQueue.empty()) {
-					LOG("No more ogg files in ogg files queue.");
-					return 0;
-				}
-				oggFn.assign(std::move(oggFnQueue.front()));
-				oggFnQueue.pop();
-			}
-			LOG("Start openning ogg file : %s ...", oggFn.c_str());
-			FILE* f = fopen(oggFn.c_str(), "rb");
-
-			if (f == NULL) {
-				LOG("Open file failed.");
-				return -1;
-			}
-
-			PtrOVFile ovFile(new OggVorbis_File{ 0 });
-			if (this->ov_open_callbacks(f, ovFile.get(), nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
-				fclose(f);
-				LOG("Open file as ogg failed!");
-				return -1;
-			}
-			LOG("Ogg file opened.");
-			{
-				LockGuard lock(mt_ovFileQueue);
-				ovFileQueue.emplace(std::move(ovFile));
-			}
-			return 1;
-		}
-	} _ogg;
-
-	struct DSD {
-		const LPDIRECTSOUND pDS;
-		LPDIRECTSOUNDBUFFER pDSBuff;
-		WAVEFORMATEX waveFormatEx;
-		DSBUFFERDESC dSBufferDesc;
-		DSBPOSITIONNOTIFY dSNotifies[NUM_NOTIFY];
-
-		int buffSize;
-		int notifySize;
-		int halfNotifySize;
-
-		std::mutex mt_play;
-		int playEnd;
-
-		DSD(InitParam* ip)
-			:pDS((decltype(pDS))*ip->addrs.p_pDS), pDSBuff(nullptr),
-			buffSize(0), notifySize(0), halfNotifySize(0) {
-			memset(&waveFormatEx, 0, sizeof(waveFormatEx));
-			memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
-			memset(dSNotifies, 0, sizeof(dSNotifies));
-		}
-	} _dsd;
-
-	struct Thread {
-		static constexpr int evEndid_Read = 0;
-		static constexpr int evEndid_Open = 1;
-		HANDLE hEvent_ReadOgg[NUM_NOTIFY];
-		HANDLE hEvent_OpenOgg;
-		HANDLE hEvent_End[2];
-		std::thread th_open;
-		std::thread th_read;
-		enum OpenStatus
-		{
-			Openning,
-			Failed,
-			Succeeded
-		} opening;
-		Thread(InitParam* ip)
-			:hEvent_OpenOgg(NULL),
-			opening(Succeeded) {
-			memset(hEvent_ReadOgg, 0, sizeof(hEvent_ReadOgg));
-			memset(hEvent_End, 0, sizeof(hEvent_End));
-		}
-	} _th;
-
-	struct IPT {
+	
+	struct Keys {
 		const char* const &keys;
 		DID* const pDID;
 		char last[KEYS_NUM];
-		IPT(InitParam* ip)
-			:keys(ip->addrs.p_keys), pDID((decltype(pDID))*ip->addrs.p_did) {
+		Keys(const char* &keys, void* pDID)
+			:keys(keys), pDID((decltype(this->pDID))pDID) {
 		}
-	} _ipt;
-
-	struct Draw {
-		struct Info
-		{
-			char text[MAX_TEXT_LEN + 1];
-			RECT rect;
-			unsigned color;
-			unsigned format;
-			InfoType type;
-
-			unsigned deadTime;
-		};
-		using PtrInfo = std::unique_ptr<Info>;
-		using PtrInfoList = std::list<PtrInfo>;
-
-		byte& showing;
-		const unsigned& now;
-
-		const HWND hWnd;
-		D3DD* const pD3DD;
-		ID3DXFont *pFont;
-
-#if DIRECT3D_VERSION == 0x900
-		D3DXFONT_DESCA desca;
-#else
-		LOGFONT lf;
-		struct _DESCA {
-			LONG &Height;
-			LONG &Width;
-			LONG &Weight;
-			UINT MipLevels;
-			BYTE &Italic;
-			BYTE &CharSet;
-			BYTE &OutputPrecision;
-			BYTE &Quality;
-			BYTE &PitchAndFamily;
-			CHAR (&FaceName)[LF_FACESIZE];
-
-			_DESCA(LOGFONT& lf) :
-				Height(lf.lfHeight),
-				Width(lf.lfWidth),
-				Weight(lf.lfWeight),
-				MipLevels(0),
-				Italic(lf.lfItalic),
-				CharSet(lf.lfCharSet),
-				OutputPrecision(lf.lfOutPrecision),
-				Quality(lf.lfQuality),
-				PitchAndFamily(lf.lfPitchAndFamily),
-				FaceName(lf.lfFaceName) { }
-		} desca;
-#endif // DIRECT3D_VERSION == 0x900
-
-		int width;
-		int height;
-		int bound;
-		int linespace;
-		int shadow;
-		unsigned fontColor;
-
-		PtrInfoList infos;
-
-		Draw(InitParam* ip)
-			:showing(ip->status.showing), now(ip->rcd.now), 
-			hWnd(*(HWND*)ip->addrs.p_Hwnd), pD3DD(*(decltype(pD3DD)*)ip->addrs.p_d3dd), pFont(nullptr),
-#if DIRECT3D_VERSION == 0x900
-			desca{ 0 },
-#else
-			lf{ 0 }, 
-			desca(lf),
-#endif
-			width(0), height(0), bound(0), linespace(0), shadow(0), fontColor(0)
-		{
-		}
-		~Draw() { if (pFont) pFont->Release(); }
-
-		void drawInfos();
-
-		void addInfo(InfoType type, unsigned time, const char* text, ...);
-
-		void removeInfo(InfoType type) {
-			switch (type)
-			{
-			case SoraVoiceImpl::InfoType::All:
-				infos.clear();
-				break;
-			case SoraVoiceImpl::InfoType::Dead:
-				infos.remove_if([this](const PtrInfo& t) { return t->deadTime < now; });
-				break;
-			default:
-				infos.remove_if([&type](const PtrInfo& t) { return t->type == type; });
-				break;
-			}
-			showing = infos.size() > 0;
-		}
-	} _draw;
+	} _keys;
 
 	struct AutoPlay {
 		const unsigned &now;
 
 		unsigned &count_ch;
-		byte &wait;
+		char &wait;
 		unsigned &time_textbeg;
-		unsigned time_autoplay;
+		unsigned time_autoplay = 0;
 		
-		byte &waitv;
-		unsigned time_autoplayv;
+		char &waitv;
+		unsigned time_autoplayv = 0;
 		
-		AutoPlay(InitParam* ip)
-		:now(ip->rcd.now), count_ch(ip->rcd.count_ch), wait(ip->status.wait), time_textbeg(ip->rcd.time_textbeg),
-		time_autoplay(0), waitv(ip->status.waitv), time_autoplayv(0){
+		AutoPlay(unsigned& now, unsigned &count_ch, 
+			char &wait, unsigned &time_textbeg,
+			char &waitv)
+		:now(now), 
+		count_ch(count_ch), wait(wait), time_textbeg(time_textbeg),
+		waitv(waitv) {
 		}
 	} _aup;
 
+private:
+	const char* const Comment;
+	char& ended;
+
+	InitParam::Status* const status;
+	InitParam::Order* const order;
+
 	Config* const config = &_config;
-	Player* const ogg = &_ogg;
-	DSD* const dsd = &_dsd;
-	Thread* const th = &_th;
-	IPT* const ipt = &_ipt;
-	Draw* const draw = &_draw;
-	Time* const tm = &_tm;
+	Keys* const keys = &_keys;
 	AutoPlay* const aup = &_aup;
+	Draw* const draw;
+	SoundPlayer* const player;
+
+	std::mutex mt_playID;
+	PlayID playID;
+	void stopCallBack(PlayID playID, StopType stopType) {
+		LOG("StopCallBack: playID = 0x%08d, stopType = %d", playID, stopType);
+		LockGuard lock(mt_playID);
+		if (playID == this->playID) {
+			if (stopType == StopType::PlayEnd) {
+				aup->waitv = 1;
+				aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice - TIME_PREC / 2;
+			}
+			status->playing = 0;
+		} //if (playID == this->playID)
+	}
 
 private:
-	void init();
-	void destory();
-
-	void thread_openOggFile();
-	void thread_readData();
-	void playSoundFile();
-	void stopPlaying();
-
 	SoraVoiceImpl(InitParam* initParam);
-	~SoraVoiceImpl() override { this->destory(); }
+	~SoraVoiceImpl() override { 
+		SoundPlayer::DestorySoundPlayer(player);
+		Draw::DestoryDraw(draw);
+	}
 
 private:
 	bool isAutoPlaying() {
@@ -435,161 +163,18 @@ public:
 	void Show() override;
 };
 
-static inline int TO_DSVOLUME(int volume) {
-	return (volume) == 0 ?
-		DSBVOLUME_MIN :
-		(int)(2000 * log10(double(volume) / Config::MAX_Volume));
-}
-
-void SoraVoiceImpl::Draw::drawInfos() {
-	if (width == 0 || !pD3DD) return;
-
-	pD3DD->BeginScene();
-	//D3DXFONT_DESCA desca;
-
-	if (!pFont) {
-#if DIRECT3D_VERSION == 0x900
-		D3DXCreateFontIndirect(pD3DD, &desca, &font);
-#else
-		D3DXCreateFontIndirect(pD3DD, &lf, &pFont);
-#endif	
-	}
-
-	if (pFont) {
-		RECT rect_shadow;
-
-		for (const auto& info : infos) {
-			rect_shadow = info->rect;
-			if (info->format & DT_RIGHT) rect_shadow.right += shadow;
-			else rect_shadow.left += shadow;
-			if (info->format & DT_BOTTOM) rect_shadow.bottom += shadow;
-			else rect_shadow.top += shadow;
-
-			unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (((info->color >> 24) * 3 / 4) << 24);
-
-			pFont->DrawTextA(SPRITE info->text, -1, &rect_shadow, info->format, color_shadow);
-		}
-
-		for (const auto& info : infos) {
-			pFont->DrawTextA(SPRITE info->text, -1, &info->rect, info->format, fontColor);
-		}
-	}
-
-	pD3DD->EndScene();
-	//if (font) {
-	//	font->Release(); font = NULL;
-	//}
-}
-
-void SoraVoiceImpl::Draw::addInfo(InfoType type, unsigned time, const char* text, ...) {
-	unsigned dead = time == INFINITY_TIME ? TIME_MAX : now + time;
-
-	LOG("Add text, type = %d", type);
-	const int h = desca.Height < 0 ? -desca.Height : desca.Height;
-
-	auto it = infos.end();
-
-	if (type != InfoType::Hello) {
-		for (it = infos.begin(); it != infos.end(); ++it) {
-			if ((*it)->type == type) {
-				LOG("No need to Create new Text.");
-				break;
-			}
-		}
-	}
-
-	if (it == infos.end()) {
-		LOG("Create new Text.");
-		infos.push_back(PtrInfo(new Info));
-		it = --infos.end();
-	}
-	(*it)->type = type;
-	(*it)->color = fontColor;
-	(*it)->deadTime = dead;
-	(*it)->format = type == InfoType::AutoPlayMark ? DT_BOTTOM | DT_LEFT : DT_TOP | DT_LEFT;
-
-	va_list argptr;
-	va_start(argptr, text);
-	vsnprintf((*it)->text, sizeof((*it)->text), text, argptr);
-	va_end(argptr);
-	int text_width = (int)(strlen((*it)->text) * h * 0.6);
-	LOG("Text is %s", (*it)->text);
-	LOG("Text width is %d", text_width);
-
-	auto& rect = (*it)->rect;
-	memset(&rect, 0, sizeof(rect));
-
-	std::set<int> invalid_bottom, invalid_top;
-	for (auto it2 = infos.begin(); it2 != infos.end(); ++it2) {
-		if (it == it2 || (((*it)->format & DT_RIGHT) != ((*it2)->format & DT_RIGHT))) continue;
-		invalid_top.insert((*it2)->rect.top);
-		invalid_bottom.insert((*it2)->rect.bottom);
-	}
-
-	if ((*it)->format & DT_BOTTOM) {
-		for (int bottom = height - bound; ; bottom -= h + bound) {
-			if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
-				rect.bottom = bottom;
-				break;
-			}
-		}
-		rect.top = rect.bottom - h - linespace;
-	}
-	else {
-		for (int top = bound; ; top += h + linespace) {
-			if (invalid_top.find(top) == invalid_top.end()) {
-				rect.top = top;
-				break;
-			}
-		}
-
-		rect.bottom = rect.top + h + linespace;
-	}
-
-	if ((*it)->format & DT_RIGHT) {
-		rect.right = width - bound;
-		rect.left = rect.right - text_width;
-	}
-	else {
-		rect.left = bound;
-		rect.right = rect.left + text_width;
-	}
-
-	LOG("top = %d, bottom = %d, left = %d, right = %d", rect.top, rect.bottom, rect.left, rect.right);
-
-	showing = infos.size() > 0;
-}
-
-
 SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
-	:Comment(initParam->Comment),
-	ended(initParam->status.ended), status(&initParam->status), order(&initParam->order), 
+	:
 	_config(CONFIG_FILE),
-	_tm(initParam), _ogg(initParam), _dsd(initParam),
-	_th(initParam), _ipt(initParam), _draw(initParam),
-	_aup(initParam)
+	_keys(initParam->addrs.p_keys, *initParam->addrs.p_did),
+	_aup(initParam->rcd.now, initParam->rcd.count_ch, initParam->status.wait, initParam->rcd.time_textbeg, initParam->status.waitv),
+	Comment(initParam->Comment),
+	ended(initParam->status.ended), status(&initParam->status), order(&initParam->order), 
+	draw(Draw::CreateDraw(initParam->status.showing, *initParam->addrs.p_Hwnd, *initParam->addrs.p_d3dd, _config.FontName)),
+	player(SoundPlayer::CreatSoundPlayer(*initParam->addrs.p_pDS, 
+		*initParam->addrs.p_ov_open_callbacks, *initParam->addrs.p_ov_info, *initParam->addrs.p_ov_read, *initParam->addrs.p_ov_clear,
+		std::bind(&SoraVoiceImpl::stopCallBack, this, std::placeholders::_1, std::placeholders::_2)))
 {
-	LOG("p = 0x%08X", initParam);
-	LOG("p->p_ov_open_callbacks = 0x%08X", initParam->addrs.p_ov_open_callbacks);
-	LOG("p->p_ov_info = 0x%08X", initParam->addrs.p_ov_info);
-	LOG("p->p_ov_read = 0x%08X", initParam->addrs.p_ov_read);
-	LOG("p->p_ov_clear = 0x%08X", initParam->addrs.p_ov_clear);
-	LOG("p->p_d3dd = 0x%08X", initParam->addrs.p_d3dd);
-	LOG("p->p_did = 0x%08X", initParam->addrs.p_did);
-	LOG("p->p_Hwnd = 0x%08X", initParam->addrs.p_Hwnd);
-	LOG("p->p_pDS = 0x%08X", initParam->addrs.p_pDS);
-	LOG("p->p_mute = 0x%08X", initParam->addrs.p_mute);
-	LOG("p->p_keys = 0x%08X", initParam->addrs.p_keys);
-
-	LOG("ov_open_callbacks = 0x%08X", *initParam->addrs.p_ov_open_callbacks);
-	LOG("ov_info = 0x%08X", *initParam->addrs.p_ov_info);
-	LOG("ov_read = 0x%08X", *initParam->addrs.p_ov_read);
-	LOG("ov_clear = 0x%08X", *initParam->addrs.p_ov_clear);
-	LOG("d3dd = 0x%08X", *initParam->addrs.p_d3dd);
-	LOG("did = 0x%08X", *initParam->addrs.p_did);
-	LOG("Hwnd = 0x%08X", *initParam->addrs.p_Hwnd);
-	LOG("pDS = 0x%08X", *initParam->addrs.p_pDS);
-
 	LOG("Config loaded");
 	LOG("config.Volume = %d", config->Volume);
 	LOG("config.AutoPlay = %d", config->AutoPlay);
@@ -607,14 +192,33 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	LOG("config.SaveChange = %d", config->SaveChange);
 
 	InitHook_SetInitParam(initParam);
-	init();
+	
+	void* pPresent = Hook_D3D_Present(*initParam->addrs.p_d3dd);
+	if (pPresent) {
+		LOG("Present hooked, old Present = 0x%08X", pPresent);
+	}
+	else {
+		LOG("Hook Present failed.");
+	}
+
+	void* pGetDeviceState = Hook_DI_GetDeviceState(*initParam->addrs.p_did);
+	if (pGetDeviceState) {
+		LOG("GetDeviceState hooked, old GetDeviceState = 0x%08X", pGetDeviceState);
+	}
+	else {
+		LOG("Hook GetDeviceState failed.");
+	}
+
+	if (config->ShowInfo) {
+		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::Title);
+		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::Version, Message::VersionNum);
+		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::GameTitle, Comment);
+	}
 }
 
 void SoraVoiceImpl::Play(const char* t)
 {
-	static bool ogg_fun_ok = ogg->ov_clear && ogg->ov_info && ogg->ov_open_callbacks && ogg->ov_read;
-	if (*t != '#' || !dsd->pDS || !ogg_fun_ok) return;
-	
+	if (*t != '#') return;
 	t++;
 
 	std::string str_vid;
@@ -653,29 +257,28 @@ void SoraVoiceImpl::Play(const char* t)
 #endif // ZA
 	}
 
-	const char* oggFileName = ogg->addOggFile(str_vid);
-	LOG("Ogg filename: %s", oggFileName ? oggFileName : "nullptr");
+	std::string oggFileName = VOICEFILE_PREFIX + str_vid + VOICEFILE_ATTR;
+	LOG("Ogg filename: %s", oggFileName.c_str());
 
+	LOG("Now playing new file...");
 	{
-		LockGuard lock(dsd->mt_play);
-		stopPlaying();
+		LockGuard lock(mt_playID);
+
+		playID = player->Play(oggFileName.c_str(), config->Volume);
+
+		status->playing = 1;
+		status->code5 = 0;
+		aup->wait = 0;
+		aup->waitv = 0;
+		aup->count_ch = 0;
+		aup->time_autoplay = 0;
+
+		order->disableDududu = config->DisableDududu;
+		order->disableDialogSE = config->DisableDialogSE;
+		order->skipVoice = config->SkipVoice;
+
+		LOG("Play called, playID = 0x%08X", playID);
 	}
-	LOG("Previous playing stopped.");
-
-	LOG("Now call opening thread...");
-	SetEvent(th->hEvent_OpenOgg);
-	LOG("Called.");
-
-	status->playing = 1;
-	status->code5 = 0;
-	aup->wait = 0;
-	aup->waitv = 0;
-	aup->count_ch = 0;
-	aup->time_autoplay = 0;
-
-	order->disableDududu = config->DisableDududu;
-	order->disableDialogSE = config->DisableDialogSE;
-	order->skipVoice = config->SkipVoice;
 }
 
 void SoraVoiceImpl::Stop()
@@ -683,12 +286,11 @@ void SoraVoiceImpl::Stop()
 	LOG("Stop is called.");
 
 	if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-		draw->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
+		draw->AddInfo(InfoType::AutoPlayMark, REMAIN_TIME, config->FontColor, Message::AutoPlayMark);
 	}
 
 	if (config->SkipVoice) {
-		LockGuard lock(dsd->mt_play);
-		stopPlaying();
+		player->Stop();
 	}
 	
 	status->code5 = 0;
@@ -702,8 +304,8 @@ void SoraVoiceImpl::Input()
 {
 	if (!config->EnableKeys) return;
 
-	const char* keys = ipt->keys;
-	char* last = ipt->last;
+	const char* keys = this->keys->keys;
+	char* last = this->keys->last;
 
 	bool needsave = false;
 	bool needsetvolume = false;
@@ -732,22 +334,22 @@ void SoraVoiceImpl::Input()
 
 			if (config->ShowInfo) {
 				//inf->addText(InfoType::ConfigReset, INFO_TIME, Message::Reset);
-				draw->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
-				draw->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
-				draw->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
-				draw->addInfo(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
-				draw->addInfo(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
-				draw->addInfo(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
+				draw->AddInfo(InfoType::AutoPlay, INFO_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+				draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+				draw->AddInfo(InfoType::DisableDialogSE, INFO_TIME, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+				draw->AddInfo(InfoType::DisableDududu, INFO_TIME, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+				draw->AddInfo(InfoType::InfoOnoff, INFO_TIME, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
 
 				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-					draw->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
 				}
 				else {
-					draw->removeInfo(InfoType::AutoPlayMark);
+					draw->RemoveInfo(InfoType::AutoPlayMark);
 				}
 			}
 			else {
-				draw->removeInfo(InfoType::All);
+				draw->RemoveInfo(InfoType::All);
 			}
 		}
 	} //if(KEY_VOLUME_UP & KEY_VOLUME_DOWN)
@@ -762,7 +364,7 @@ void SoraVoiceImpl::Input()
 			needsave = needsetvolume;
 
 			if (config->ShowInfo) {
-				draw->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
 			}
 
 			LOG("Set Volume : %d", config->Volume);
@@ -777,7 +379,7 @@ void SoraVoiceImpl::Input()
 			needsave = needsetvolume;
 
 			if (config->ShowInfo) {
-				draw->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
 			}
 
 			LOG("Set Volume : %d", config->Volume);
@@ -787,10 +389,10 @@ void SoraVoiceImpl::Input()
 			needsetvolume = true;
 
 			if (config->ShowInfo && status->mute) {
-				draw->addInfo(InfoType::Volume, INFO_TIME, Message::Mute);
+				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Mute);
 			}
 			else {
-				draw->addInfo(InfoType::Volume, INFO_TIME, Message::Volume, config->Volume);
+				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
 			}
 
 			LOG("Set mute : %d", status->mute);
@@ -801,12 +403,12 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (config->ShowInfo) {
-				draw->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+				draw->AddInfo(InfoType::AutoPlay, INFO_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
 				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-					draw->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
 				}
 				else {
-					draw->removeInfo(InfoType::AutoPlayMark);
+					draw->RemoveInfo(InfoType::AutoPlayMark);
 				}
 			}
 			LOG("Set AutoPlay : %d", config->AutoPlay);
@@ -817,7 +419,7 @@ void SoraVoiceImpl::Input()
 					order->skipVoice = config->SkipVoice;
 				}
 				if (config->ShowInfo) {
-					draw->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+					draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 				}
 				LOG("Set SkipVoice : %d", config->SkipVoice);
 			}
@@ -831,7 +433,7 @@ void SoraVoiceImpl::Input()
 			}
 
 			if (config->ShowInfo) {
-				draw->addInfo(InfoType::SkipVoice, INFO_TIME, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+				draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 			}
 
 			LOG("Set SkipVoice : %d", config->SkipVoice);
@@ -839,8 +441,8 @@ void SoraVoiceImpl::Input()
 			if (!config->SkipVoice && config->AutoPlay) {
 				config->AutoPlay = 0;
 				if (config->ShowInfo) {
-					draw->addInfo(InfoType::AutoPlay, INFO_TIME, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
-					draw->removeInfo(InfoType::AutoPlayMark);
+					draw->AddInfo(InfoType::AutoPlay, INFO_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+					draw->RemoveInfo(InfoType::AutoPlayMark);
 				}
 				LOG("Set AutoPlay : %d", config->AutoPlay);
 			}
@@ -854,7 +456,7 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (config->ShowInfo) {
-				draw->addInfo(InfoType::DisableDialogSE, INFO_TIME, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+				draw->AddInfo(InfoType::DisableDialogSE, INFO_TIME, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
 			}
 
 			LOG("Set DisableDialogSE : %d", config->DisableDialogSE);
@@ -868,7 +470,7 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (config->ShowInfo) {
-				draw->addInfo(InfoType::DisableDududu, INFO_TIME, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+				draw->AddInfo(InfoType::DisableDududu, INFO_TIME, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
 			}
 
 			LOG("Set DisableDududu : %d", config->DisableDududu);
@@ -880,26 +482,25 @@ void SoraVoiceImpl::Input()
 
 			if (config->ShowInfo) {
 				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-					draw->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
 				}
 				else {
-					draw->removeInfo(InfoType::AutoPlayMark);
+					draw->RemoveInfo(InfoType::AutoPlayMark);
 				}
 			}
 			else {
-				draw->removeInfo(InfoType::All);
+				draw->RemoveInfo(InfoType::All);
 			}
-			draw->addInfo(InfoType::InfoOnoff, INFO_TIME, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+			draw->AddInfo(InfoType::InfoOnoff, INFO_TIME, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
 
 			LOG("Set ShowInfo : %d", config->ShowInfo);
 		}//if(KEY_INFO)
 	}
 
 	if (needsetvolume) {
-		LockGuard lock(dsd->mt_play);
 		if (status->playing) {
-			if (status->mute) dsd->pDSBuff->SetVolume(TO_DSVOLUME(0));
-			else dsd->pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
+			if (status->mute) player->SetVolume(config->Volume);
+			else player->SetVolume(0);
 		}
 	}
 
@@ -913,17 +514,17 @@ void SoraVoiceImpl::Input()
 
 void SoraVoiceImpl::Show()
 {
-	tm->updateTime();
+	Clock::UpdateTime();
 
 	if (status->showing) {
-		draw->drawInfos();
-		draw->removeInfo(InfoType::Dead);
+		draw->DrawInfos();
+		draw->RemoveInfo(InfoType::Dead);
 	}
 
 	if (aup->count_ch == 1) {
 		aup->count_ch++;
 		if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-			draw->addInfo(InfoType::AutoPlayMark, INFINITY_TIME, Message::AutoPlayMark);
+			draw->AddInfo(InfoType::AutoPlayMark, Draw::ShowTimeInfinity, config->FontColor ,Message::AutoPlayMark);
 		}
 	}
 
@@ -936,7 +537,7 @@ void SoraVoiceImpl::Show()
 			aup->time_autoplay = 0;
 
 			if (config->ShowInfo == Config::ShowInfo_WithMark) {
-				draw->removeInfo(InfoType::AutoPlayMark);
+				draw->RemoveInfo(InfoType::AutoPlayMark);
 			}
 		}
 		else if (aup->wait && !aup->time_autoplay) {
@@ -964,7 +565,7 @@ void SoraVoiceImpl::Show()
 				}
 
 				if (config->ShowInfo == Config::ShowInfo_WithMark) {
-					draw->addInfo(InfoType::AutoPlayMark, REMAIN_TIME, Message::AutoPlayMark);
+					draw->AddInfo(InfoType::AutoPlayMark, REMAIN_TIME, config->FontColor, Message::AutoPlayMark);
 				}
 			}
 
@@ -976,312 +577,38 @@ void SoraVoiceImpl::Show()
 	}
 }
 
-void SoraVoiceImpl::init()
-{
-	constexpr int len_cfn = sizeof(config->FontName);
-	constexpr int len_lffn = sizeof(draw->desca.FaceName);
-	static_assert(len_cfn == len_lffn, "Font names' length not match");
-
-	for (int i = 0; i < NUM_NOTIFY; i++) {
-		th->hEvent_ReadOgg[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
-		dsd->dSNotifies[i].hEventNotify = th->hEvent_ReadOgg[i];
-	}
-	th->hEvent_OpenOgg = CreateEvent(NULL, FALSE, FALSE, NULL);
-	th->hEvent_End[th->evEndid_Read] = CreateEvent(NULL, TRUE, FALSE, NULL);
-	th->hEvent_End[th->evEndid_Open] = CreateEvent(NULL, TRUE, FALSE, NULL);
-	LOG("Event created!");
-
-	ended = 0;
-
-	th->th_read = std::thread(&SoraVoiceImpl::thread_readData, this);
-	th->th_read.detach();
-
-	th->th_open = std::thread(&SoraVoiceImpl::thread_openOggFile, this);
-	th->th_open.detach();
-
-	LOG("Thread created!");
-
-	void* pPresent = Hook_D3D_Present(draw->pD3DD);
-	if (pPresent) {
-		LOG("Present hooked, old Present = 0x%08X", pPresent);
-	}
-	else {
-		LOG("Hook Present failed.");
-	}
-
-	void* pGetDeviceState = Hook_DI_GetDeviceState(ipt->pDID);
-	if (pGetDeviceState) {
-		LOG("GetDeviceState hooked, old GetDeviceState = 0x%08X", pGetDeviceState);
-	}
-	else {
-		LOG("Hook GetDeviceState failed.");
-	}
-
-	RECT rect;
-	if (GetClientRect(draw->hWnd, &rect)) {
-		draw->width = rect.right - rect.left;
-		draw->height = rect.bottom - rect.top;
-
-		int fontSize = draw->height / TEXT_NUM_SCRH;
-		if (fontSize < MIN_FONT_SIZE) fontSize = MIN_FONT_SIZE;
-		draw->desca.Height = -fontSize;
-		draw->desca.Weight = FW_NORMAL;
-		draw->desca.CharSet = DEFAULT_CHARSET;
-		draw->desca.OutputPrecision = OUT_OUTLINE_PRECIS;
-		draw->desca.Quality = CLEARTYPE_QUALITY;
-
-		memcpy(draw->desca.FaceName, config->FontName, len_lffn);
-		draw->desca.FaceName[len_lffn - 1] = 0;
-
-		draw->fontColor = config->FontColor;
-		draw->bound = (int)(fontSize * BOUND_WIDTH_RATE + 0.5);
-		draw->shadow = (int)(fontSize * TEXT_SHADOW_POS_RATE + 0.5);
-		draw->linespace = (int)(fontSize * LINE_SPACE_RATE + 0.5);
-
-		LOG("screen width = %d", draw->width);
-		LOG("screen height = %d", draw->height);
-		LOG("Font Size = %d", fontSize);
-		LOG("Font Name = %s", draw->desca.FaceName);
-
-		if (config->ShowInfo) {
-			draw->addInfo(InfoType::Hello, HELLO_TIME, Message::Title);
-			draw->addInfo(InfoType::Hello, HELLO_TIME, Message::Version, Message::VersionNum);
-			draw->addInfo(InfoType::Hello, HELLO_TIME, Message::GameTitle, Comment);
-		}
-	}
-}
-
-void SoraVoiceImpl::destory()
-{
-	ended = 1;
-	{
-		LockGuard lock(dsd->mt_play);
-		stopPlaying();
-	}
-	memset(order, 0, sizeof(*order));
-	
-	SetEvent(th->hEvent_ReadOgg[0]);
-	SetEvent(th->hEvent_OpenOgg);
-	WaitForMultipleObjects(sizeof(th->hEvent_End) / sizeof(*th->hEvent_End), th->hEvent_End, TRUE, 100);
-}
-
-void SoraVoiceImpl::thread_openOggFile()
-{
-	while (!ended)
-	{
-		DWORD rst = WaitForSingleObject(th->hEvent_OpenOgg, INFINITE);
-		if (rst == WAIT_OBJECT_0 && !ended) {
-			FILE* f = NULL;
-			LOG("[Thread_Open]Open %s ...", ogg->oggFn);
-			f = fopen(ogg->oggFn, "rb");
-
-			if (f == NULL) {
-				th->opening = th->Failed;
-				LOG("Open file failed.");
-				break;
-			}
-
-			auto &ovf = ogg->ovf;
-			if (ogg->ov_open_callbacks(f, &ovf, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
-				fclose(f);
-				th->opening = th->Failed;
-				LOG("[Thread_Open]Open file as ogg failed!");
-				break;
-			}
-			LOG("[Thread_Open]Ogg file opened");
-			th->opening = th->Succeeded;
-		}
-	}//while
-	SetEvent(th->hEvent_End[th->evEndid_Open]);
-}
-
-void SoraVoiceImpl::thread_readData()
-{
-	auto &playEnd = th->playEnd;
-	while (!ended)
-	{
-		DWORD rst = WaitForMultipleObjects(NUM_NOTIFY, th->hEvent_ReadOgg, FALSE, INFINITE);
-		if (rst >= WAIT_OBJECT_0 && rst < WAIT_OBJECT_0 + NUM_NOTIFY) {
-			th->mt_play.lock();
-
-			if (status->playing) {
-				const int id = rst - WAIT_OBJECT_0;
-				if (id == playEnd) {
-					LOG("[Thread_Read]Voice end, stop!");
-					
-					aup->waitv = 1;
-					aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice - TIME_PRECV / 2;
-
-					LOG("[Thread_Read]now = %d", tm->now);
-					LOG("[Thread_Read]time_autoplayv = %d", aup->time_autoplayv);
-
-					stopPlaying();
-				}
-				else {
-					const int buff_no = id / NUM_NOTIFY_PER_BUFF;
-					const int notify_no_inbuff = id % NUM_NOTIFY_PER_BUFF;
-
-					if (notify_no_inbuff == 0) {
-						const int read_buff_no = (buff_no - 1 + NUM_AUDIO_BUF) % NUM_AUDIO_BUF;
-
-						const int start = read_buff_no * dsd->buffSize;
-						const int size = read_buff_no == NUM_AUDIO_BUF - 1 ?
-							dsd->dSBufferDesc.dwBufferBytes - (NUM_AUDIO_BUF - 1) * dsd->buffSize
-							: dsd->buffSize;
-
-						void *AP1, *AP2;
-						DWORD AB1, AB2;
-						int read = 0;
-
-						if (DS_OK == dsd->pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
-							read = ogg->readOggData((char*)AP1, AB1);
-							if (AP2) read += ogg->readOggData((char*)AP2, AB2);
-							dsd->pDSBuff->Unlock(AP1, AB1, AP2, AB2);
-						}
-
-						if (read < size && playEnd < 0) {
-							playEnd = read_buff_no * NUM_NOTIFY_PER_BUFF + (read + dsd->notifySize - dsd->halfNotifySize) / dsd->notifySize;
-							if (playEnd >= NUM_NOTIFY) playEnd = 0;
-						}
-					}
-				}
-			}
-
-			th->mt_play.unlock();
-		}//if
-	}//while
-	SetEvent(th->hEvent_End[th->evEndid_Read]);
-}
-
-void SoraVoiceImpl::playSoundFile()
-{
-	LockGuard lock_play(dsd->mt_play);
-
-	vorbis_info* info = nullptr;
-	{
-		LockGuard lock_ovFile(ogg->mt_ovFileQueue);
-		info = ogg->ov_info(ogg->ovFileQueue.back().get(), -1);
-	}
-	if (!info) return;
-
-	auto &waveFormatEx = dsd->waveFormatEx;
-	waveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
-	waveFormatEx.nChannels = info->channels;
-	waveFormatEx.nSamplesPerSec = info->rate;
-	waveFormatEx.wBitsPerSample = 16;
-	waveFormatEx.nBlockAlign = info->channels * 16 / 8;
-	waveFormatEx.nAvgBytesPerSec = waveFormatEx.nSamplesPerSec * waveFormatEx.nBlockAlign;
-	waveFormatEx.cbSize = 0;
-
-	auto &dSBufferDesc = dsd->dSBufferDesc;
-	dSBufferDesc.dwSize = sizeof(dSBufferDesc);
-	dSBufferDesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_CTRLVOLUME;
-	dSBufferDesc.dwBufferBytes = waveFormatEx.nAvgBytesPerSec * TIME_BUF;
-	dSBufferDesc.dwReserved = 0;
-	dSBufferDesc.lpwfxFormat = &waveFormatEx;
-	dSBufferDesc.guid3DAlgorithm = GUID_NULL;
-
-	auto &buffSize = dsd->buffSize;
-	auto &notifySize = dsd->notifySize;
-	auto &halfNotifySize = dsd->halfNotifySize;
-	buffSize = dSBufferDesc.dwBufferBytes / NUM_AUDIO_BUF;
-	notifySize = buffSize / NUM_NOTIFY_PER_BUFF;
-	halfNotifySize = notifySize / 2;
-
-	auto &pDSBuff = dsd->pDSBuff;
-	auto &pDS = dsd->pDS;
-	if (DS_OK != pDS->CreateSoundBuffer(&dSBufferDesc, &pDSBuff, NULL)) {
-		LOG("Create sound buff failed!");
-		return;
-	}
-	LOG("Sound buff opened");
-
-	void *AP1, *AP2;
-	DWORD AB1, AB2;
-	if (DS_OK == pDSBuff->Lock(0, dsd->buffSize * (NUM_AUDIO_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
-		ogg->readOggData((char*)AP1, AB1);
-		if (AP2) ogg->readOggData((char*)AP2, AB2);
-		pDSBuff->Unlock(AP1, AB1, AP2, AB2);
-	}
-	else {
-		pDSBuff->Release();
-		LOG("Write first data failed!");
-		return;
-	}
-	LOG("First data wroten");
-
-	auto &dSNotifies = dsd->dSNotifies;
-	for (int i = 0; i < NUM_AUDIO_BUF; ++i) {
-		for (int j = 0; j < NUM_NOTIFY_PER_BUFF; j++) {
-			dSNotifies[i * NUM_NOTIFY_PER_BUFF + j].dwOffset = i * buffSize + j * notifySize + halfNotifySize;
-		}
-	}
-
-	static LPDIRECTSOUNDNOTIFY pDSN = NULL;
-	if (DS_OK != pDSBuff->QueryInterface(IID_IDirectSoundNotify, (LPVOID*)&pDSN)) {
-		pDSBuff->Release();
-		LOG("Set notify failed!");
-		return;
-	};
-
-	if (DS_OK != pDSN->SetNotificationPositions(NUM_NOTIFY, dSNotifies)) {
-		pDSN->Release();
-		pDSBuff->Release();
-		LOG("Set notify failed!");
-		return;
-	}
-	pDSN->Release();
-	LOG("Notify set");
-
-	if (!status->mute) {
-		pDSBuff->SetVolume(TO_DSVOLUME(config->Volume));
-		LOG("DSVolume = %d", TO_DSVOLUME(config->Volume));
-	}
-	else {
-		pDSBuff->SetVolume(TO_DSVOLUME(0));
-		LOG("Mute");
-	}
-
-	th->mt_play.lock();
-	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
-	th->mt_play.unlock();
-
-	LOG("Playing...");
-}
-
-void SoraVoiceImpl::stopPlaying()
-{
-	if (!status->playing) return;
-	status->playing = 0;
-
-	if (dsd->pDSBuff) {
-		dsd->pDSBuff->Stop();
-		dsd->pDSBuff->Release();
-		dsd->pDSBuff = NULL;
-	}
-	
-	dsd->playEnd = -1;
-	order->disableDududu = 0;
-	order->skipVoice = 0;
-	order->disableDialogSE = 0;
-
-	{
-		LockGuard lock(ogg->mt_oggFnQueue);
-		while (!ogg->oggFnQueue.empty()) {
-			ogg->oggFnQueue.pop();
-		}
-	}
-	{
-		LockGuard lock(ogg->mt_ovFileQueue);
-		while (!ogg->ovFileQueue.empty()) {
-			ov_clear(ogg->ovFileQueue.front().get());
-			ogg->ovFileQueue.pop();
-		}
-	}
-}
-
 SoraVoice * SoraVoice::CreateInstance(void * initParam)
 {
+	InitParam* ip = (InitParam*)initParam;
+
+	LOG("p = 0x%08X", ip);
+	LOG("p->p_ov_open_callbacks = 0x%08X", ip->addrs.p_ov_open_callbacks);
+	LOG("p->p_ov_info = 0x%08X", ip->addrs.p_ov_info);
+	LOG("p->p_ov_read = 0x%08X", ip->addrs.p_ov_read);
+	LOG("p->p_ov_clear = 0x%08X", ip->addrs.p_ov_clear);
+	LOG("p->p_d3dd = 0x%08X", ip->addrs.p_d3dd);
+	LOG("p->p_did = 0x%08X", ip->addrs.p_did);
+	LOG("p->p_Hwnd = 0x%08X", ip->addrs.p_Hwnd);
+	LOG("p->p_pDS = 0x%08X", ip->addrs.p_pDS);
+	LOG("p->p_mute = 0x%08X", ip->addrs.p_mute);
+	LOG("p->p_keys = 0x%08X", ip->addrs.p_keys);
+
+	LOG("ov_open_callbacks = 0x%08X", *ip->addrs.p_ov_open_callbacks);
+	LOG("ov_info = 0x%08X", *ip->addrs.p_ov_info);
+	LOG("ov_read = 0x%08X", *ip->addrs.p_ov_read);
+	LOG("ov_clear = 0x%08X", *ip->addrs.p_ov_clear);
+	LOG("d3dd = 0x%08X", *ip->addrs.p_d3dd);
+	LOG("did = 0x%08X", *ip->addrs.p_did);
+	LOG("Hwnd = 0x%08X", *ip->addrs.p_Hwnd);
+	LOG("pDS = 0x%08X", *ip->addrs.p_pDS);
+
+	if (!*ip->addrs.p_ov_open_callbacks || !*ip->addrs.p_ov_info || !*ip->addrs.p_ov_read || !*ip->addrs.p_ov_clear
+		|| !*ip->addrs.p_pDS) {
+		LOG("nullptr exists, failed to init SoraVoice");
+		return nullptr;
+	}
+
+	Clock::InitClock(ip->rcd.now, ip->rcd.recent);
 	return new SoraVoiceImpl((InitParam*)initParam);
 }
 

@@ -11,6 +11,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <queue>
 
 class SoundPlayerImpl : private SoundPlayer
 {
@@ -21,7 +22,8 @@ class SoundPlayerImpl : private SoundPlayer
 	static constexpr DWORD INVALID_POS = 0xFFFFFFFF;
 
 	using LockGuard = std::lock_guard<std::mutex>;
-	using FnsQueue = std::queue<std::string>;
+	using PlayInfo = struct { PlayID playID; std::string fileNm;};
+	using PlayQueue = std::queue<PlayInfo>;
 
 	friend class SoundPlayer;
 
@@ -31,55 +33,51 @@ class SoundPlayerImpl : private SoundPlayer
 			(int)(2000 * log10(double(volume) / MaxVolume));
 	}
 
-	static int ReadOggData(OggVorbis_File* ovFile, void * buff, unsigned size)
-	{
-		if (!buff || !size) return 0;
-
-		for (int i = 0; i < size; i++) ((char*)buff)[i] = 0;
-
-		int bitstream = 0;
-		return ov_read(ovFile, (char*)buff, size, 0, 2, 1, &bitstream);
-	}
-
 private:
-	virtual void Play(const char* fileName, int volume) override {
-		Stop();
+	virtual PlayID Play(const char* fileName, int volume) override {
+		PlayID playID = generatePlayID();
 		{
-			LockGuard lock(mt_fnsQueue);
-			this->fnsQueue.emplace(fileName);
+			LockGuard lock(mt_playQueue);
+			this->playQueue.push({ playID, fileName });
 		}
 		this->volume = volume;
+		stop = false;
 		SetEvent(hEvent_Playing);
+		return playID;
 	}
 
 	virtual void Stop() override {
-		LockGuard lock(mt_DSBuff);
-		status = Status::Stoped;
-		pDSBuff->Stop();
+		stop = true;
 	}
 
 	virtual void SetVolume(int volume = MaxVolume) override {
 		this->volume = volume;
 		{
 			LockGuard lock(mt_DSBuff);
-			pDSBuff->SetVolume(TO_DSVOLUME(volume));
+			if(pDSBuff)
+				pDSBuff->SetVolume(TO_DSVOLUME(volume));
 		}
 	};
 
 	virtual void SetStopCallBack(StopCallBack stopCallBack = nullptr) override {
+		LockGuard lock(mt_stopCallBack);
 		this->stopCallBack = stopCallBack;
 	}
 
-	virtual void Destory() override {
+	virtual ~SoundPlayerImpl() override {
+		ended = true;
 		Stop();
-		status = Status::End;
+		{
+			LockGuard lock(mt_playQueue);
+			while (!playQueue.empty()) playQueue.pop();
+		}
 		SetEvent(hEvent_Playing);
-		WaitForSingleObject(hEvent_End, DELTA_TIME * 2);
+		WaitForSingleObject(hEvent_End, DELTA_TIME * 3);
 	}
 
 	SoundPlayerImpl(void * pDSD,
 			void * ov_open_callbacks, void * ov_info, void * ov_read, void * ov_clear,
-			StopCallBack* stopCallBack)
+			StopCallBack stopCallBack)
 		:
 		pDSD((decltype(this->pDSD))pDSD),
 		ov_open_callbacks((decltype(this->ov_open_callbacks))ov_open_callbacks),
@@ -94,11 +92,9 @@ private:
 		status = Status::Stoped;
 		th_playing.detach();
 	}
-	bool stop = false;
-	std::mutex mt_stop;
 
+	bool stop = false;
 	bool ended = false;
-	std::mutex mt_ended;
 
 	IDirectSound* const pDSD;
 	decltype(::ov_open_callbacks)* const ov_open_callbacks;
@@ -106,15 +102,15 @@ private:
 	decltype(::ov_read)* const ov_read;
 	decltype(::ov_clear)* const ov_clear;
 
-	StopCallBack* stopCallBack;
+	StopCallBack stopCallBack;
 	std::mutex mt_stopCallBack;
 
 	int volume = MaxVolume;
 
 	IDirectSoundBuffer *pDSBuff = nullptr;
-	std::mutex mt_DSBuff = nullptr;
-	int buffSize = 0;
-	int buffIndex = 0;
+	std::mutex mt_DSBuff;
+	unsigned buffSize = 0;
+	unsigned buffIndex = 0;
 	DWORD endPos = MaxVolume;
 	DWORD curPos = 0;
 	DWORD prePos = 0;
@@ -123,33 +119,41 @@ private:
 	WAVEFORMATEX waveFormatEx {0};
 	DSBUFFERDESC dSBufferDesc {0};
 
-	FnsQueue fnsQueue;
-	std::mutex mt_fnsQueue;
+	PlayQueue playQueue;
+	std::mutex mt_playQueue;
 
 	const HANDLE hEvent_Playing;
 	const HANDLE hEvent_End;
 	std::thread th_playing;
 
+	unsigned readOggData(void * buff, unsigned size)
+	{
+		if (!buff || !size) return 0;
+
+		memset(buff, 0, size);
+
+		int bitstream = 0;
+		unsigned total = 0;
+
+		constexpr int block = 4096;
+
+		while (total < size)
+		{
+			int request = size - total < block ? size - total : block;
+			int read = ov_read(&ovFile, (char*)buff + total, request, 0, 2, 1, &bitstream);
+			if (read <= 0) return total;
+
+			total += read;
+		}
+		return total;
+	}
+
 	void thread_Playing();
-	/*
-	 * return value:
-	 *     1 succeeded
-	 *     0 failed
-	 *    -1 no file
-	 */
-	int openSoundFile();
-	/*
-	 * return value:
-	 *     0 failed
-	 *     1 succeeded
-	 */
-	int initDSBuff();
-	/*
-	 * return value:
-	 *     0 failed
-	 *     1 succeeded
-	 */
-	int startPlay();
+
+	bool SoundPlayerImpl::openSoundFile(const std::string& fileName);
+	bool initDSBuff();
+	bool startPlay();
+
 	/*
 	 * return value:
 	 *     0 finished
@@ -158,57 +162,98 @@ private:
 	int playing();
 
 	void finishPlay();
+
+	static PlayID generatePlayID() {
+		static PlayID last = InvalidPlayID;
+		return ++last == InvalidPlayID ? ++last : last;
+	}
 };
 
 SoundPlayer * SoundPlayer::CreatSoundPlayer(void * pDSD,
 		void * ov_open_callbacks, void * ov_info, void * ov_read, void * ov_clear,
-		StopCallBack* stopCallBack)
+		StopCallBack stopCallBack)
 {
-	SoundPlayerImpl* soundPlayer = new SoundPlayerImpl(pDSD,
+	SoundPlayer* soundPlayer = new SoundPlayerImpl(pDSD,
 			ov_open_callbacks, ov_info, ov_read, ov_clear,
 			stopCallBack);
 	return soundPlayer;
+}
+
+void SoundPlayer::DestorySoundPlayer(SoundPlayer * player)
+{
+	delete player;
 }
 
 void SoundPlayerImpl::thread_Playing()
 {
 	while (!ended)
 	{
-		DWORD rst = WaitForSingleObject(hEvent_Playing, INFINITE);
-		if (rst == WAIT_OBJECT_0) {
-			openSoundFile();
-			initDSBuff();
-			startPlay();
+		DWORD waitResult = WaitForSingleObject(hEvent_Playing, INFINITE);
+		if (waitResult != WAIT_OBJECT_0) continue;
 
-			int remain = 0;
-			while(!stop && fnsQueue.empty() && (remain = playing())) {
-				int delta = remain * waveFormatEx.nAvgBytesPerSec / Clock::TimeUnitsPerSecond;
-				if(delta > DELTA_TIME) delta = DELTA_TIME;
-				Clock::Sleep(delta);
+		status = Status::Playing;
+
+		PlayInfo play{ InvalidPlayID };
+		{
+			LockGuard lock(mt_playQueue);
+			while (playQueue.size() > 1)
+			{
+				play = std::move(playQueue.front());
+				playQueue.pop();
+				LockGuard lock2(mt_stopCallBack);
+				if (stopCallBack) {
+					stopCallBack(play.playID, StopType::ForceStop);
+				}
+			}
+
+			if (!playQueue.empty())
+			{
+				play = std::move(playQueue.front());
+				playQueue.pop();
+			}
+		}
+
+		if (play.playID != InvalidPlayID) {
+			bool rst = openSoundFile(play.fileNm)
+				&& initDSBuff()
+				&& startPlay();
+
+			if (rst) {
+				int remain = 0;
+				while (!stop && playQueue.empty() && (remain = playing())) {
+					int delta = remain * waveFormatEx.nAvgBytesPerSec / Clock::TimeUnitsPerSecond;
+					if (delta > DELTA_TIME) delta = DELTA_TIME;
+					Clock::Sleep(delta);
+				}
 			}
 
 			finishPlay();
 
-			if(!stop && fnsQueue.empty()) {
-				if(!stopCallBack) {
-					stopCallBack(Status::End);
+			StopType stopType;
+			if (!rst) {
+				stopType = StopType::Error;
+			}
+			else if (stop || !playQueue.empty()) {
+				stopType = StopType::ForceStop;
+			}
+			else {
+				stopType = StopType::PlayEnd;
+			}
+
+			{
+				LockGuard lock(mt_stopCallBack);
+				if (stopCallBack) {
+					stopCallBack(play.playID, stopType);
 				}
 			}
-		}
-	}
+		} //if (play.playID != InvalidPlayID)
+
+		status = Status::Stoped;
+	} //while (!ended)
+	SetEvent(hEvent_End);
 }
 
-int SoundPlayerImpl::openSoundFile(){
-	std::string fileName;
-	{
-		LockGuard lock(mt_fnsQueue);
-		if(fnsQueue.empty()) {
-			return -1;
-		}
-		fileName.assign(std::move(fnsQueue.back()));
-		while(!fnsQueue.empty()) fnsQueue.pop();
-	}
-
+bool SoundPlayerImpl::openSoundFile(const std::string& fileName){
 	LOG("Open file %s ...", fileName.c_str());
 	FILE* f = fopen(fileName.c_str(), "rb");
 	if (f == NULL) {
@@ -224,7 +269,7 @@ int SoundPlayerImpl::openSoundFile(){
 	return 1;
 }
 
-int SoundPlayerImpl::initDSBuff(){
+bool SoundPlayerImpl::initDSBuff(){
 	vorbis_info* info = ov_info(&ovFile, -1);
 
 	memset(&waveFormatEx, 0, sizeof(waveFormatEx));
@@ -259,12 +304,12 @@ int SoundPlayerImpl::initDSBuff(){
 	return 1;
 }
 
-int SoundPlayerImpl::startPlay(){
+bool SoundPlayerImpl::startPlay(){
 	void *AP1, *AP2;
 	DWORD AB1, AB2;
 	if (DS_OK == pDSBuff->Lock(0, buffSize * (NUM_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
-		ReadOggData(&ovFile, AP1, AB1);
-		if (AP2) ReadOggData(&ovFile, AP2, AB2);
+		readOggData(AP1, AB1);
+		if (AP2) readOggData(AP2, AB2);
 		pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 	}
 	else {
@@ -283,15 +328,16 @@ int SoundPlayerImpl::startPlay(){
 
 int SoundPlayerImpl::playing() {
 	pDSBuff->GetCurrentPosition(&curPos, NULL);
-	if(endPos != INVALID_POS && curPos < prePos) {
-		endPos -= dSBufferDesc.dwBufferBytes;
+	if(curPos < prePos) {
+		buffIndex = 0;
+		if(endPos != INVALID_POS) endPos -= dSBufferDesc.dwBufferBytes;
 	}
 	prePos = curPos;
 	if(curPos > endPos) {
 		return 0;
 	}
 	else if(curPos > buffIndex * buffSize) {
-		const int buffReadIndex = (buffIndex - 1 + NUM_BUF) % NUM_BUF;
+		const int buffReadIndex = (buffIndex + NUM_BUF - 1) % NUM_BUF;
 
 		const int start = buffReadIndex * buffSize;
 		const int size = buffReadIndex == NUM_BUF - 1 ?
@@ -303,15 +349,16 @@ int SoundPlayerImpl::playing() {
 		int read = 0;
 
 		if (DS_OK == pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
-			read = ReadOggData(&ovFile, AP1, AB1);
-			if (AP2) read += ReadOggData(&ovFile, AP2, AB2);
+			read = readOggData(AP1, AB1);
+			if (AP2) read += readOggData(AP2, AB2);
 			pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 		}
 
-		if (endPos != INVALID_POS && read < size) {
+		if (endPos == INVALID_POS && read < size) {
 			endPos = start + size;
 			if (endPos < curPos) endPos += dSBufferDesc.dwBufferBytes;
 		}
+		buffIndex += 1;
 	}
 
 	return endPos == INVALID_POS ?
@@ -321,7 +368,13 @@ int SoundPlayerImpl::playing() {
 
 void SoundPlayerImpl::finishPlay() {
 	ov_clear(&ovFile);
-	pDSBuff->Stop();
-	pDSBuff->Release();
-	pDSBuff = NULL;
+
+	{
+		LockGuard lock(mt_DSBuff);
+		if (pDSBuff) {
+			pDSBuff->Stop();
+			pDSBuff->Release();
+			pDSBuff = NULL;
+		}
+	}
 }

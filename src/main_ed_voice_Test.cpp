@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
 	GUID guidf = { 0xBF798030,0x483A,0x4DA2,0xAA,0x99,0x5D,0x64,0xED,0x36,0x97,0x00 };
 	void* pDI;
-	DirectInput8Create(GetModuleHandle(0), 0x800, &guidf, &pDI, 0);
+	//DirectInput8Create(GetModuleHandle(0), 0x800, &guidf, &pDI, 0);
 
 	LPDIRECTSOUND pDS = NULL;
 
@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
 	p.addrs.p_Hwnd = (void**)&hWnd;
 	void* d3d = nullptr;
 	p.addrs.p_d3dd = &d3d;
+	p.addrs.p_did = &d3d;
 
 	IDirect3DDevice8 d3dd;
 	IDirect3DDevice8Vtbl vtbl;

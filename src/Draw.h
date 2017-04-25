@@ -1,6 +1,7 @@
 #pragma once
 
 class Draw {
+public:
 	enum class InfoType
 	{
 		Hello,
@@ -19,7 +20,22 @@ class Draw {
 		Dead
 	};
 
+	static constexpr unsigned ShowTimeInfinity = 0;
 
+	static Draw * CreateDraw(char& showing, void * hWnd, void * pD3DD, const char* fontName);
+	static void DestoryDraw(Draw * draw);
 
+	virtual void DrawInfos() = 0;
+
+	virtual void AddInfo(InfoType type, unsigned time, unsigned color, const char* text, ...) = 0;
+
+	virtual void RemoveInfo(InfoType type) = 0;
+
+	const char& Showing() { return showing; }
+
+protected:
+	Draw(char& showing) : showing(showing) { }
+	char &showing;
+	virtual ~Draw() { };
 };
 
