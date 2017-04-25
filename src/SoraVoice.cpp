@@ -61,15 +61,8 @@ constexpr char VOICEFILE_PREFIX[] = "voice\\ch";
 #endif
 constexpr char VOICEFILE_ATTR[] = ".ogg";
 
-constexpr int NUM_AUDIO_BUF = 2;
-constexpr int NUM_NOTIFY_PER_BUFF = 8;
-constexpr int NUM_NOTIFY = (NUM_AUDIO_BUF * NUM_NOTIFY_PER_BUFF);
-static_assert(NUM_NOTIFY <= MAXIMUM_WAIT_OBJECTS, "Number of notifies exceeds the maxmum value");
-
 constexpr int VOLUME_STEP = 1;
 constexpr int VOLUME_STEP_BIG = 5;
-
-
 
 constexpr int KEY_MIN = DIK_5;
 constexpr int KEY_MAX = DIK_EQUALS;
@@ -124,30 +117,10 @@ class SoraVoiceImpl : private SoraVoice
 {
 	friend SoraVoice;
 
-	using Clock = std::chrono::steady_clock;
-	using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
-	using TimeUnit = std::chrono::milliseconds;
-
 	using LockGuard = std::lock_guard<std::mutex>;
 
 private:
-	enum class InfoType
-	{
-		Hello,
-		InfoOnoff,
-		AutoPlayMark,
 
-		Volume,
-		AutoPlay,
-		SkipVoice,
-		DisableDialogSE,
-		DisableDududu,
-
-		ConfigReset,
-
-		All,
-		Dead
-	};
 
 	const char* const Comment;
 	byte& ended;

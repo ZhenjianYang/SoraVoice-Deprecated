@@ -1,5 +1,5 @@
 
-#define CINTERFACE 1
+//#define CINTERFACE 1
 
 #ifdef ZA
 #include <d3d9.h>

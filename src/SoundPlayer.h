@@ -18,7 +18,7 @@ public:
 		void* ov_open_callbacks, void* ov_info, void* ov_read, void* ov_clear,
 		StopCallBack* stopCallBack = nullptr);
 
-	virtual void Play(const char* fileName) = 0;
+	virtual void Play(const char* fileName, int volume) = 0;
 
 	virtual void Stop() = 0;
 
@@ -30,5 +30,6 @@ public:
 
 	Status GetStatus() const { return status; }
 protected:
+	virtual ~SoundPlayer() {}
 	Status status;
 };
