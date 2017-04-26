@@ -9,7 +9,9 @@ SVDECL void SVCALL Init(void *p)
 	InitParam* ip = (InitParam*)p;
 	if (!ip || ip->sv) return;
 
-	ip->sv = SoraVoice::CreateInstance(ip);
+	if (InitAddrs(ip)) {
+		ip->sv = SoraVoice::CreateInstance(ip);
+	}
 }
 
 SVDECL void SVCALL End(void *p)

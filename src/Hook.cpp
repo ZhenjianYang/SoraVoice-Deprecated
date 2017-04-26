@@ -31,9 +31,7 @@ CallGetDeviceState* pGetDeviceState = nullptr;
 
 HRESULT WINAPI Hooked_Present(D3DD* pD3DD, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion) {
 	if (ip && ip->sv) {
-		CallPresent* bak = pD3DD->lpVtbl->Present;
 		((SoraVoice*)ip->sv)->Show();
-		pD3DD->lpVtbl->Present = bak;
 	}
 	return pPresent(pD3DD, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }

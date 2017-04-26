@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\Mapping.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\ed_voice.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -27,16 +30,10 @@
     <ClInclude Include="..\..\src\Draw.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Mapping.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SoraVoice.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\InitParam.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Message.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\rc\resource.h">
@@ -51,12 +48,12 @@
     <ClInclude Include="..\..\src\Clock.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\SoraVoiceImpl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ed_voice.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\Draw.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Log.cpp">
@@ -65,16 +62,22 @@
     <ClCompile Include="..\..\src\Config.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\SoraVoice.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Hook.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\SoundPlayer.cpp">
+    <ClCompile Include="..\..\src\Clock.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Clock.cpp">
+    <ClCompile Include="..\..\src\SoraVoiceImpl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\InitParam.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\DrawImpl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SoundPlayerImpl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

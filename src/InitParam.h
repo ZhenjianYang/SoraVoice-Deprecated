@@ -28,7 +28,9 @@ struct InitParam
 		//0x24
 		const char* p_keys;
 		//0x28
-		void** reserved[2];
+		void** p_D3DXCreateFontIndirect;
+		//0x2C
+		void** reserved;
 	} addrs;
 
 	//0x30
@@ -95,3 +97,4 @@ struct InitParam
 static_assert(sizeof(void*) == 4, "32 bits only!");
 static_assert(sizeof(InitParam) <= 0xE0, "Size of InitParam too big!");
 
+bool InitAddrs(InitParam* initParam);

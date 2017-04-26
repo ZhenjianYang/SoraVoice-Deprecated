@@ -15,11 +15,11 @@ aup_start:
 	mov     dword [ebx + tmp], eax
 	pop     eax
 
-	cmp byte [ebx + status_ended], 0
-	jne short aup_return
+	cmp     byte [ebx + status_ended], 0
+	jne     short auto_play
 
-	cmp dword [ebx + ptr_sv], 0
-	jne short auto_play
+	cmp     dword [ebx + ptr_sv], 0
+	jne     short auto_play
 
 	push    eax
 	push    ecx
@@ -31,32 +31,29 @@ aup_start:
 	pop     eax
 
 auto_play:
-	cmp byte [ebx + order_aup], 0
-	je short aup_return
-	mov byte [ebx + order_aup], 0
-
 %ifdef za
 	call    dword [ebx + to(jcs_aup)]
-	mov     eax, 1
-	push    dword [ebx + next(jcs_aup)]
-	mov     ebx, dword [ebx + tmp]
-	ret
-
-aup_return:
-	call    dword [ebx + to(jcs_aup)]
-	push    dword [ebx + next(jcs_aup)]
-	mov     ebx, dword [ebx + tmp]
-	ret
-
-%else
-	mov eax, [ebx + addr_keys]
-	mov byte [eax + dik_space], dik_press
-
-aup_return:
-	push    dword [ebx + to(jcs_aup)]
-	mov     ebx, dword [ebx + tmp]
-	ret
 %endif
+
+	cmp     byte [ebx + order_aup], 0
+	je      short aup_return
+	mov     byte [ebx + order_aup], 0
+
+%ifdef za
+	mov     eax, 1
+%else
+	mov     eax, [ebx + addr_keys]
+	mov     byte [eax + dik_space], dik_press
+%endif
+
+aup_return:
+%ifdef za
+	push    dword [ebx + next(jcs_aup)]
+%else
+	push    dword [ebx + to(jcs_aup)]
+%endif
+	mov     ebx, dword [ebx + tmp]
+	ret
 
 %undef tmp
 %undef vs

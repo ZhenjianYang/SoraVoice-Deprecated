@@ -61,31 +61,61 @@ int main(int argc, char* argv[])
 	InitParam p;
 	memset(&p, 0, sizeof(p));
 
-	void* vf_ov_open_callbacks = ov_open_callbacks;
-	void* vf_ov_info = ov_info;
-	void* vf_ov_read = ov_read;
-	void* vf_ov_clear = ov_clear;
+	bool ao = true;
+
+	constexpr char STR_DLL_ZA[] = "za_voice.dll";
+	constexpr char STR_DLL[] = "ed_voice.dll";
+	constexpr char STR_Init[] = "_Init@4";
+	constexpr char STR_End[] = "_End@4";
+	constexpr char STR_Play[] = "_Play@8";
+	constexpr char STR_Stop[] = "_Stop@4";
+
+	HMODULE dll = LoadLibrary(ao ? STR_DLL_ZA : STR_DLL);
+	decltype(::Init)* Init = nullptr;
+	decltype(::Stop)* Stop = nullptr;
+	decltype(::End)* End = nullptr;
+	decltype(::Play)* Play = nullptr;
+	if (dll) {
+		Init = (decltype(Init))GetProcAddress(dll, STR_Init);
+		Stop = (decltype(Stop))GetProcAddress(dll, STR_Stop);
+		End = (decltype(End))GetProcAddress(dll, STR_End);
+		Play = (decltype(Play))GetProcAddress(dll, STR_Play);
+	}
+
+	if (!Init) return 0;
+	if (!Stop) return 0;
+	if (!End) return 0;
+	if (!Play) return 0;
+
+	//void* vf_ov_open_callbacks = ov_open_callbacks;
+	//void* vf_ov_info = ov_info;
+	//void* vf_ov_read = ov_read;
+	//void* vf_ov_clear = ov_clear;
 
 	GUID guidf = { 0xBF798030,0x483A,0x4DA2,0xAA,0x99,0x5D,0x64,0xED,0x36,0x97,0x00 };
-	void* pDI;
+	//void* pDI;
 	//DirectInput8Create(GetModuleHandle(0), 0x800, &guidf, &pDI, 0);
 
-	LPDIRECTSOUND pDS = NULL;
-
-	p.addrs.p_pDS = (void**)&pDS;
-	p.addrs.p_ov_open_callbacks = &vf_ov_open_callbacks;
-	p.addrs.p_ov_info = &vf_ov_info;
-	p.addrs.p_ov_read = &vf_ov_read;
-	p.addrs.p_ov_clear = &vf_ov_clear;
-
-	DirectSoundCreate(NULL, &pDS, NULL);
 	HWND hWnd = GetHwnd();
-	pDS->lpVtbl->SetCooperativeLevel(pDS, hWnd, DSSCL_PRIORITY);
-
 	p.addrs.p_Hwnd = (void**)&hWnd;
-	void* d3d = nullptr;
-	p.addrs.p_d3dd = &d3d;
-	p.addrs.p_did = &d3d;
+
+	LPDIRECTSOUND pDS = NULL;
+	if (!ao) {
+		DirectSoundCreate(NULL, &pDS, NULL);
+		pDS->lpVtbl->SetCooperativeLevel(pDS, hWnd, DSSCL_PRIORITY);
+		p.addrs.p_pDS = (void**)&pDS;
+	}
+
+	//p.addrs.p_pDS = (void**)&pDS;
+	//p.addrs.p_ov_open_callbacks = &vf_ov_open_callbacks;
+	//p.addrs.p_ov_info = &vf_ov_info;
+	//p.addrs.p_ov_read = &vf_ov_read;
+	//p.addrs.p_ov_clear = &vf_ov_clear;
+
+	//DirectSoundCreate(NULL, &pDS, NULL);
+	
+	//pDS->lpVtbl->SetCooperativeLevel(pDS, hWnd, DSSCL_PRIORITY);
+	
 
 	IDirect3DDevice8 d3dd;
 	IDirect3DDevice8Vtbl vtbl;

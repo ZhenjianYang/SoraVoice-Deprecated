@@ -63,9 +63,9 @@ class DrawImpl : private Draw
 		showing = infos.size() > 0;
 	}
 
-	DrawImpl(char& showing, void* hWnd, void* pD3DD, const char* fontName)
+	DrawImpl(char& showing, void* hWnd, void* pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName)
 		:Draw(showing),
-		hWnd((HWND)hWnd), pD3DD((decltype(this->pD3DD))pD3DD)
+		hWnd((HWND)hWnd), pD3DD((decltype(this->pD3DD))pD3DD), pD3DXCreateFontIndirect((CallCreateFont)p_D3DXCreateFontIndirect)
 	{
 		constexpr int len = sizeof(desca.FaceName);
 		for (int i = 0; i < len && fontName[i]; i++) {
@@ -115,6 +115,7 @@ class DrawImpl : private Draw
 	};
 	using PtrInfo = std::unique_ptr<Info>;
 	using PtrInfoList = std::list<PtrInfo>;
+	using CallCreateFont = decltype(D3DXCreateFontIndirect)*;
 
 #if DIRECT3D_VERSION == 0x900
 	D3DXFONT_DESCA desca;
@@ -148,6 +149,7 @@ class DrawImpl : private Draw
 
 	const HWND hWnd;
 	D3DD* const pD3DD;
+	CallCreateFont pD3DXCreateFontIndirect;
 
 	ID3DXFont *pFont = nullptr;
 
@@ -160,9 +162,9 @@ class DrawImpl : private Draw
 	PtrInfoList infos;
 };
 
-Draw * Draw::CreateDraw(char& showing, void * hWnd, void * pD3DD, const char* fontName)
+Draw * Draw::CreateDraw(char& showing, void * hWnd, void * pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName)
 {
-	DrawImpl* draw = new DrawImpl(showing, hWnd, pD3DD, fontName);
+	DrawImpl* draw = new DrawImpl(showing, hWnd, pD3DD, p_D3DXCreateFontIndirect, fontName);
 	return draw;
 }
 
@@ -177,11 +179,11 @@ void DrawImpl::DrawInfos() {
 	pD3DD->BeginScene();
 	//D3DXFONT_DESCA desca;
 
-	if (!pFont) {
+	if (!pFont && pD3DXCreateFontIndirect) {
 #if DIRECT3D_VERSION == 0x900
-		D3DXCreateFontIndirect(pD3DD, &desca, &pFont);
+		pD3DXCreateFontIndirect(pD3DD, &desca, &pFont);
 #else
-		D3DXCreateFontIndirect(pD3DD, &lf, &pFont);
+		pD3DXCreateFontIndirect(pD3DD, &lf, &pFont);
 #endif	
 	}
 
