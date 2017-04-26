@@ -128,7 +128,7 @@ private:
 	Draw* const draw;
 	SoundPlayer* const player;
 
-	std::mutex mt_playID;
+	mutable std::mutex mt_playID;
 	PlayID playID;
 	void stopCallBack(PlayID playID, StopType stopType) {
 		LOG("StopCallBack: playID = 0x%08d, stopType = %d", playID, stopType);
@@ -139,6 +139,10 @@ private:
 				aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice - TIME_PREC / 2;
 			}
 			status->playing = 0;
+
+			order->disableDududu = 0;
+			order->disableDialogSE = 0;
+			order->skipVoice = 0;
 		} //if (playID == this->playID)
 	}
 
@@ -152,7 +156,7 @@ private:
 private:
 	bool isAutoPlaying() {
 		return aup->count_ch 
-			&& (config->AutoPlay && (status->playing || aup->waitv)
+			&& ((config->AutoPlay && (status->playing || aup->waitv))
 				|| config->AutoPlay == Config::AutoPlay_ALL);
 	}
 
@@ -222,7 +226,7 @@ void SoraVoiceImpl::Play(const char* t)
 	t++;
 
 	std::string str_vid;
-	int num_vid = 0;
+	unsigned num_vid = 0;
 	for (int i = 0; i < MAX_VOICEID_LEN; i++) {
 		if (*t < '0' || *t > '9') break;
 		num_vid *= 10; num_vid += *t - '0';
@@ -267,11 +271,11 @@ void SoraVoiceImpl::Play(const char* t)
 		playID = player->Play(oggFileName.c_str(), config->Volume);
 
 		status->playing = 1;
-		status->code5 = 0;
-		aup->wait = 0;
-		aup->waitv = 0;
-		aup->count_ch = 0;
-		aup->time_autoplay = 0;
+//		status->code5 = 0;
+//		aup->wait = 0;
+//		aup->waitv = 0;
+//		aup->count_ch = 0;
+//		aup->time_autoplay = 0;
 
 		order->disableDududu = config->DisableDududu;
 		order->disableDialogSE = config->DisableDialogSE;
@@ -292,6 +296,11 @@ void SoraVoiceImpl::Stop()
 	if (config->SkipVoice) {
 		player->Stop();
 	}
+	status->playing = 0;
+
+	order->disableDududu = 0;
+	order->disableDialogSE = 0;
+	order->skipVoice = 0;
 	
 	status->code5 = 0;
 	aup->wait = 0;
@@ -545,8 +554,8 @@ void SoraVoiceImpl::Show()
 				+ (aup->count_ch - 1) * config->WaitTimePerChar + config->WaitTimeDialog - TIME_PREC / 2;
 		}
 
-		if (aup->waitv && aup->time_autoplayv <= aup->now
-			|| !aup->waitv && aup->wait && aup->time_autoplay <= aup->now) {
+		if ((aup->waitv && aup->time_autoplayv <= aup->now)
+			|| (!aup->waitv && aup->wait && aup->time_autoplay <= aup->now)) {
 			LOG("now = %d", aup->now);
 			LOG("waitv = %d", aup->waitv);
 			LOG("autoplayv = %d", aup->time_autoplayv);

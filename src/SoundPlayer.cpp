@@ -8,6 +8,7 @@
 #include <vorbis\vorbisfile.h>
 #include <dsound.h>
 
+#include <cmath>
 #include <string>
 #include <thread>
 #include <mutex>
@@ -30,10 +31,18 @@ class SoundPlayerImpl : private SoundPlayer
 	static inline int TO_DSVOLUME(int volume) {
 		return (volume) == 0 ?
 			DSBVOLUME_MIN :
-			(int)(2000 * log10(double(volume) / MaxVolume));
+			(int)(2000 * std::log10(double(volume) / MaxVolume));
 	}
 
 private:
+	virtual PlayID GetCurrentPlayID() const override {
+		return playID;
+	}
+
+	virtual const char* GetCurrentFile() const override {
+		return fileName.empty() ? nullptr : fileName.c_str();
+	}
+
 	virtual PlayID Play(const char* fileName, int volume) override {
 		PlayID playID = generatePlayID();
 		{
@@ -64,6 +73,11 @@ private:
 		this->stopCallBack = stopCallBack;
 	}
 
+	virtual StopCallBack GetStopCallBack() const override {
+		LockGuard lock(mt_stopCallBack);
+		return stopCallBack;
+	}
+
 	virtual ~SoundPlayerImpl() override {
 		ended = true;
 		Stop();
@@ -89,9 +103,10 @@ private:
 		hEvent_End(CreateEvent(NULL, FALSE, FALSE, NULL)),
 		th_playing(&SoundPlayerImpl::thread_Playing, this)
 	{
-		status = Status::Stoped;
 		th_playing.detach();
 	}
+	PlayID playID = InvalidPlayID;
+	std::string fileName;
 
 	bool stop = false;
 	bool ended = false;
@@ -103,12 +118,12 @@ private:
 	decltype(::ov_clear)* const ov_clear;
 
 	StopCallBack stopCallBack;
-	std::mutex mt_stopCallBack;
+	mutable std::mutex mt_stopCallBack;
 
 	int volume = MaxVolume;
 
 	IDirectSoundBuffer *pDSBuff = nullptr;
-	std::mutex mt_DSBuff;
+	mutable std::mutex mt_DSBuff;
 	unsigned buffSize = 0;
 	unsigned buffIndex = 0;
 	DWORD endPos = MaxVolume;
@@ -120,7 +135,7 @@ private:
 	DSBUFFERDESC dSBufferDesc {0};
 
 	PlayQueue playQueue;
-	std::mutex mt_playQueue;
+	mutable std::mutex mt_playQueue;
 
 	const HANDLE hEvent_Playing;
 	const HANDLE hEvent_End;
@@ -150,7 +165,7 @@ private:
 
 	void thread_Playing();
 
-	bool SoundPlayerImpl::openSoundFile(const std::string& fileName);
+	bool openSoundFile(const std::string& fileName);
 	bool initDSBuff();
 	bool startPlay();
 
@@ -192,29 +207,38 @@ void SoundPlayerImpl::thread_Playing()
 		if (waitResult != WAIT_OBJECT_0) continue;
 
 		status = Status::Playing;
+		playID = InvalidPlayID;
+		fileName.clear();
 
-		PlayInfo play{ InvalidPlayID };
+		std::queue<PlayID> forceStop;
 		{
 			LockGuard lock(mt_playQueue);
 			while (playQueue.size() > 1)
 			{
-				play = std::move(playQueue.front());
+				forceStop.push(playQueue.front().playID);
 				playQueue.pop();
-				LockGuard lock2(mt_stopCallBack);
-				if (stopCallBack) {
-					stopCallBack(play.playID, StopType::ForceStop);
-				}
 			}
 
 			if (!playQueue.empty())
 			{
-				play = std::move(playQueue.front());
+				playID = playQueue.front().playID;
+				fileName = std::move(playQueue.front().fileNm);
 				playQueue.pop();
 			}
 		}
 
-		if (play.playID != InvalidPlayID) {
-			bool rst = openSoundFile(play.fileNm)
+		if(!forceStop.empty()) {
+			StopCallBack tmp_stopCallBack = GetStopCallBack();
+			if(tmp_stopCallBack) {
+				while(!forceStop.empty()) {
+					tmp_stopCallBack(forceStop.front(), StopType::ForceStop);
+					forceStop.pop();
+				}
+			}
+		}
+
+		if (playID != InvalidPlayID) {
+			bool rst = openSoundFile(fileName)
 				&& initDSBuff()
 				&& startPlay();
 
@@ -240,14 +264,14 @@ void SoundPlayerImpl::thread_Playing()
 				stopType = StopType::PlayEnd;
 			}
 
-			{
-				LockGuard lock(mt_stopCallBack);
-				if (stopCallBack) {
-					stopCallBack(play.playID, stopType);
-				}
+			StopCallBack tmp_stopCallBack = GetStopCallBack();
+			if (tmp_stopCallBack) {
+				tmp_stopCallBack(playID, stopType);
 			}
 		} //if (play.playID != InvalidPlayID)
 
+		fileName.clear();
+		playID = InvalidPlayID;
 		status = Status::Stoped;
 	} //while (!ended)
 	SetEvent(hEvent_End);
@@ -257,16 +281,16 @@ bool SoundPlayerImpl::openSoundFile(const std::string& fileName){
 	LOG("Open file %s ...", fileName.c_str());
 	FILE* f = fopen(fileName.c_str(), "rb");
 	if (f == NULL) {
-		return 0;
+		return false;
 	}
 
 	if (ov_open_callbacks(f, &ovFile, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
 		fclose(f);
 		LOG("Open file as ogg failed!");
-		return 0;
+		return false;
 	}
 	LOG("Ogg file opened");
-	return 1;
+	return true;
 }
 
 bool SoundPlayerImpl::initDSBuff(){
@@ -283,7 +307,7 @@ bool SoundPlayerImpl::initDSBuff(){
 
 	memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
 	dSBufferDesc.dwSize = sizeof(dSBufferDesc);
-	dSBufferDesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_CTRLVOLUME;
+	dSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME;
 	dSBufferDesc.dwBufferBytes = waveFormatEx.nAvgBytesPerSec * TIME_BUF * NUM_BUF / Clock::TimeUnitsPerSecond;
 	dSBufferDesc.dwReserved = 0;
 	dSBufferDesc.lpwfxFormat = &waveFormatEx;
@@ -298,10 +322,10 @@ bool SoundPlayerImpl::initDSBuff(){
 
 	if (DS_OK != pDSD->CreateSoundBuffer(&dSBufferDesc, &pDSBuff, NULL)) {
 		LOG("Create sound buff failed!");
-		return 0;
+		return false;
 	}
 	LOG("Sound buff opened");
-	return 1;
+	return true;
 }
 
 bool SoundPlayerImpl::startPlay(){

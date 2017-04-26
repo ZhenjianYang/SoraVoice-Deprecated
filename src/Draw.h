@@ -31,7 +31,7 @@ public:
 
 	virtual void RemoveInfo(InfoType type) = 0;
 
-	const char& Showing() { return showing; }
+	const char& Showing() const { return showing; }
 
 protected:
 	Draw(char& showing) : showing(showing) { }

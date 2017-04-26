@@ -22,6 +22,11 @@ public:
 
 	static constexpr PlayID InvalidPlayID = 0;
 
+	Status GetStatus() const { return status; }
+
+	virtual PlayID GetCurrentPlayID() const = 0;
+	virtual const char* GetCurrentFile() const = 0;
+
 	static SoundPlayer* CreatSoundPlayer(
 		void* pDSD, 
 		void* ov_open_callbacks, void* ov_info, void* ov_read, void* ov_clear,
@@ -35,9 +40,8 @@ public:
 	virtual void SetVolume(int volume = MaxVolume) = 0;
 
 	virtual void SetStopCallBack(StopCallBack stopCallBack = nullptr) = 0;
-
-	Status GetStatus() const { return status; }
+	virtual StopCallBack GetStopCallBack() const = 0;
 protected:
 	virtual ~SoundPlayer() {}
-	Status status;
+	Status status = Status::Stoped;
 };
