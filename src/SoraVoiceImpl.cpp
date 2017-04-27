@@ -187,7 +187,6 @@ void SoraVoiceImpl::Play(const char* t)
 
 	order->disableDududu = config->DisableDududu;
 	order->disableDialogSE = config->DisableDialogSE;
-	order->skipVoice = config->SkipVoice;
 
 	LOG("Play called, playID = 0x%08X", playID);
 }
@@ -207,9 +206,7 @@ void SoraVoiceImpl::Stop()
 
 	order->disableDududu = 0;
 	order->disableDialogSE = 0;
-	order->skipVoice = 0;
-	
-	status->code5 = 0;
+
 	aup->wait = 0;
 	aup->waitv = 0;
 	aup->count_ch = 0;
@@ -242,7 +239,6 @@ void SoraVoiceImpl::Input()
 			}
 			status->mute = 0;
 			if (status->playing) {
-				order->skipVoice = config->SkipVoice;
 				order->disableDialogSE = config->DisableDialogSE;
 				order->disableDududu = config->DisableDududu;
 			}
@@ -331,9 +327,7 @@ void SoraVoiceImpl::Input()
 
 			if (config->AutoPlay && !config->SkipVoice) {
 				config->SkipVoice = 1;
-				if (status->playing) {
-					order->skipVoice = config->SkipVoice;
-				}
+
 				if (config->ShowInfo) {
 					draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 				}
@@ -344,9 +338,6 @@ void SoraVoiceImpl::Input()
 		if (keys[KEY_SKIPVOICE] && !last[KEY_SKIPVOICE - KEY_MIN]) {
 			config->SkipVoice = 1 - config->SkipVoice;
 			needsave = true;
-			if (status->playing) {
-				order->skipVoice = config->SkipVoice;
-			}
 
 			if (config->ShowInfo) {
 				draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
@@ -445,7 +436,7 @@ void SoraVoiceImpl::Show()
 	}
 
 	if (!status->playing) {
-		if (aup->wait 
+		if (aup->wait
 			&& status->scode != SCODE_SAY && status->scode != SCODE_TALK && status->scode != SCODE_TEXT) {
 			aup->count_ch = 0;
 			aup->wait = 0;
@@ -473,12 +464,10 @@ void SoraVoiceImpl::Show()
 			LOG("autoplay = %d", aup->time_autoplay);
 
 			if (isAutoPlaying()) {
-				if (!status->code5) {
-					order->autoPlay = 1;
-					LOG("Auto play set.");
+				order->autoPlay = 1;
+				LOG("Auto play set.");
 
-					SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-				}
+				SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 
 				if (config->ShowInfo == Config::ShowInfo_WithMark) {
 					draw->AddInfo(InfoType::AutoPlayMark, REMAIN_TIME, config->FontColor, Message::AutoPlayMark);

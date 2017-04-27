@@ -1,6 +1,6 @@
 %include "macro_common"
 
-%define tmp tmp2
+%define tmp _tmp(2)
 %define vs vs_dlgse 
 
 [BITS 32]
@@ -16,26 +16,26 @@ dlgse_start:
 	pop     eax
 
 	cmp     byte [ebx + order_dlgse], 0
-	je      short set_mute_over
+	je      short close_dlgse_over
 
 %ifdef za
 	mov     dword [esp + 0x0C], 0
 %else
 	mov     ecx, dword [ebx + addr_mute]
 	cmp     byte [ecx], 0
-	jne     short set_mute_over
+	jne     short close_dlgse_over
 
 	mov     byte [ecx], 1
 	call    dword [ebx + to(jcs_dlgse)]
 	mov     ecx, dword [ebx + addr_mute]
 	mov     byte [ecx], 0
-	jmp     dlgse_stop
+	jmp     dlgse_call_stop
 %endif
 
-set_mute_over:
+close_dlgse_over:
 	call    dword [ebx + to(jcs_dlgse)]
 
-dlgse_stop:
+dlgse_call_stop:
 	push    eax
 	push    ecx
 	push    edx
@@ -44,7 +44,7 @@ dlgse_stop:
 	pop     edx
 	pop     ecx
 	pop     eax
-	
+
 	push    dword [ebx + next(jcs_dlgse)]
 	mov     ebx, dword [ebx + tmp]
 	ret

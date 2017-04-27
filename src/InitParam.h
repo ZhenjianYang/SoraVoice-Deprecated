@@ -71,22 +71,20 @@ struct InitParam
 	//0xA8
 		char wait;
 		char waitv;
-		char code5;
 		char scode;
 
-	//0xAC
-		char reserved[4];
+	//0xAB
+		char reservedb[5];
 	} status;
 
 	//0xB0
 	struct Order {
 		char disableDududu;
 		char disableDialogSE;
-		char skipVoice;
 		char autoPlay;
 
-	//0xB4
-		char reserved[4];
+	//0xB3
+		char reservedb[5];
 	} order;
 
 	//0xB8

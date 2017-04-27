@@ -1,6 +1,6 @@
 %include "macro_common"
 
-%define tmp tmp3
+%define tmp _tmp(3)
 %define vs vs_aup 
 
 [BITS 32]

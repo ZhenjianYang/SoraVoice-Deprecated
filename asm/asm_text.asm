@@ -1,6 +1,6 @@
 %include "macro_common"
 
-%define tmp tmp0
+%define tmp _tmp(0)
 %define vs vs_text
 
 %ifdef za
@@ -58,11 +58,6 @@ text_return:
 	ret
 
 jcode:
-	cmp     byte [eadx], 5
-	jnz     jcode2
-	mov     byte [ebx + status_code5], 1
-
-jcode2:
 	cmp     byte [eadx], 2
 	jne     short text_returnb
 	cmp     dword [ebx + ptr_cnt], 0

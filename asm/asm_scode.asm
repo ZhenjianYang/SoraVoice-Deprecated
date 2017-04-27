@@ -1,6 +1,6 @@
 %include "macro_common"
 
-%define tmp tmp4
+%define tmp _tmp(4)
 %define vs vs_scode 
 
 [BITS 32]

@@ -57,24 +57,15 @@
 %define status_showing	(base_status + 0x03)
 %define status_wait		(base_status + 0x04)
 %define status_waitv	(base_status + 0x05)
-%define status_code5	(base_status + 0x06)
-%define status_scode	(base_status + 0x07)
+%define status_scode	(base_status + 0x06)
 
 %define base_order		(base + 0xB0)
 %define order_dududu	(base_order + 0x00)
 %define order_dlgse		(base_order + 0x01)
-%define order_skp		(base_order + 0x02)
-%define order_aup		(base_order + 0x03)
+%define order_aup		(base_order + 0x02)
 
 %define base_tmp		(base + 0xE0)
-%define tmp0			(base_tmp + 0x00)
-%define tmp1			(base_tmp + 0x04)
-%define tmp2			(base_tmp + 0x08)
-%define tmp3			(base_tmp + 0x0C)
-%define tmp4			(base_tmp + 0x10)
-%define tmp5			(base_tmp + 0x14)
-%define tmp6			(base_tmp + 0x18)
-%define tmp7			(base_tmp + 0x1C)
+%define _tmp(i)			(base_tmp + 4 * (i))
 
 %define addr_codebase	(base + 0x100)
 %define vs_text			(addr_codebase + 0x000)
@@ -83,7 +74,7 @@
 %define vs_aup			(addr_codebase + 0x300)
 %define vs_scode		(addr_codebase + 0x400)
 
-%define dik_space	0x39
-%define dik_press	0x80
+%define dik_space		0x39
+%define dik_press		0x80
 
 %endif

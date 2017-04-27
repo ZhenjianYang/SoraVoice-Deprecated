@@ -1,6 +1,6 @@
 %include "macro_common"
 
-%define tmp tmp1
+%define tmp _tmp(1)
 %define vs vs_dududu
 
 [BITS 32]
@@ -15,8 +15,8 @@ dududu_start:
 	mov     dword [ebx + tmp], eax
 	pop     eax
 
-	cmp     byte [ebx + status_code5], 0
-	je      code5end
+	cmp     byte [ebx + status_wait], 0
+	je      checkcode
 	push    eax
 	push    ecx
 	push    edx
@@ -26,54 +26,48 @@ dududu_start:
 	pop     ecx
 	pop     eax
 
-code5end:
+checkcode:
 	mov     al, byte [ebx + status_scode]
-	cmp     byte [ebx + scode_TEXT], al
+	cmp     al, byte [ebx + scode_TEXT]
 	je      count
-	cmp     byte [ebx + scode_SAY], al
+	cmp     al, byte [ebx + scode_SAY]
 	je      count
-	cmp     byte [ebx + scode_TALK], al
+	cmp     al, byte [ebx + scode_TALK]
 	je      count
-	jmp     disabledududu
-
+	jmp     dududu
 count:
 	cmp     dword [ebx + ptr_cnt], 0
-	je      first
-	
+	jne     notfirst
+	mov     eax, dword [ebx + ptr_now]
+	mov     dword [ebx + ptr_ttb], eax
+
+notfirst:
 	mov     eax, dword [ebx + ptr_cnt]
 	inc     eax
 	mov     dword [ebx + ptr_cnt], eax
-	jmp     disabledududu
-	
-first:
-	mov     eax, dword [ebx + ptr_now]
-	mov     dword [ebx + ptr_ttb], eax
-	mov     dword [ebx + ptr_cnt], 1
 
-disabledududu:
+dududu:
 	cmp     byte [ebx + order_dududu], 0
-	je      short dududu_return
+	je      short close_dududu_over
 
 %ifdef za
 	mov     dword [esp + 0x0C], 0
-	call    dword [ebx + to(jcs_dududu)]
 %else
-	mov     ecx, dword [ebx + addr_mute]
-	cmp     byte [ecx], 0
-	jne     short dududu_return
+	mov     eax, dword [ebx + addr_mute]
+	cmp     byte [eax], 0
+	jne     short close_dududu_over
 
-	mov     byte [ecx], 1
+	mov     byte [eax], 1
 	call    dword [ebx + to(jcs_dududu)]
-	mov     ecx, dword [ebx + addr_mute]
-	mov     byte [ecx], 0
+	mov     eax, dword [eax + addr_mute]
+	mov     byte [eax], 0
+	jmp     dududu_return
 %endif
 
-	push    dword [ebx + next(jcs_dududu)]
-	mov     ebx, dword [ebx + tmp]
-	ret
+close_dududu_over:
+	call    dword [ebx + to(jcs_dududu)]
 
 dududu_return:
-	call    dword [ebx + to(jcs_dududu)]
 	push    dword [ebx + next(jcs_dududu)]
 	mov     ebx, dword [ebx + tmp]
 	ret
