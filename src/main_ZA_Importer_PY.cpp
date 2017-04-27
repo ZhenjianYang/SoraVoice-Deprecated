@@ -54,12 +54,14 @@ static auto GetMapVid(const string& py_out, const string& bin_out, bool lineNoMo
 		ifs_py.getline(buff_py, sizeof(buff_py)) && ifs_bin.getline(buff_bin, sizeof(buff_bin));
 		i++ ) {
 
-		if (buff_py[0] == '#' && buff_bin[0] != '#' || buff_py[0] != '#' && buff_bin[0] == '#') {
+		if ((buff_py[0] == '#' && buff_bin[0] != '#')
+				|| (buff_py[0] != '#' && buff_bin[0] == '#')) {
 			Error("%s, %d: 注释行不匹配！", py_out.c_str(), i);
 		}
 		if (buff_py[0] == '#' || buff_bin[0] == '#') continue;
 
-		if (buff_py[0] == '\0' && buff_bin[0] != '\0' || buff_py[0] != '\0' && buff_bin[0] == '\0') {
+		if ((buff_py[0] == '\0' && buff_bin[0] != '\0')
+				|| (buff_py[0] != '\0' && buff_bin[0] == '\0')) {
 			Error("%s, %d: 空行不匹配！", py_out.c_str(), i);
 		}
 		if (buff_py[0] == '\0' || buff_bin[0] == '\0') continue;
@@ -103,10 +105,9 @@ int main(int argc, char* argv[])
 	bool LineNoMode = false;
 
 	int argi = 1;
-	bool enbaleMappingGlobal = false;
 	if (argc > 1 && argv[argi][0] == '-') {
-		if (argv[argi][1] == 'm') {
-			enbaleMappingGlobal = true;
+		if (argv[argi][1] == 'l') {
+			LineNoMode = true;
 			++argi;
 		}
 	}
@@ -155,7 +156,6 @@ int main(int argc, char* argv[])
 
 		int msg_cnt = 0;
 		int cnt = 0;
-		int line_no = 0;
 
 		int key = 0;
 		auto it = map_vid.cbegin();
