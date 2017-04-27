@@ -4,7 +4,7 @@ class Draw {
 public:
 	enum class InfoType
 	{
-		Hello,
+		Hello = 0,
 		InfoOnoff,
 		AutoPlayMark,
 

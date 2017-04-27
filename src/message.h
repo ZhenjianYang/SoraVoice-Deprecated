@@ -12,7 +12,7 @@ namespace Message {
 	constexpr const char Version[] = "版本 %s";
 	constexpr const char VersionNum[] = "0.4.1";
 
-	constexpr const char GameTitle[] = "本游戏为：%s";
+	constexpr const char GameTitle[] = "当前游戏为：%s";
 
 	constexpr const char On[] = "开";
 	constexpr const char Off[] = "关";

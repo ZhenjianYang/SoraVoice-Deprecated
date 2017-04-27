@@ -31,7 +31,8 @@ constexpr int MAX_TEXT_LEN = 63;
 constexpr int MIN_FONT_SIZE = 25;
 constexpr int TEXT_NUM_SCRH = 25;
 
-constexpr double BOUND_WIDTH_RATE = 0.5;
+constexpr double VBOUND_RATE = 0.3;
+constexpr double HBOUND_RATE = 0.5;
 constexpr double LINE_SPACE_RATE = 0.15;
 constexpr double TEXT_SHADOW_POS_RATE = 0.08;
 
@@ -84,11 +85,18 @@ class DrawImpl : private Draw
 			width = rect.right - rect.left;
 			height = rect.bottom - rect.top;
 
-			int fontSize = height / TEXT_NUM_SCRH;
+#ifdef ZA
+			vfix = (height - width * 9 / 16) / 2;
+#endif // ZA
+
+			int fontSize = (height - 2 * vfix) / TEXT_NUM_SCRH;
 			if (fontSize < MIN_FONT_SIZE) fontSize = MIN_FONT_SIZE;
 			desca.Height = -fontSize;
 
-			bound = (int)(fontSize * BOUND_WIDTH_RATE + 0.5);
+			vbound = (int)(fontSize * VBOUND_RATE + 0.5);
+			hbound = (int)(fontSize * HBOUND_RATE + 0.5);
+
+
 			shadow = (int)(fontSize * TEXT_SHADOW_POS_RATE + 0.5);
 			linespace = (int)(fontSize * LINE_SPACE_RATE + 0.5);
 
@@ -116,6 +124,25 @@ class DrawImpl : private Draw
 	using PtrInfo = std::unique_ptr<Info>;
 	using PtrInfoList = std::list<PtrInfo>;
 	using CallCreateFont = decltype(D3DXCreateFontIndirect)*;
+
+	static constexpr unsigned DftFormatList[] = {
+		DT_TOP | DT_LEFT   ,//Hello = 0,
+		DT_TOP | DT_LEFT   ,//InfoOnoff,
+#ifdef ZA
+		DT_BOTTOM | DT_RIGHT,//AutoPlayMark,
+#else
+		DT_BOTTOM | DT_LEFT,//AutoPlayMark,
+#endif
+		DT_TOP | DT_LEFT   ,//Volume,
+		DT_TOP | DT_LEFT   ,//AutoPlay,
+		DT_TOP | DT_LEFT   ,//SkipVoice,
+		DT_TOP | DT_LEFT   ,//DisableDialogSE,
+		DT_TOP | DT_LEFT   ,//DisableDududu,
+
+		DT_TOP | DT_LEFT   ,//ConfigReset,
+
+		DT_TOP | DT_LEFT   ,//All,
+	};
 
 #if DIRECT3D_VERSION == 0x900
 	D3DXFONT_DESCA desca;
@@ -155,7 +182,9 @@ class DrawImpl : private Draw
 
 	int width = 0;
 	int height = 0;
-	int bound = 0;
+	int vfix = 0;
+	int vbound = 0;
+	int hbound = 0;
 	int linespace = 0;
 	int shadow = 0;
 	
@@ -215,6 +244,8 @@ void DrawImpl::DrawInfos() {
 
 void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char* text, ...) {
 	unsigned dead = time == ShowTimeInfinity ? TIME_MAX : Clock::Now() + time;
+	constexpr int NumValidType = std::extent<decltype(DftFormatList)>::value;
+	const unsigned format = (int)type < NumValidType ? DftFormatList[(int)type] : DftFormatList[(int)InfoType::All];
 
 	LOG("Add text, type = %d", type);
 	const int h = desca.Height < 0 ? -desca.Height : desca.Height;
@@ -238,7 +269,7 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 	(*it)->type = type;
 	(*it)->color = color;
 	(*it)->deadTime = dead;
-	(*it)->format = type == InfoType::AutoPlayMark ? DT_BOTTOM | DT_LEFT : DT_TOP | DT_LEFT;
+	(*it)->format = format;
 
 	va_list argptr;
 	va_start(argptr, text);
@@ -259,7 +290,7 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 	}
 
 	if ((*it)->format & DT_BOTTOM) {
-		for (int bottom = height - bound; ; bottom -= h + bound) {
+		for (int bottom = height - vbound - vfix; ; bottom -= h + vbound) {
 			if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
 				rect.bottom = bottom;
 				break;
@@ -268,7 +299,7 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 		rect.top = rect.bottom - h - linespace;
 	}
 	else {
-		for (int top = bound; ; top += h + linespace) {
+		for (int top = vbound + vfix; ; top += h + linespace) {
 			if (invalid_top.find(top) == invalid_top.end()) {
 				rect.top = top;
 				break;
@@ -279,11 +310,11 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 	}
 
 	if ((*it)->format & DT_RIGHT) {
-		rect.right = width - bound;
+		rect.right = width - hbound;
 		rect.left = rect.right - text_width;
 	}
 	else {
-		rect.left = bound;
+		rect.left = hbound;
 		rect.right = rect.left + text_width;
 	}
 

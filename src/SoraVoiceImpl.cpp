@@ -109,6 +109,11 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	LOG("config.SaveChange = %d", config->SaveChange);
 
 	InitHook_SetInitParam(initParam);
+
+	draw->AddInfo(InfoType::Hello, 1, 0, "Init Text");
+	draw->DrawInfos();
+	draw->RemoveInfo(InfoType::All);
+
 	
 	void* pPresent = Hook_D3D_Present(*initParam->addrs.p_d3dd);
 	if (pPresent) {

@@ -23,9 +23,6 @@ constexpr char STR_ov_read[] = "ov_read";
 constexpr char STR_ov_clear[] = "ov_clear";
 constexpr const char* OvDllNames[] = { STR_vorbisfile_dll , STR_libvorbisfile_dll };
 constexpr const char* DllDirs[] = { ".\\dll\\", ".\\voice\\dll\\" };
-constexpr int DllDirsNum = std::extent<decltype(DllDirs)>::value;
-constexpr int OvDllNamesNum = std::extent<decltype(OvDllNames)>::value;
-constexpr int MAX_DLL_FULLPATH_LEN = 1024;
 
 #ifdef ZA
 constexpr char STR_d3dx_dll[] = "d3dx9_42.dll";
@@ -91,7 +88,6 @@ bool InitAddrs(InitParam* initParam)
 		LOG("null ogg api exists, now going to load vorbisfile.dll ...");
 
 		HMODULE ogg_dll = NULL;
-		char buff[MAX_DLL_FULLPATH_LEN + 1];
 		for (auto dir : DllDirs) {
 			SetDllDirectory(dir);
 			for (auto filename : OvDllNames) {
