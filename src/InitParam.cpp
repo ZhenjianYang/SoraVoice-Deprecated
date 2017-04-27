@@ -88,7 +88,7 @@ bool InitAddrs(InitParam* initParam)
 	LOG("D3DXCreateFontIndirect = 0x%08X", d3DXCreateFontIndirect);
 
 	if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
-		LOG("null ogg api exits, loading vorbisfile.dll ...");
+		LOG("null ogg api exits, now going to load vorbisfile.dll ...");
 
 		HMODULE ogg_dll = NULL;
 		char buff[MAX_DLL_FULLPATH_LEN + 1];
@@ -120,7 +120,7 @@ bool InitAddrs(InitParam* initParam)
 
 #ifdef ZA
 	if (!pDS) {
-		LOG("pDS is nullptr, try to creat DirectSoundDevice");
+		LOG("pDS is nullptr, now going to creat DirectSoundDevice");
 		if (!hWnd) {
 			LOG("HWnd is nullptr, cound not DirectSoundDevice");
 			return false;
@@ -151,9 +151,9 @@ bool InitAddrs(InitParam* initParam)
 	}
 
 	if (!d3DXCreateFontIndirect) {
-		LOG("D3DXCreateFontIndirect is nullptr, try to get D3DXCreateFontIndirect");
+		LOG("D3DXCreateFontIndirect is nullptr, now going to get D3DXCreateFontIndirect");
 
-#if ZA
+#ifdef ZA
 		HMODULE d3dx_dll = NULL;
 		d3dx_dll = LoadLibrary(STR_d3dx_dll);
 		if (d3dx_dll) {
