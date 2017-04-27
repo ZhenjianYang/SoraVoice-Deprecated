@@ -22,7 +22,7 @@ constexpr char STR_ov_info[] = "ov_info";
 constexpr char STR_ov_read[] = "ov_read";
 constexpr char STR_ov_clear[] = "ov_clear";
 constexpr const char* OvDllNames[] = { STR_vorbisfile_dll , STR_libvorbisfile_dll };
-constexpr const char* DllDirs[] = { ".\\", ".\\dll\\", ".\\voice\\dll\\" };
+constexpr const char* DllDirs[] = { ".\\dll\\", ".\\voice\\dll\\" };
 constexpr int DllDirsNum = std::extent<decltype(DllDirs)>::value;
 constexpr int OvDllNamesNum = std::extent<decltype(OvDllNames)>::value;
 constexpr int MAX_DLL_FULLPATH_LEN = 1024;
@@ -88,18 +88,18 @@ bool InitAddrs(InitParam* initParam)
 	LOG("D3DXCreateFontIndirect = 0x%08X", d3DXCreateFontIndirect);
 
 	if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
-		LOG("null ogg api exits, now going to load vorbisfile.dll ...");
+		LOG("null ogg api exists, now going to load vorbisfile.dll ...");
 
 		HMODULE ogg_dll = NULL;
 		char buff[MAX_DLL_FULLPATH_LEN + 1];
-		for (auto dir : DllDirs) for (auto filename : OvDllNames) {
-			std::string path;
-			path.append(dir).append(filename);
-			GetFullPathName(path.c_str(), sizeof(buff), buff, NULL);
-
-			ogg_dll = LoadLibrary(buff);
-			if (ogg_dll) break;
+		for (auto dir : DllDirs) {
+			SetDllDirectory(dir);
+			for (auto filename : OvDllNames) {
+				ogg_dll = LoadLibrary(filename);
+				if (ogg_dll) break;
+			}
 		}
+		SetDllDirectory(NULL);
 		if (ogg_dll) {
 			ov_open_callbacks = (void*)GetProcAddress(ogg_dll, STR_ov_open_callbacks);
 			ov_info = (void*)GetProcAddress(ogg_dll, STR_ov_info);
@@ -118,7 +118,6 @@ bool InitAddrs(InitParam* initParam)
 		return false;
 	}
 
-#ifdef ZA
 	if (!pDS) {
 		LOG("pDS is nullptr, now going to creat DirectSoundDevice");
 		if (!hWnd) {
@@ -144,7 +143,7 @@ bool InitAddrs(InitParam* initParam)
 
 		LOG("new pDS = 0x%08X", pDS);
 	}
-#endif // ZA
+
 	if (!pDS) {
 		LOG("pDS is nullptr, failed to init SoraVoice");
 		return false;

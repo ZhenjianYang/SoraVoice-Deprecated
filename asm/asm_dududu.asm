@@ -15,17 +15,6 @@ dududu_start:
 	mov     dword [ebx + tmp], eax
 	pop     eax
 
-	cmp     byte [ebx + status_wait], 0
-	je      checkcode
-	push    eax
-	push    ecx
-	push    edx
-	push    ebx + ptr_initparam
-	call    dword [ebx + voice_stop]
-	pop     edx
-	pop     ecx
-	pop     eax
-
 checkcode:
 	mov     al, byte [ebx + status_scode]
 	cmp     al, byte [ebx + scode_TEXT]
@@ -59,7 +48,7 @@ dududu:
 
 	mov     byte [eax], 1
 	call    dword [ebx + to(jcs_dududu)]
-	mov     eax, dword [eax + addr_mute]
+	mov     eax, dword [ebx + addr_mute]
 	mov     byte [eax], 0
 	jmp     dududu_return
 %endif

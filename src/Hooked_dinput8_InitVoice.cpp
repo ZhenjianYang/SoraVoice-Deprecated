@@ -50,6 +50,7 @@ const string str_jcs = "jcs_";
 const string str_from = "_from";
 const string str_to = "_to";
 const string str_Comment = "Comment";
+const string str_Game = "Game";
 
 constexpr const char* addr_list[] = {
 	"p_ov_open_callbacks",
@@ -195,11 +196,7 @@ void Init(void* hDll)
 		return;
 	}
 
-	bool isZa = false;
-	if (!tp->addrs.p_mute || !tp->addrs.p_pDS
-		|| !tp->addrs.p_ov_clear || !tp->addrs.p_ov_info || !tp->addrs.p_ov_open_callbacks || !tp->addrs.p_ov_read) {
-		isZa = true;
-	}
+	bool isZa = GetUIntFromValue(group->GetValue(str_Game.c_str()));
 
 	const char* comment = group->GetValue(str_Comment.c_str());
 	if (comment) {

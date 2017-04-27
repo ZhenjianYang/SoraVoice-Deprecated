@@ -37,10 +37,12 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\props\Common.props" />
+    <Import Project="..\props\Def.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\props\Common.props" />
+    <Import Project="..\props\Def.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -77,7 +79,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-	<ClInclude Include="..\..\src\Mapping.h" />
+    <ClInclude Include="..\..\src\Mapping.h" />
     <ClInclude Include="..\..\src\Clock.h" />
     <ClInclude Include="..\..\src\Config.h" />
     <ClInclude Include="..\..\src\Draw.h" />

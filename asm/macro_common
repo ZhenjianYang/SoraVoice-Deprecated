@@ -41,6 +41,7 @@
 %define scode_SAY		(base_scode + 0x01)
 %define scode_TALK		(base_scode + 0x02)
 %define scode_MENU		(base_scode + 0x03)
+%define scode_CLSW		(base_scode + 0x04)
 
 %define base_rcd		(base + 0x90)
 %define ptr_recent		(base_rcd + 0x00)

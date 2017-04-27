@@ -46,6 +46,7 @@ const string str_jcs = "jcs_";
 const string str_from = "_from";
 const string str_to = "_to";
 const string str_Comment = "Comment";
+const string str_Game = "Game";
 
 const byte opjmp = 0xE9;
 const byte opcall = 0xE8;
@@ -109,9 +110,9 @@ static_assert(sizeof(import_names[0]) % 2 == 0, "Size of import_name must be eve
 
 int main(int argc, char* argv[])
 {
-	if (argc <= 2) {
+	if (argc <= 5) {
 		cout << "Usage:\n"
-			"\t" "Importer_EXE.exe EXE_new EXE_old SoraData.ini bin\n"
+			"\t" "Importer_EXE.exe EXE_new EXE_old SoraData.ini bin report\n"
 			<< endl;
 		return 0;
 	}
@@ -119,8 +120,8 @@ int main(int argc, char* argv[])
 	const string path_exe_new = argv[1];
 	const string path_exe_old = argv[2];
 	const string path_data = argv[3];
-	const string path_report = "report.txt";
 	const string path_bin = argv[4];
+	const string path_report = argv[5];
 
 	ifstream ifs(path_exe_old, ios::binary);
 	if (!ifs) {
@@ -289,10 +290,7 @@ int main(int argc, char* argv[])
 	for (int j = 0; j < num_addr; j++) {
 		addrs[j] = GetUIntFromValue(group->GetValue(addr_list[j]));
 	}
-	bool isZa = false;
-	for (int j = 0; j < 8; j++) {
-		if (addrs[j] == 0) { isZa = true; break; }
-	}
+	bool isZa = GetUIntFromValue(group->GetValue(str_Game.c_str()));
 
 	const char* comment = group->GetValue(str_Comment.c_str());
 

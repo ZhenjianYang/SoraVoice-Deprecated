@@ -1,9 +1,10 @@
 set nasm=nasm\nasm.exe
 set dir_asm=..\asm
+set dir_rc=..\src\rc_hk_dinput8
 set dir_main=main
 set dir_bin=bin
 set dir_new=new
-set data=..\example\SoraData.ini
+set data=%dir_rc%\SoraData.ini
 set input=asm_all
 
 md %dir_new%
@@ -17,5 +18,5 @@ for %%i in (sora za) do (
 
 
 for %%i in (fc sc 3rd) do (
-Importer_EXE %dir_new%\%%i_voice.exe  %dir_main%\%%i_main.exe %data% %dir_bin%\sora_!input:asm_=!
+Importer_EXE %dir_new%\%%i_voice.exe  %dir_main%\%%i_main.exe %data% %dir_bin%\sora_!input:asm_=! zrep_%%i.txt
 )

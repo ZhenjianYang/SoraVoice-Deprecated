@@ -61,14 +61,22 @@ int main(int argc, char* argv[])
 	InitParam p;
 	memset(&p, 0, sizeof(p));
 
-	bool ao = true;
+	bool ao = false;
 
 	constexpr char STR_DLL_ZA[] = "za_voice.dll";
 	constexpr char STR_DLL[] = "ed_voice.dll";
-	constexpr char STR_Init[] = "_Init@4";
-	constexpr char STR_End[] = "_End@4";
-	constexpr char STR_Play[] = "_Play@8";
-	constexpr char STR_Stop[] = "_Stop@4";
+	constexpr char STR_Init[] = "Init";
+	constexpr char STR_End[] = "End";
+	constexpr char STR_Play[] = "Play";
+	constexpr char STR_Stop[] = "Stop";
+
+	//HMODULE dll1 = LoadLibraryA("D:\\ZJ.Yang\\Documents\\GitHub\\SoraVoice\\bin\\Debug\\dll\\ogg.dll");
+	//HMODULE dll2 = LoadLibraryA("D:\\ZJ.Yang\\Documents\\GitHub\\SoraVoice\\bin\\Debug\\dll\\vorbis.dll");
+	//HMODULE dll3 = LoadLibraryA("D:\\ZJ.Yang\\Documents\\GitHub\\SoraVoice\\bin\\Debug\\dll\\vorbisfile.dll");
+	//if (!dll3) {
+	//	auto e = GetLastError();
+	//	cout << e << endl;
+	//}
 
 	HMODULE dll = LoadLibrary(ao ? STR_DLL_ZA : STR_DLL);
 	decltype(::Init)* Init = nullptr;

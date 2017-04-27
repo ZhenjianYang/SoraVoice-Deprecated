@@ -1,5 +1,0 @@
-.voice
-VA = 0x033F9000
-RVA = 0x02FF9000
-Offset = 0x001D9000
-Size = 0x1000

@@ -23,6 +23,17 @@ scode_start:
 	je      record_code
 	cmp     byte [ebx + scode_MENU], al
 	je      record_code
+
+;	cmp     byte [ebx + scode_CLSW], al
+;	jne     scode_return
+;	push    eax
+;	push    ecx
+;	push    edx
+;	push    ebx + ptr_initparam
+;	call    dword [ebx + voice_stop]
+;	pop     edx
+;	pop     ecx
+;	pop     eax
 	jmp     scode_return
 
 record_code:

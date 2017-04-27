@@ -245,12 +245,20 @@ void SoundPlayerImpl::thread_Playing()
 			if (rst) {
 				int remain = 0;
 				while (!stop && playQueue.empty() && (remain = playing())) {
-					int delta = remain * waveFormatEx.nAvgBytesPerSec / Clock::TimeUnitsPerSecond;
-					if (delta > DELTA_TIME) delta = DELTA_TIME;
+					int delta = remain * Clock::TimeUnitsPerSecond / waveFormatEx.nAvgBytesPerSec + 1;
+					if (delta > DELTA_TIME)
+					{
+						delta = DELTA_TIME;
+					}
+					else {
+						delta--;
+						delta++;
+					}
 					Clock::Sleep(delta);
 				}
 			}
 
+			LOG("Play end.");
 			finishPlay();
 
 			StopType stopType;
@@ -290,10 +298,7 @@ bool SoundPlayerImpl::openSoundFile(const std::string& fileName){
 		return false;
 	}
 	LOG("Ogg file opened");
-	return true;
-}
 
-bool SoundPlayerImpl::initDSBuff(){
 	vorbis_info* info = ov_info(&ovFile, -1);
 
 	memset(&waveFormatEx, 0, sizeof(waveFormatEx));
@@ -305,6 +310,10 @@ bool SoundPlayerImpl::initDSBuff(){
 	waveFormatEx.nAvgBytesPerSec = waveFormatEx.nSamplesPerSec * waveFormatEx.nBlockAlign;
 	waveFormatEx.cbSize = 0;
 
+	return true;
+}
+
+bool SoundPlayerImpl::initDSBuff(){
 	memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
 	dSBufferDesc.dwSize = sizeof(dSBufferDesc);
 	dSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME;
@@ -379,7 +388,7 @@ int SoundPlayerImpl::playing() {
 		}
 
 		if (endPos == INVALID_POS && read < size) {
-			endPos = start + size;
+			endPos = start + read;
 			if (endPos < curPos) endPos += dSBufferDesc.dwBufferBytes;
 		}
 		buffIndex += 1;
