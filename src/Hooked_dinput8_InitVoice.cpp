@@ -20,21 +20,21 @@ using namespace std;
 FILE* _flog;
 #define LOG(...) _flog = fopen("ilog.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
 
-constexpr char STR_vorbisfile_dll[] = "vorbisfile.dll";
-constexpr char STR_libvorbisfile_dll[] = "libvorbisfile.dll";
-
-constexpr char STR_ov_open_callbacks[] = "ov_open_callbacks";
-constexpr char STR_ov_info[] = "ov_info";
-constexpr char STR_ov_read[] = "ov_read";
-constexpr char STR_ov_clear[] = "ov_clear";
-
-constexpr const char* OggApis[] = {
-	STR_ov_open_callbacks,
-	STR_ov_info,
-	STR_ov_read,
-	STR_ov_clear
-};
-constexpr int NumOggApis = sizeof(OggApis) / sizeof(*OggApis);
+//constexpr char STR_vorbisfile_dll[] = "vorbisfile.dll";
+//constexpr char STR_libvorbisfile_dll[] = "libvorbisfile.dll";
+//
+//constexpr char STR_ov_open_callbacks[] = "ov_open_callbacks";
+//constexpr char STR_ov_info[] = "ov_info";
+//constexpr char STR_ov_read[] = "ov_read";
+//constexpr char STR_ov_clear[] = "ov_clear";
+//
+//constexpr const char* OggApis[] = {
+//	STR_ov_open_callbacks,
+//	STR_ov_info,
+//	STR_ov_read,
+//	STR_ov_clear
+//};
+//constexpr int NumOggApis = sizeof(OggApis) / sizeof(*OggApis);
 
 constexpr char dll_name_sora[] = "ed_voice.dll";
 constexpr char dll_name_za[] = "za_voice.dll";
@@ -74,7 +74,7 @@ constexpr const char* name_list[] = {
 	"aup",
 	"scode",
 };
-const unsigned rvalist[] = {
+constexpr unsigned rvalist[] = {
 	0x100,
 	0x200,
 	0x300,
@@ -93,11 +93,11 @@ constexpr byte scode_za[] = { 0x55, 0x5C, 0x5D, 0x5E };
 
 constexpr int Size = 0x1000;
 
-void* ov_open_callbacks = nullptr;
-void* ov_info = nullptr;
-void* ov_read = nullptr;
-void* ov_clear = nullptr;
-IDirectSound* pDS = nullptr;
+//void* ov_open_callbacks = nullptr;
+//void* ov_info = nullptr;
+//void* ov_read = nullptr;
+//void* ov_clear = nullptr;
+//IDirectSound* pDS = nullptr;
 
 InitParam *ip = nullptr;
 static HINSTANCE hd;
@@ -203,7 +203,7 @@ void Init(void* hDll)
 
 	const char* comment = group->GetValue(str_Comment.c_str());
 	if (comment) {
-		for (int i = 0; comment[i] && i < sizeof(tp->Comment) - 1; i++) {
+		for (int i = 0; comment[i] && i < (int)sizeof(tp->Comment) - 1; i++) {
 			tp->Comment[i] = comment[i];
 		}
 		LOG("Data comment, %s", comment);
@@ -231,38 +231,38 @@ void Init(void* hDll)
 	}
 	LOG("Read bin finished.");
 
-	if (isZa) {
-		HMODULE ogg_dll = LoadLibraryA(STR_vorbisfile_dll);
-		if (!ogg_dll) {
-			ogg_dll = LoadLibraryA(STR_libvorbisfile_dll);
-		}
-
-		if (ogg_dll) {
-			ov_open_callbacks = GetProcAddress(ogg_dll, STR_ov_open_callbacks);
-			ov_info = GetProcAddress(ogg_dll, STR_ov_info);
-			ov_read = GetProcAddress(ogg_dll, STR_ov_read);
-			ov_clear = GetProcAddress(ogg_dll, STR_ov_clear);
-		}
-
-		if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
-			LOG("Get ogg api failed.");
-			return;
-		}
-		LOG("ogg loaded.");
-
-		DirectSoundCreate(NULL, &pDS, NULL);
-		if (!pDS || DS_OK != pDS->SetCooperativeLevel((HWND)*tp->addrs.p_Hwnd, DSSCL_PRIORITY)) {
-			LOG("Init DSD failed.");
-			return;
-		};
-		LOG("DSD opened.");
-
-		tp->addrs.p_pDS = (void**)&pDS;
-		tp->addrs.p_ov_open_callbacks = (void**)&ov_open_callbacks;
-		tp->addrs.p_ov_info = (void**)&ov_info;
-		tp->addrs.p_ov_read = (void**)&ov_read;
-		tp->addrs.p_ov_clear = (void**)&ov_clear;
-	}
+//	if (isZa) {
+//		HMODULE ogg_dll = LoadLibraryA(STR_vorbisfile_dll);
+//		if (!ogg_dll) {
+//			ogg_dll = LoadLibraryA(STR_libvorbisfile_dll);
+//		}
+//
+//		if (ogg_dll) {
+//			ov_open_callbacks = (void*)GetProcAddress(ogg_dll, STR_ov_open_callbacks);
+//			ov_info = (void*)GetProcAddress(ogg_dll, STR_ov_info);
+//			ov_read = (void*)GetProcAddress(ogg_dll, STR_ov_read);
+//			ov_clear = (void*)GetProcAddress(ogg_dll, STR_ov_clear);
+//		}
+//
+//		if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
+//			LOG("Get ogg api failed.");
+//			return;
+//		}
+//		LOG("ogg loaded.");
+//
+//		DirectSoundCreate(NULL, &pDS, NULL);
+//		if (!pDS || DS_OK != pDS->SetCooperativeLevel((HWND)*tp->addrs.p_Hwnd, DSSCL_PRIORITY)) {
+//			LOG("Init DSD failed.");
+//			return;
+//		};
+//		LOG("DSD opened.");
+//
+//		tp->addrs.p_pDS = (void**)&pDS;
+//		tp->addrs.p_ov_open_callbacks = (void**)&ov_open_callbacks;
+//		tp->addrs.p_ov_info = (void**)&ov_info;
+//		tp->addrs.p_ov_read = (void**)&ov_read;
+//		tp->addrs.p_ov_clear = (void**)&ov_clear;
+//	}
 	
 
 	HMODULE voice_dll = LoadLibraryA(isZa ? dll_name_za : dll_name_sora);
@@ -311,10 +311,10 @@ void Go()
 		PUT(jc_len, buff + 1);
 
 		LOG("change code at : 0x%08X", (unsigned)from);
-		DWORD tmp, tmp2;
-		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &tmp)) {
+		DWORD dwProtect, dwProtect2;
+		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &dwProtect)) {
 			memcpy(from, buff, len_op);
-			VirtualProtect(from, len_op, tmp, &tmp2);
+			VirtualProtect(from, len_op, dwProtect, &dwProtect2);
 		}
 		else {
 			LOG("Change code failed.");
