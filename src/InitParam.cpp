@@ -44,7 +44,7 @@ static void* d3dd;
 static void* did;
 static HWND hWnd;
 static DSD* pDS;
-static void* d3DXCreateFontIndirect;
+static CallDSCreate d3DXCreateFontIndirect;
 
 static unsigned fake_mute = 1;
 
@@ -101,10 +101,10 @@ bool InitAddrs(InitParam* initParam)
 			if (ogg_dll) break;
 		}
 		if (ogg_dll) {
-			ov_open_callbacks = GetProcAddress(ogg_dll, STR_ov_open_callbacks);
-			ov_info = GetProcAddress(ogg_dll, STR_ov_info);
-			ov_read = GetProcAddress(ogg_dll, STR_ov_read);
-			ov_clear = GetProcAddress(ogg_dll, STR_ov_clear);
+			ov_open_callbacks = (void*)GetProcAddress(ogg_dll, STR_ov_open_callbacks);
+			ov_info = (void*)GetProcAddress(ogg_dll, STR_ov_info);
+			ov_read = (void*)GetProcAddress(ogg_dll, STR_ov_read);
+			ov_clear = (void*)GetProcAddress(ogg_dll, STR_ov_clear);
 		}
 
 		LOG("Loaded ov_open_callbacks = 0x%08X", ov_open_callbacks);
@@ -115,7 +115,7 @@ bool InitAddrs(InitParam* initParam)
 
 	if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
 		LOG("Load ogg apis failed.");
-		return nullptr;
+		return false;
 	}
 
 #ifdef ZA

@@ -25,7 +25,7 @@ public:
 
 	protected:
 		Group() = default;
-		~Group() = default;
+		virtual ~Group() = default;
 	};
 
 	bool Valid() const { return data; }

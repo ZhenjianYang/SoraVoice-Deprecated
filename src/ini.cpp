@@ -1,6 +1,6 @@
 #include "ini.h"
 #include <fstream>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <vector>
 #include <string>
@@ -8,6 +8,10 @@
 using namespace std;
 
 #define MAXCH_ONELINE 2048
+
+using VectorKeys = vector<string>;
+using VectorValues = vector<string>;
+using MapKeyIndex = unordered_map<string, int>;
 
 class GroupImpl : private INI::Group
 {
@@ -18,9 +22,9 @@ private:
 
 	bool valid;
 	string name;
-	vector<string> values;
-	vector<string> keys;
-	map<string, int> map_name_idx;
+	VectorKeys values;
+	VectorValues keys;
+	MapKeyIndex map_name_idx;
 
 	bool Valid() const override { return valid; }
 	int Num() const override { return values.size(); }
@@ -45,17 +49,19 @@ private:
 		return values[it->second].c_str();
 	}
 
-	GroupImpl(const string& name = "", bool valid = true) : name(name), valid(valid) { }
+	GroupImpl(const string& name = "", bool valid = true) : valid(valid), name(name) { }
 };
 
 const GroupImpl GroupImpl::InValidGroup("", false);
 using PtrGroup = unique_ptr<GroupImpl>;
+using VectorGroup = vector<PtrGroup>;
 
 struct INIData
 {
-	vector<PtrGroup> groups;
-	map<string, int> map_name_idx;
+	VectorGroup groups;
+	MapKeyIndex map_name_idx;
 };
+using PtrINIData = unique_ptr<INIData>;
 
 int INI::Num() const
 {
@@ -97,13 +103,13 @@ bool INI::Open(const char * fileName)
 
 bool INI::Open(std::istream & is)
 {
-	delete data;
+	delete (INIData*)data;
 	data = nullptr;
 
 	if (!is) return false;
 
 	char buff[MAXCH_ONELINE];
-	unique_ptr<INIData> iniData(new INIData);
+	PtrINIData iniData(new INIData);
 
 	iniData->groups.push_back(PtrGroup(new GroupImpl));
 	iniData->map_name_idx[""] = 0;
@@ -166,7 +172,7 @@ bool INI::Open(std::istream & is)
 
 INI::~INI()
 {
-	delete data;
+	delete (INIData*)data;
 }
 
 INI::INI(INI && _Right)
@@ -177,7 +183,7 @@ INI::INI(INI && _Right)
 
 INI& INI::operator=(INI && _Right)
 {
-	delete data;
+	delete (INIData*)data;
 	data = _Right.data;
 	_Right.data = nullptr;
 
