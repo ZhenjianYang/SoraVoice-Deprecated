@@ -49,6 +49,10 @@ constexpr int NumImport = sizeof(import_names) / sizeof(*import_names);
 const string str_jcs = "jcs_";
 const string str_from = "_from";
 const string str_to = "_to";
+
+const string str_FeatureAddr = "FeatureAddr";
+const string str_FeatureValue = "FeatureValue";
+
 const string str_Comment = "Comment";
 const string str_Game = "Game";
 
@@ -164,7 +168,7 @@ void Init(void* hDll)
 
 			byte* p = (byte*)jcs[j].next;
 			constexpr int size = 6;
-			if (IsBadReadPtr(p, size)) continue;
+			if (IsBadReadPtr(p, size)) { ok = false; break; };
 
 			int len_op = p[0] == opjmp || p[0] == opcall ? 5 : 6;
 			int jc_len = GET_INT(p + len_op - 4);
@@ -172,6 +176,21 @@ void Init(void* hDll)
 			unsigned va_to = jcs[j].next + jc_len + len_op;
 			LOG("va_to 0x%08X", va_to);
 			if (va_to != jcs[j].to) { ok = false; break; }
+		}
+
+		if (ok) {
+			unsigned faddr = GetUIntFromValue(tmp_group.GetValue(str_FeatureAddr.c_str()));
+			LOG("%s: 0x%08X", str_FeatureAddr.c_str(), faddr);
+			if (faddr) {
+				unsigned fvalue = GetUIntFromValue(tmp_group.GetValue(str_FeatureValue.c_str()));
+				LOG("%s: 0x%08X", str_FeatureValue.c_str(), fvalue);
+				unsigned* p = (unsigned*)faddr;
+				if (IsBadReadPtr(p, 4)) { ok = false; }
+				else {
+					LOG("True value: 0x%08X", *p);
+					ok = *p == fvalue;
+				}
+			}
 		}
 
 		if (ok) {
@@ -317,6 +336,5 @@ void Go()
 			LOG("Change code failed.");
 		}
 	}
-
 	LOG("All done");
 }

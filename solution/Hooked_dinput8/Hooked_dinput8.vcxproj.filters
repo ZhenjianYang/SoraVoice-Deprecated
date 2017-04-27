@@ -45,8 +45,14 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\rc_hk_dinput8\sora_all" />
-    <None Include="..\..\src\rc_hk_dinput8\SoraData.ini" />
-    <None Include="..\..\src\rc_hk_dinput8\za_all" />
+    <None Include="..\..\src\rc_hk_dinput8\sora_all">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\..\src\rc_hk_dinput8\SoraData.ini">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\..\src\rc_hk_dinput8\za_all">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>
