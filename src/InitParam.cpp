@@ -160,7 +160,7 @@ bool InitAddrs(InitParam* initParam)
 			d3DXCreateFontIndirect = (CallDSCreate)GetProcAddress(d3dx_dll, STR_D3DXCreateFontIndirectA);
 		}//if (d3dx_dll) 
 #else
-		d3DXCreateFontIndirect = &D3DXCreateFontIndirect;
+		d3DXCreateFontIndirect = (CallDSCreate)&D3DXCreateFontIndirect;
 #endif
 		LOG("new D3DXCreateFontIndirect = 0x%08X", d3DXCreateFontIndirect);
 	}

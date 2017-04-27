@@ -7,7 +7,7 @@
 #endif // !D3DCALL
 
 #ifdef _SVDLL
-#define SVDECL __declspec(dllexport)
+#define SVDECL
 #else
 #define SVDECL __declspec(dllimport)
 #endif // _SVDLL

@@ -35,10 +35,10 @@ const string nsec_name = ".voice";
 const char dll_name_sora[] = "ed_voice.dll";
 const char dll_name_za[] = "za_voice.dll";
 const char import_names[][16] = {
-	"_Init@4",
-	"_End@4",
-	"_Play@8",
-	"_Stop@4",
+	"Init",
+	"End",
+	"Play",
+	"Stop",
 };
 const int NumImport = sizeof(import_names) / sizeof(*import_names);
 

@@ -1,3 +1,0 @@
-LIBRARY dinput8
-EXPORTS
-DirectInput8Create = Hooked_DirectInput8Create 
