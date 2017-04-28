@@ -60,8 +60,8 @@ static ConvertResult ConvertUtf8toUtf16(CharType* dst_buff, int size_dst, const 
 			}
 			else {
 				unsigned tmp = unicode - 0x10000;
-				dst_buff[i++] = (CharType)(tmp >> 10)   | 0xDC00;
-				dst_buff[i++] = (CharType)(tmp & 0x3FF) | 0xD800;
+				dst_buff[i++] = (CharType)(tmp >> 10)   | 0xD800;
+				dst_buff[i++] = (CharType)(tmp & 0x3FF) | 0xDC00;
 				rst.cnt4++;
 			}
 		}
