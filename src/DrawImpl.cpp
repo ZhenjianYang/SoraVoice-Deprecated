@@ -130,6 +130,8 @@ class DrawImpl : private Draw
 	using PtrInfoList = std::list<PtrInfo>;
 #ifdef ZA
 	using CallCreateFont = decltype(D3DXCreateFontIndirectW)*;
+#else
+	using CallCreateFont = void*;
 #endif // ZA
 
 	static constexpr const unsigned DftFormatList[] = {
