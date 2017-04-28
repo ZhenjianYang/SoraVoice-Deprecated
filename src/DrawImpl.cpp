@@ -69,8 +69,14 @@ class DrawImpl : private Draw
 		:Draw(showing),
 		hWnd((HWND)hWnd), pD3DD((decltype(this->pD3DD))pD3DD), pD3DXCreateFontIndirect((CallCreateFont)p_D3DXCreateFontIndirect)
 	{
+#ifdef ZA
 		ConvertUtf8toUtf16(desca.FaceName, fontName);
-
+#else
+		constexpr int lfFaceName_len = std::extent<decltype(lf.lfFaceName)>::value;
+		wchar buff[lfFaceName_len];
+		ConvertUtf8toUtf16(buff, fontName);
+		WideCharToMultiByte(CP_OEMCP, 0, buff, -1, desca.FaceName, sizeof(desca.FaceName), 0, 0);
+#endif // ZA
 		desca.Height = -MIN_FONT_SIZE;
 		desca.Weight = FW_NORMAL;
 		desca.CharSet = DEFAULT_CHARSET;
@@ -122,7 +128,9 @@ class DrawImpl : private Draw
 	};
 	using PtrInfo = std::unique_ptr<Info>;
 	using PtrInfoList = std::list<PtrInfo>;
+#ifdef ZA
 	using CallCreateFont = decltype(D3DXCreateFontIndirectW)*;
+#endif // ZA
 
 	static constexpr const unsigned DftFormatList[] = {
 			DT_TOP | DT_LEFT   ,//Hello = 0,
@@ -146,7 +154,7 @@ class DrawImpl : private Draw
 #if DIRECT3D_VERSION == 0x900
 	D3DXFONT_DESCW desca;
 #else
-	LOGFONTW lf;
+	LOGFONTA lf;
 	struct _DESCA {
 		LONG &Height;
 		LONG &Width;
@@ -157,9 +165,9 @@ class DrawImpl : private Draw
 		BYTE &OutputPrecision;
 		BYTE &Quality;
 		BYTE &PitchAndFamily;
-		wchar(&FaceName)[LF_FACESIZE];
+		CHAR (&FaceName)[LF_FACESIZE];
 
-		_DESCA(LOGFONTW& lf) :
+		_DESCA(LOGFONTA& lf) :
 			Height(lf.lfHeight),
 			Width(lf.lfWidth),
 			Weight(lf.lfWeight),
@@ -207,13 +215,16 @@ void DrawImpl::DrawInfos() {
 	pD3DD->BeginScene();
 	//D3DXFONT_DESCA desca;
 
-	if (!pFont && pD3DXCreateFontIndirect) {
+
 #if DIRECT3D_VERSION == 0x900
+	if (!pFont 	&& pD3DXCreateFontIndirect) {
 		pD3DXCreateFontIndirect(pD3DD, &desca, &pFont);
-#else
-		pD3DXCreateFontIndirect(pD3DD, &lf, &pFont);
-#endif	
 	}
+#else
+	if (!pFont) {
+		D3DXCreateFontIndirect(pD3DD, &lf, &pFont);
+	}
+#endif	
 
 	if (pFont) {
 		RECT rect_shadow;

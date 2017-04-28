@@ -62,14 +62,19 @@ bool Config::LoadConfig(const char * configFn)
 	KeyValue kv;
 
 	char buff[MAXCH_ONELINE];
+	bool first = true;
 	while (ifs.getline(buff, sizeof(buff)))
 	{
-		if (buff[0] == 0 || buff[0] == '#' || buff[0] == ';') continue;
-		buff[sizeof(buff) - 1] = 0;
+		char* p = buff;
+		if (first) {
+			first = false;
+			if (p[0] == (char)0xEF && p[1] == (char)0xBB && p[2] == (char)0xBF) {
+				p += 3;
+			}
+		}
+		if (p[0] == 0 || p[0] == '#' || p[0] == ';') continue;
 
 		string key, value;
-		
-		char* p = buff;
 		while (*p && (*p == ' ' || *p == '\t')) p++;
 
 		while (*p && *p != '=') key.push_back(*p++);

@@ -79,6 +79,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\EncodeHelper.h" />
     <ClInclude Include="..\..\src\Mapping.h" />
     <ClInclude Include="..\..\src\Clock.h" />
     <ClInclude Include="..\..\src\Config.h" />

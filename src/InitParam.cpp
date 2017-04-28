@@ -7,11 +7,6 @@
 #include <dsound.h>
 using DSD = IDirectSound;
 
-#ifndef ZA
-#include <d3d8/d3dx8.h>
-#endif // !ZA
-
-
 #define BIND(var, ptr) { if (ptr) (var) = decltype(var)(*(ptr)); \
 						(ptr) = (decltype(ptr))&(var); }
 
@@ -41,7 +36,7 @@ static void* d3dd;
 static void* did;
 static HWND hWnd;
 static DSD* pDS;
-static CallDSCreate d3DXCreateFontIndirect;
+static void* d3DXCreateFontIndirect;
 
 static unsigned fake_mute = 1;
 
@@ -89,13 +84,13 @@ bool InitAddrs(InitParam* initParam)
 
 		HMODULE ogg_dll = NULL;
 		for (auto dir : DllDirs) {
-			SetDllDirectory(dir);
+			SetDllDirectoryA(dir);
 			for (auto filename : OvDllNames) {
-				ogg_dll = LoadLibrary(filename);
+				ogg_dll = LoadLibraryA(filename);
 				if (ogg_dll) break;
 			}
 		}
-		SetDllDirectory(NULL);
+		SetDllDirectoryA(NULL);
 		if (ogg_dll) {
 			ov_open_callbacks = (void*)GetProcAddress(ogg_dll, STR_ov_open_callbacks);
 			ov_info = (void*)GetProcAddress(ogg_dll, STR_ov_info);
@@ -121,7 +116,7 @@ bool InitAddrs(InitParam* initParam)
 			return false;
 		}
 		HMODULE dsd_dll = NULL;
-		dsd_dll = LoadLibrary(STR_dsound_dll);
+		dsd_dll = LoadLibraryA(STR_dsound_dll);
 		if (dsd_dll) {
 			auto pDirectSoundCreate = (CallDSCreate)GetProcAddress(dsd_dll, STR_DirectSoundCreate);
 			if (pDirectSoundCreate) {
@@ -145,20 +140,19 @@ bool InitAddrs(InitParam* initParam)
 		return false;
 	}
 
+#ifdef ZA
 	if (!d3DXCreateFontIndirect) {
 		LOG("D3DXCreateFontIndirect is nullptr, now going to get D3DXCreateFontIndirect");
 
-#ifdef ZA
 		HMODULE d3dx_dll = NULL;
 		d3dx_dll = LoadLibrary(STR_d3dx_dll);
 		if (d3dx_dll) {
 			d3DXCreateFontIndirect = (CallDSCreate)GetProcAddress(d3dx_dll, STR_D3DXCreateFontIndirect);
 		}//if (d3dx_dll) 
-#else
-		d3DXCreateFontIndirect = (CallDSCreate)&D3DXCreateFontIndirectW;
-#endif
+
 		LOG("new D3DXCreateFontIndirect = 0x%08X", d3DXCreateFontIndirect);
 	}
+#endif
 
 	if (!initParam->addrs.p_mute) initParam->addrs.p_mute = &fake_mute;
 
