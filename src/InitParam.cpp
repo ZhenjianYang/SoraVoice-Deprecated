@@ -26,7 +26,7 @@ constexpr const char* DllDirs[] = { ".\\dll\\", ".\\voice\\dll\\" };
 
 #ifdef ZA
 constexpr char STR_d3dx_dll[] = "d3dx9_42.dll";
-constexpr char STR_D3DXCreateFontIndirectA[] = "D3DXCreateFontIndirectA";
+constexpr char STR_D3DXCreateFontIndirect[] = "D3DXCreateFontIndirectW";
 #endif
 
 constexpr char STR_dsound_dll[] = "dsound.dll";
@@ -152,10 +152,10 @@ bool InitAddrs(InitParam* initParam)
 		HMODULE d3dx_dll = NULL;
 		d3dx_dll = LoadLibrary(STR_d3dx_dll);
 		if (d3dx_dll) {
-			d3DXCreateFontIndirect = (CallDSCreate)GetProcAddress(d3dx_dll, STR_D3DXCreateFontIndirectA);
+			d3DXCreateFontIndirect = (CallDSCreate)GetProcAddress(d3dx_dll, STR_D3DXCreateFontIndirect);
 		}//if (d3dx_dll) 
 #else
-		d3DXCreateFontIndirect = (CallDSCreate)&D3DXCreateFontIndirect;
+		d3DXCreateFontIndirect = (CallDSCreate)&D3DXCreateFontIndirectW;
 #endif
 		LOG("new D3DXCreateFontIndirect = 0x%08X", d3DXCreateFontIndirect);
 	}

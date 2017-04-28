@@ -313,7 +313,7 @@ bool SoundPlayerImpl::initDSBuff(){
 	dSBufferDesc.dwBufferBytes = waveFormatEx.nAvgBytesPerSec * TIME_BUF * NUM_BUF / Clock::TimeUnitsPerSecond;
 	dSBufferDesc.dwReserved = 0;
 	dSBufferDesc.lpwfxFormat = &waveFormatEx;
-	dSBufferDesc.guid3DAlgorithm = GUID_NULL;
+	dSBufferDesc.guid3DAlgorithm = { 0 };
 
 	buffSize = dSBufferDesc.dwBufferBytes / NUM_BUF;
 

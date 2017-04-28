@@ -2,6 +2,7 @@
 
 #include "Log.h"
 #include "Clock.h"
+#include "EncodeHelper.h"
 
 #ifdef ZA
 #include <d3dx9.h>
@@ -68,11 +69,7 @@ class DrawImpl : private Draw
 		:Draw(showing),
 		hWnd((HWND)hWnd), pD3DD((decltype(this->pD3DD))pD3DD), pD3DXCreateFontIndirect((CallCreateFont)p_D3DXCreateFontIndirect)
 	{
-		constexpr int len = sizeof(desca.FaceName);
-		for (int i = 0; i < len && fontName[i]; i++) {
-			desca.FaceName[i] = fontName[i];
-		}
-		desca.FaceName[len - 1] = '\0';
+		ConvertUtf8toUtf16(desca.FaceName, fontName);
 
 		desca.Height = -MIN_FONT_SIZE;
 		desca.Weight = FW_NORMAL;
@@ -111,9 +108,11 @@ class DrawImpl : private Draw
 		if (pFont) pFont->Release();
 	}
 
+	using wchar = wchar_t;
+
 	struct Info
 	{
-		char text[MAX_TEXT_LEN + 1];
+		wchar text[MAX_TEXT_LEN + 1];
 		RECT rect;
 		unsigned color;
 		unsigned format;
@@ -123,31 +122,31 @@ class DrawImpl : private Draw
 	};
 	using PtrInfo = std::unique_ptr<Info>;
 	using PtrInfoList = std::list<PtrInfo>;
-	using CallCreateFont = decltype(D3DXCreateFontIndirect)*;
+	using CallCreateFont = decltype(D3DXCreateFontIndirectW)*;
 
-	static constexpr unsigned DftFormatList[] = {
-		DT_TOP | DT_LEFT   ,//Hello = 0,
-		DT_TOP | DT_LEFT   ,//InfoOnoff,
-#ifdef ZA
-		DT_BOTTOM | DT_RIGHT,//AutoPlayMark,
-#else
-		DT_BOTTOM | DT_LEFT,//AutoPlayMark,
-#endif
-		DT_TOP | DT_LEFT   ,//Volume,
-		DT_TOP | DT_LEFT   ,//AutoPlay,
-		DT_TOP | DT_LEFT   ,//SkipVoice,
-		DT_TOP | DT_LEFT   ,//DisableDialogSE,
-		DT_TOP | DT_LEFT   ,//DisableDududu,
+	static constexpr const unsigned DftFormatList[] = {
+			DT_TOP | DT_LEFT   ,//Hello = 0,
+			DT_TOP | DT_LEFT   ,//InfoOnoff,
+	#ifdef ZA
+			DT_BOTTOM | DT_RIGHT,//AutoPlayMark,
+	#else
+			DT_BOTTOM | DT_LEFT,//AutoPlayMark,
+	#endif
+			DT_TOP | DT_LEFT   ,//Volume,
+			DT_TOP | DT_LEFT   ,//AutoPlay,
+			DT_TOP | DT_LEFT   ,//SkipVoice,
+			DT_TOP | DT_LEFT   ,//DisableDialogSE,
+			DT_TOP | DT_LEFT   ,//DisableDududu,
 
-		DT_TOP | DT_LEFT   ,//ConfigReset,
+			DT_TOP | DT_LEFT   ,//ConfigReset,
 
-		DT_TOP | DT_LEFT   ,//All,
-	};
+			DT_TOP | DT_LEFT   ,//All,
+		};
 
 #if DIRECT3D_VERSION == 0x900
-	D3DXFONT_DESCA desca;
+	D3DXFONT_DESCW desca;
 #else
-	LOGFONT lf;
+	LOGFONTW lf;
 	struct _DESCA {
 		LONG &Height;
 		LONG &Width;
@@ -158,9 +157,9 @@ class DrawImpl : private Draw
 		BYTE &OutputPrecision;
 		BYTE &Quality;
 		BYTE &PitchAndFamily;
-		CHAR(&FaceName)[LF_FACESIZE];
+		wchar(&FaceName)[LF_FACESIZE];
 
-		_DESCA(LOGFONT& lf) :
+		_DESCA(LOGFONTW& lf) :
 			Height(lf.lfHeight),
 			Width(lf.lfWidth),
 			Weight(lf.lfWeight),
@@ -228,11 +227,11 @@ void DrawImpl::DrawInfos() {
 
 			unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (((info->color >> 24) * 3 / 4) << 24);
 
-			pFont->DrawTextA(SPRITE info->text, -1, &rect_shadow, info->format, color_shadow);
+			pFont->DrawTextW(SPRITE info->text, -1, &rect_shadow, info->format, color_shadow);
 		}
 
 		for (const auto& info : infos) {
-			pFont->DrawTextA(SPRITE info->text, -1, &info->rect, info->format, info->color);
+			pFont->DrawTextW(SPRITE info->text, -1, &info->rect, info->format, info->color);
 		}
 	}
 
@@ -241,6 +240,8 @@ void DrawImpl::DrawInfos() {
 	//	font->Release(); font = NULL;
 	//}
 }
+
+constexpr const unsigned DrawImpl::DftFormatList[];
 
 void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char* text, ...) {
 	unsigned dead = time == ShowTimeInfinity ? TIME_MAX : Clock::Now() + time;
@@ -271,12 +272,16 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 	(*it)->deadTime = dead;
 	(*it)->format = format;
 
+	constexpr int buffSize = MAX_TEXT_LEN * 3;
+	char buff[buffSize];
 	va_list argptr;
 	va_start(argptr, text);
-	vsnprintf((*it)->text, sizeof((*it)->text), text, argptr);
+	vsnprintf(buff, sizeof(buff), text, argptr);
 	va_end(argptr);
-	int text_width = (int)(strlen((*it)->text) * h * 0.6);
-	LOG("Text is %s", (*it)->text);
+	auto conRst = ConvertUtf8toUtf16((*it)->text, buff);
+
+	int text_width = (int)((conRst.cnt1 + conRst.cnt2 * 2 + conRst.cnt4 * 2) * h * 0.6);
+	LOG("Text is %s", buff);
 	LOG("Text width is %d", text_width);
 
 	auto& rect = (*it)->rect;
