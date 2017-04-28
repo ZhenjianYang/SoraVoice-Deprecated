@@ -20,7 +20,8 @@ class SoundPlayerImpl : private SoundPlayer
 	static constexpr int NUM_BUF = 2;
 	static constexpr int DELTA_TIME = 50;
 
-	static constexpr DWORD INVALID_POS = 0xFFFFFFFF;
+	using SDWORD = long;
+	static constexpr SDWORD INVALID_POS = 0x7FFFFFFF;
 
 	using LockGuard = std::lock_guard<std::mutex>;
 	using PlayInfo = struct { PlayID playID; std::string fileNm;};
@@ -124,11 +125,11 @@ private:
 
 	IDirectSoundBuffer *pDSBuff = nullptr;
 	mutable std::mutex mt_DSBuff;
-	unsigned buffSize = 0;
-	unsigned buffIndex = 0;
-	DWORD endPos = MaxVolume;
-	DWORD curPos = 0;
-	DWORD prePos = 0;
+	int buffSize = 0;
+	int buffIndex = 0;
+	SDWORD endPos = MaxVolume;
+	SDWORD curPos = 0;
+	SDWORD prePos = 0;
 
 	OggVorbis_File ovFile {0};
 	WAVEFORMATEX waveFormatEx {0};
@@ -141,14 +142,14 @@ private:
 	const HANDLE hEvent_End;
 	std::thread th_playing;
 
-	unsigned readOggData(void * buff, unsigned size)
+	int readOggData(void * buff, int size)
 	{
 		if (!buff || !size) return 0;
 
 		memset(buff, 0, size);
 
 		int bitstream = 0;
-		unsigned total = 0;
+		int total = 0;
 
 		constexpr int block = 4096;
 
@@ -353,7 +354,7 @@ bool SoundPlayerImpl::startPlay(){
 }
 
 int SoundPlayerImpl::playing() {
-	pDSBuff->GetCurrentPosition(&curPos, NULL);
+	pDSBuff->GetCurrentPosition((LPDWORD)&curPos, NULL);
 	if(curPos < prePos) {
 		buffIndex = 0;
 		if(endPos != INVALID_POS) endPos -= dSBufferDesc.dwBufferBytes;

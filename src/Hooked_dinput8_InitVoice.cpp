@@ -289,11 +289,12 @@ void Init(void* hDll)
 				LOG("Symbol not found : %s", import_names[i]);
 			}
 		}
+		LOG("%s loaded", isZa ? dll_name_za : dll_name_sora);
 	}
 	else {
 		LOG("Load dll failed : %s", isZa ? dll_name_za : dll_name_sora);
+		return;
 	}
-	LOG("%s loaded", isZa ? dll_name_za : dll_name_sora);
 
 	ip = (InitParam*)VirtualAlloc(NULL, Size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
