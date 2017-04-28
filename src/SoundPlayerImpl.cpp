@@ -246,14 +246,7 @@ void SoundPlayerImpl::thread_Playing()
 				int remain = 0;
 				while (!stop && playQueue.empty() && (remain = playing())) {
 					int delta = remain * Clock::TimeUnitsPerSecond / waveFormatEx.nAvgBytesPerSec + 1;
-					if (delta > DELTA_TIME)
-					{
-						delta = DELTA_TIME;
-					}
-					else {
-						delta--;
-						delta++;
-					}
+					if (delta > DELTA_TIME) delta = DELTA_TIME;
 					Clock::Sleep(delta);
 				}
 			}
