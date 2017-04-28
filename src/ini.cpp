@@ -1,4 +1,4 @@
-#include "ini.h"
+#include "INI.h"
 #include <fstream>
 #include <unordered_map>
 #include <memory>
