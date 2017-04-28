@@ -7,9 +7,9 @@
 #include <iomanip>
 #include <algorithm>
 
-#include "common.h"
+#include "Common.h"
 #include "InitParam.h"
-#include "ini.h"
+#include "INI.h"
 
 using namespace std;
 using byte = unsigned char;

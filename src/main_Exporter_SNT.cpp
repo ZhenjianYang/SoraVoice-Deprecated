@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iomanip>
 
-#include "common.h"
+#include "Common.h"
 
 #define ATTR_SNT "._SN.txt"
 #define ATTR_OUT ".txt"

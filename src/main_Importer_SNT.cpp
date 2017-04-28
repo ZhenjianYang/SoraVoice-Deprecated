@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <algorithm>
 
-#include "common.h"
-#include "mapping.h"
+#include "Common.h"
+#include "Mapping.h"
 
 #define ATTR_SNT "._SN.txt"
 #define ATTR_IPT ".txt"

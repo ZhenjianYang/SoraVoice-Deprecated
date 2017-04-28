@@ -10,7 +10,7 @@
 #include "ed_voice.h"
 #include "InitParam.h"
 #include "Hook.h"
-#include "ini.h"
+#include "INI.h"
 
 #include <vorbis\vorbisfile.h>
 #include <dsound.h>

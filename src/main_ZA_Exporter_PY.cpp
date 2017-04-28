@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <iomanip>
-#include "common.h"
+#include "Common.h"
 
 #define ATTR_PY ".bin.py"
 #define ATTR_OUT ".txt"

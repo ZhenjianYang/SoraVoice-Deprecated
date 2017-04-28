@@ -1,5 +1,5 @@
 #include "Hooked_dinput8_InitVoice.h"
-#include "ini.h"
+#include "INI.h"
 #include "rc_hk_dinput8\resource.h"
 #include <Windows.h>
 #include <dsound.h>

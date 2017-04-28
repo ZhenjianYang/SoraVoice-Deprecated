@@ -5,7 +5,7 @@
 #include <map>
 #include <algorithm>
 
-#include "common.h"
+#include "Common.h"
 
 #define ATTR_BIN ".bin"
 #define ATTR_OUT ".txt"

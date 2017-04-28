@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <memory>
 
-#include "common.h"
+#include "Common.h"
 
 #define ATTR_MBIN ".mbin"
 #define ATTR_OUT ".txt"
