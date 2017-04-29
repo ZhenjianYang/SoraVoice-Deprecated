@@ -1,8 +1,9 @@
-#include "config.h"
+#include "Config.h"
 
 #include <fstream>
 #include <map>
 #include <iomanip>
+#include <cstring>
 
 using namespace std;
 
@@ -35,16 +36,18 @@ static bool _getValue(int& var, const KeyValue& kv, const char* name) {
 	return true;
 }
 
-template<typename ArrayType, typename = std::enable_if<std::is_array<ArrayType>::value>::type>
+template<typename ArrayType, typename = std::enable_if_t<std::is_array<ArrayType>::value>>
 static bool _getValue(ArrayType &var, const KeyValue& kv, const char* name) {
 
 	auto it = kv.find(name);
 	if (it == kv.end()) return false;
 
-	for (int i = 0; i < (int)it->second.length() && i < sizeof(var) / sizeof(&var); i++) {
+	constexpr int len_array = std::extent<ArrayType>::value;
+
+	for (int i = 0; i < (int)it->second.length() && i < len_array; i++) {
 		var[i] = it->second[i];
 	}
-	var[sizeof(var) / sizeof(&var) - 1] = 0;
+	var[len_array - 1] = 0;
 
 	return true;
 }
@@ -59,14 +62,19 @@ bool Config::LoadConfig(const char * configFn)
 	KeyValue kv;
 
 	char buff[MAXCH_ONELINE];
+	bool first = true;
 	while (ifs.getline(buff, sizeof(buff)))
 	{
-		if (buff[0] == 0 || buff[0] == '#' || buff[0] == ';') continue;
-		buff[sizeof(buff) - 1] = 0;
+		char* p = buff;
+		if (first) {
+			first = false;
+			if (p[0] == (char)0xEF && p[1] == (char)0xBB && p[2] == (char)0xBF) {
+				p += 3;
+			}
+		}
+		if (p[0] == 0 || p[0] == '#' || p[0] == ';') continue;
 
 		string key, value;
-		
-		char* p = buff;
 		while (*p && (*p == ' ' || *p == '\t')) p++;
 
 		while (*p && *p != '=') key.push_back(*p++);
@@ -83,6 +91,7 @@ bool Config::LoadConfig(const char * configFn)
 	}
 
 	GET_VALUE_MAXFIX(Volume, kv);
+	GET_VALUE_BOOLFIX(OriginalVoice, kv);
 
 	GET_VALUE_MAXFIX(AutoPlay, kv);
 	GET_VALUE(WaitTimePerChar, kv);
@@ -113,6 +122,11 @@ bool Config::SaveConfig(const char * configFn) const
 	OUTPUT_VALUE(Volume, ofs);
 	ofs << '\n';
 
+#ifdef ZA
+	OUTPUT_VALUE(OriginalVoice, ofs);
+	ofs << '\n';
+#endif // ZA
+
 	OUTPUT_VALUE(AutoPlay, ofs);
 	OUTPUT_VALUE(WaitTimePerChar, ofs);
 	OUTPUT_VALUE(WaitTimeDialog, ofs);
@@ -139,6 +153,7 @@ bool Config::SaveConfig(const char * configFn) const
 void Config::load_default(bool all)
 {
 	SET_DEFAULT(Volume);
+	SET_DEFAULT(OriginalVoice);
 
 	SET_DEFAULT(AutoPlay);
 	SET_DEFAULT(WaitTimePerChar);

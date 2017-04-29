@@ -1,56 +1,45 @@
 %include "macro_common"
 
-%ifdef sora_3rd
-%include "macro_3rd"
-%elifdef sora_sc
-%include "macro_sc"
-%else
-%include "macro_fc"
-%endif
+%define tmp _tmp(1)
+%define vs vs_dududu
 
 [BITS 32]
-section dududu vstart=vs_dududu
-	cmp     byte [ptr_flag_code5], 0
-	je      code5end
-	push    ptr_initparam
-	call    dword [ptr_voice_stop]
-	
-code5end:
-	cmp     byte [ptr_flag_scode], SCODE_TEXT
-	je      count
-	cmp     byte [ptr_flag_scode], SCODE_SAY
-	je      count
-	cmp     byte [ptr_flag_scode], SCODE_TALK
-	je      count
-	jmp     disabledududu
-	
-count:
-	cmp     dword [ptr_count_ch], 0
-	je      first
-	
-	mov     eax, dword [ptr_count_ch]
-	inc     eax
-	mov     dword [ptr_count_ch], eax
-	jmp     disabledududu
-	
-first:
-	mov     eax, dword [ptr_now]
-	mov     dword [ptr_time_textbeg], eax
-	mov     dword [ptr_count_ch], 1
+section dududu vstart=vs
+	push    eax
+	push    ebx
+	call    dududu_start
+dududu_start:
+	pop     ebx
+	pop     eax
+	sub     ebx, 7 + vs
+	mov     dword [ebx + tmp], eax
+	pop     eax
 
-disabledududu:
-	cmp     byte [ptr_flag_disable_du], 0
-	je      short return
-	
-	cmp     byte [ptr_mute], 0
-	jne     short return
+dududu:
+	cmp     byte [ebx + order_dududu], 0
+	je      short close_dududu_over
 
-	mov     byte [ptr_mute], 1
-	call    addr_dududu
-	mov     byte [ptr_mute], 0
+%ifdef za
+	mov     dword [esp + 0x0C], 0
+%else
+	mov     eax, dword [ebx + addr_mute]
+	cmp     byte [eax], 0
+	jne     short close_dududu_over
 
-	jmp     addr_call_dududu+5
+	mov     byte [eax], 1
+	call    dword [ebx + to(jcs_dududu)]
+	mov     eax, dword [ebx + addr_mute]
+	mov     byte [eax], 0
+	jmp     dududu_return
+%endif
 
-return:
-	call    addr_dududu
-	jmp     addr_call_dududu+5
+close_dududu_over:
+	call    dword [ebx + to(jcs_dududu)]
+
+dududu_return:
+	push    dword [ebx + next(jcs_dududu)]
+	mov     ebx, dword [ebx + tmp]
+	ret
+
+%undef tmp
+%undef vs

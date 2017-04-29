@@ -1,18 +1,17 @@
 set nasm=nasm\nasm.exe
 set dir_asm=.
 set dir_bin=bin
+set dir_rc=..\src\rc_hk_dinput8
+
+set input=asm_all
 
 md %dir_bin%
 
 setlocal enabledelayedexpansion
 
-for %%i in (fc sc 3rd) do (
-
-for %%j in (%dir_asm%\*.asm) do (
-set p=%%~nj
-%nasm% -i%dir_asm%\ -o %dir_bin%\%%i_!p:asm_=! -Dsora_%%i %%j
-)
-
+for %%i in (sora za) do (
+%nasm% -i%dir_asm%\ -o %dir_bin%\%%i_!input:asm_=! -D%%i %dir_asm%\%input%.asm
+copy /Y %dir_bin%\%%i_!input:asm_=! %dir_rc%\
 )
 
 

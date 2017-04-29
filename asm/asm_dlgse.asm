@@ -1,33 +1,53 @@
 %include "macro_common"
 
-%ifdef sora_3rd
-%include "macro_3rd"
-%elifdef sora_sc
-%include "macro_sc"
-%else
-%include "macro_fc"
-%endif
+%define tmp _tmp(2)
+%define vs vs_dlgse 
 
 [BITS 32]
-section dlgse vstart=vs_dlgse
+section dlgse vstart=vs
+	push    eax
+	push    ebx
+	call    dlgse_start
+dlgse_start:
+	pop     ebx
+	pop     eax
+	sub     ebx, 7 + vs
+	mov     dword [ebx + tmp], eax
+	pop     eax
 
-	push    ptr_initparam
-	call    dword [ptr_voice_stop]
+	cmp     byte [ebx + order_dlgse], 0
+	je      short close_dlgse_over
 
-callend:
-	cmp     byte [ptr_flag_disable_dlgse], 0 
-	je      short return
-	mov     byte [ptr_flag_disable_dlgse], 0
+%ifdef za
+	mov     dword [esp + 0x0C], 0
+%else
+	mov     ecx, dword [ebx + addr_mute]
+	cmp     byte [ecx], 0
+	jne     short close_dlgse_over
 
-	cmp     byte [ptr_mute], 0
-	jne     short return
+	mov     byte [ecx], 1
+	call    dword [ebx + to(jcs_dlgse)]
+	mov     ecx, dword [ebx + addr_mute]
+	mov     byte [ecx], 0
+	jmp     dlgse_call_stop
+%endif
 
-	mov     byte [ptr_mute], 1
-	call    addr_dlgse
-	mov     byte [ptr_mute], 0
+close_dlgse_over:
+	call    dword [ebx + to(jcs_dlgse)]
 
-	jmp     addr_call_dlgse+5
+dlgse_call_stop:
+	push    eax
+	push    ecx
+	push    edx
+	push    ebx + ptr_initparam
+	call    dword [ebx + voice_stop]
+	pop     edx
+	pop     ecx
+	pop     eax
 
-return:
-	call    addr_dlgse
-	jmp     addr_call_dlgse+5
+	push    dword [ebx + next(jcs_dlgse)]
+	mov     ebx, dword [ebx + tmp]
+	ret
+
+%undef tmp
+%undef vs

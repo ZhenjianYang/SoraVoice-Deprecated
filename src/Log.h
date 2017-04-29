@@ -28,7 +28,7 @@
 
 #define LOG_LOGFILE_DFT "log.txt"
 
-#if !LOG_NOLOG
+#ifndef LOG_NOLOG
 
 #define LOG_SETLOGFILE(filename) _log_setlogfile(filename)
 #define LOG_SETPARAM(_param) _log_setparam(_param)

@@ -18,7 +18,10 @@
     <ClCompile Include="..\..\src\main_ed_voice_Test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\HookD3d.cpp">
+    <ClCompile Include="..\..\src\Hook.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ini.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

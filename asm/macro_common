@@ -1,57 +1,81 @@
+%ifndef MACRO_COMMON
+%define MACRO_COMMON
 
-%define ptr_impaddr_table (addr_voice + 0x170)
+%ifndef fill_code
+%define fill_code 0
+%endif
 
-%define ptr_initparam (addr_voice + 0x240)
-%define addr_codebase (addr_voice + 0x300)
+%ifndef za
+%ifdef zero
+%define za
+%elifdef ao
+%define za
+%endif
+%endif
 
-%define ptr_sv					ptr_initparam
+%define base		0
 
-%define ptr_flag_ended			(ptr_initparam + 0x04)
-%define ptr_flag_playing		(ptr_initparam + 0x05)
+%define ptr_initparam	(base + 0)
 
-%define ptr_flag_wait			(ptr_initparam + 0x0C)
-%define ptr_flag_code5			(ptr_initparam + 0x0E)
-%define ptr_flag_scode			(ptr_initparam + 0x0F)
+%define base_addr		(base + 0)
+%define addr_mute		(base_addr + 0x20)
+%define addr_keys		(base_addr + 0x24)
 
-%define ptr_flag_disable_du		(ptr_initparam + 0x10)
-%define ptr_flag_disable_dlgse	(ptr_initparam + 0x11)
-%define ptr_flag_skipvoice		(ptr_initparam + 0x12)
-%define ptr_flag_autoplay		(ptr_initparam + 0x13)
+%define base_exps		(base + 0x30)
+%define voice_init		(base_exps + 0x00)
+%define voice_end		(base_exps + 0x04)
+%define voice_play		(base_exps + 0x08)
+%define voice_stop		(base_exps + 0x0C)
 
+%define next(jc)		(jc)
+%define to(jc)			(jc + 4)
+%define base_jcs		(base + 0x50)
+%define jcs_text		(base_jcs + 0x00)
+%define jcs_dududu		(base_jcs + 0x08)
+%define jcs_dlgse		(base_jcs + 0x10)
+%define jcs_aup			(base_jcs + 0x18)
+%define jcs_scode		(base_jcs + 0x20)
 
-%define ptr_p_keys				(ptr_initparam + 0x4C)
-%define ptr_keys_old			(ptr_initparam + 0x50)
+%define base_scode		(base + 0x88)
+%define scode_TEXT		(base_scode + 0x00)
+%define scode_SAY		(base_scode + 0x01)
+%define scode_TALK		(base_scode + 0x02)
+%define scode_MENU		(base_scode + 0x03)
+%define scode_CLSW		(base_scode + 0x04)
 
-%define ptr_now					(ptr_initparam + 0x5C)
-%define ptr_time_textbeg		(ptr_initparam + 0x60)
-%define ptr_count_ch			(ptr_initparam + 0x64)
+%define base_rcd		(base + 0x90)
+%define ptr_recent		(base_rcd + 0x00)
+%define ptr_now			(base_rcd + 0x04)
+%define ptr_ttb			(base_rcd + 0x08)
+%define ptr_cnt			(base_rcd + 0x0C)
 
-%define ptr_tmp (ptr_initparam + 0x80)
+%define ptr_sv			(base + 0xA0)
 
-%define ptr_voice_init		(ptr_impaddr_table + 0x00)
-%define ptr_voice_end		(ptr_impaddr_table + 0x04)
-%define ptr_voice_play		(ptr_impaddr_table + 0x08)
-%define ptr_voice_stop		(ptr_impaddr_table + 0x0C)
-%define ptr_voice_input		(ptr_impaddr_table + 0x10)
+%define base_status		(base + 0xA4)
+%define status_ended	(base_status + 0x00)
+%define status_playing	(base_status + 0x01)
+%define status_mute		(base_status + 0x02)
+%define status_showing	(base_status + 0x03)
+%define status_wait		(base_status + 0x04)
+%define status_waitv	(base_status + 0x05)
+%define status_scode	(base_status + 0x06)
 
-%define volume_lowest -10000
+%define base_order		(base + 0xB0)
+%define order_dududu	(base_order + 0x00)
+%define order_dlgse		(base_order + 0x01)
+%define order_aup		(base_order + 0x02)
 
-%define dik_space	0x39
-%define dik_5		0x06
-%define dik_equal	0x0D
-%define dik_beg		dik_5
-%define dik_end		dik_equal
+%define base_tmp		(base + 0xE0)
+%define _tmp(i)			(base_tmp + 4 * (i))
 
-%define SCODE_TEXT   0x54
-%define SCODE_SAY    0x5B
-%define SCODE_TALK   0x5C
-%define SCODE_MENU   0x5D
-
-%define dik_press	0x80
-
+%define addr_codebase	(base + 0x100)
 %define vs_text			(addr_codebase + 0x000)
 %define vs_dududu		(addr_codebase + 0x100)
 %define vs_dlgse		(addr_codebase + 0x200)
-%define vs_input		(addr_codebase + 0x300)
+%define vs_aup			(addr_codebase + 0x300)
 %define vs_scode		(addr_codebase + 0x400)
 
+%define dik_space		0x39
+%define dik_press		0x80
+
+%endif

@@ -15,16 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\Mapping.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\ed_voice.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Log.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\config.h">
+    <ClInclude Include="..\..\src\Config.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\mapping.h">
+    <ClInclude Include="..\..\src\Draw.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\SoraVoice.h">
@@ -33,13 +36,25 @@
     <ClInclude Include="..\..\src\InitParam.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\HookD3d.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\message.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\rc\resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hook.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SoundPlayer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Clock.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SoraVoiceImpl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Message.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\EncodeHelper.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,13 +65,25 @@
     <ClCompile Include="..\..\src\Log.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\config.cpp">
+    <ClCompile Include="..\..\src\Config.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\SoraVoice.cpp">
+    <ClCompile Include="..\..\src\Hook.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\HookD3d.cpp">
+    <ClCompile Include="..\..\src\Clock.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SoraVoiceImpl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\InitParam.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\DrawImpl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SoundPlayerImpl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

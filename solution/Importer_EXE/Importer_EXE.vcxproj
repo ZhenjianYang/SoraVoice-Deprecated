@@ -67,6 +67,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\common.cpp" />
+    <ClCompile Include="..\..\src\ini.cpp" />
     <ClCompile Include="..\..\src\main_Importer_EXE.cpp" />
   </ItemGroup>
   <ItemGroup>

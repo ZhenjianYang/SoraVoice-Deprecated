@@ -1,20 +1,22 @@
 set nasm=nasm\nasm.exe
 set dir_asm=..\asm
+set dir_rc=..\src\rc_hk_dinput8
 set dir_main=main
 set dir_bin=bin
 set dir_new=new
+set data=%dir_rc%\SoraData.ini
+set input=asm_all
 
 md %dir_new%
 md %dir_bin%
 
 setlocal enabledelayedexpansion
 
-for %%i in (fc sc 3rd) do (
-
-for %%j in (%dir_asm%\*.asm) do (
-set p=%%~nj
-%nasm% -i%dir_asm%\ -o %dir_bin%\%%i_!p:asm_=! -Dsora_%%i %%j
+for %%i in (sora za) do (
+%nasm% -i%dir_asm%\ -o %dir_bin%\%%i_!input:asm_=! -D%%i %dir_asm%\%input%.asm
 )
 
-Importer_EXE %dir_new%\%%i_voice.exe  %dir_main%\%%i_main.exe -r zrep_%%i.txt -m %dir_asm%\macro_%%i -b %dir_bin%\%%i_*
+
+for %%i in (fc sc 3rd) do (
+Importer_EXE %dir_new%\%%i_voice.exe  %dir_main%\%%i_main.exe %data% %dir_bin%\sora_!input:asm_=! zrep_%%i.txt
 )

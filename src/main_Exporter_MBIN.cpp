@@ -1,9 +1,9 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <memory>
 
-#include "common.h"
+#include "Common.h"
 
 #define ATTR_MBIN ".mbin"
 #define ATTR_OUT ".txt"
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 	ofstream ofs_rp(REP_NAME);
 	for (const auto &fn_mbin : fn_mbins) {
 		const string name = fn_mbin.substr(0, fn_mbin.rfind(ATTR_MBIN));
-		cout << "´¦Àí" << fn_mbin << "..." << endl;
+		cout << "å¤„ç†" << fn_mbin << "..." << endl;
 
 		ifstream ifs(dir_mbin + fn_mbin, ios::binary);
 		ofstream ofs;

@@ -9,6 +9,7 @@
     <ExtBinsDirs>$(ExtlibsHome)bin</ExtBinsDirs>
     <ExtLibs>
     </ExtLibs>
+    <DefDir>$(SrcDir)def\</DefDir>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)..\bin\$(Configuration)\</OutDir>
@@ -42,6 +43,9 @@
     </BuildMacro>
     <BuildMacro Include="ExtLibs">
       <Value>$(ExtLibs)</Value>
+    </BuildMacro>
+    <BuildMacro Include="DefDir">
+      <Value>$(DefDir)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

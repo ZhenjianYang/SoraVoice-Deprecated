@@ -1,34 +1,45 @@
-#pragma once
+ï»¿#pragma once
 
-class Message {
-public:
-	static constexpr char Title[] = "¡¶¿ÕÖ®¹ì¼£¡·ÓïÒô²¹¶¡";
-	static constexpr char Version[] = "°æ±¾ %s";
-	static constexpr char VersionNum[] = "0.4.1";
+namespace Message {
+	constexpr const char Title_Sora[] =  u8"ã€Šç©ºä¹‹è½¨è¿¹ã€‹è¯­éŸ³è¡¥ä¸";
+	constexpr const char Title_ZA[] =  u8"ã€Šé›¶Â·ç¢§ä¹‹è½¨è¿¹ã€‹è¯­éŸ³è¡¥ä¸";
+#ifdef ZA
+	constexpr const char *Title = Title_ZA;
+#else
+	constexpr const char *Title = Title_Sora;
+#endif // ZA
 
-	static constexpr char On[] = "¿ª";
-	static constexpr char Off[] = "¹Ø";
-	static constexpr const char* Switch[] = { Off, On };
-	
-	static constexpr char Volume[] = "ÒôÁ¿£º%d";
-	static constexpr char Mute[] = "¾²Òô";
+	constexpr const char Version[] =  u8"ç‰ˆæœ¬ %s";
+	constexpr const char VersionNum[] =  u8"0.4.1";
 
-	static constexpr char Reset[] = "ÖØÖÃÉèÖÃ";
-	
-	static constexpr char AutoPlay[] = "×Ô¶¯²¥·Å£º%s";
-	static constexpr char AutoPlayVoice[] = "ÓĞÓïÒôÊ±¿ªÆô";
-	static constexpr char AutoPlayAll[] = "Ò»ÂÉ¿ªÆô";
-	static constexpr const char* AutoPlaySwitch[] = { Off, AutoPlayVoice, AutoPlayAll };
+	constexpr const char GameTitle[] =  u8"å½“å‰æ¸¸æˆä¸ºï¼š%s";
 
-	static constexpr char SkipVoice[] = "¶Ô»°¿ò¹Ø±ÕÊ±ÖÕÖ¹ÓïÒô£º%s";
-	static constexpr char DisableDialogSE[] = "½ûÓÃ¶Ô»°¿ò¹Ø±ÕÒôĞ§£º%s";
-	static constexpr char DisableDududu[] = "½ûÓÃÎÄ×ÖÏÔÊ¾ÒôĞ§£º%s";
+	constexpr const char On[] =  u8"å¼€";
+	constexpr const char Off[] =  u8"å…³";
+	constexpr const char* Switch[] = { Off, On };
 	
-	static constexpr char ShowInfo[] = "ĞÅÏ¢ÏÔÊ¾£º%s";
-	static constexpr char ShowInfoAuto[] = "¿ª(ÏÔÊ¾×Ô¶¯²¥·Å·ûºÅ)";
-	static constexpr const char* ShowInfoSwitch[] = {Off, On, ShowInfoAuto};
+	constexpr const char Volume[] =  u8"éŸ³é‡ï¼š%d";
+	constexpr const char Mute[] =  u8"é™éŸ³";
+
+	constexpr const char* OriginalVoiceSwitch[] = { Off, On };
+	constexpr const char OriginalVoice[] = u8"ç¦ç”¨åŸæœ‰å‰§æƒ…è¯­éŸ³ï¼š%s";
+
+	constexpr const char Reset[] =  u8"é‡ç½®è®¾ç½®";
 	
-	static constexpr char AutoPlayMark[] = "AUTO";
+	constexpr const char AutoPlay[] =  u8"è‡ªåŠ¨æ’­æ”¾ï¼š%s";
+	constexpr const char AutoPlayVoice[] =  u8"æœ‰è¯­éŸ³æ—¶å¼€å¯";
+	constexpr const char AutoPlayAll[] =  u8"ä¸€å¾‹å¼€å¯";
+	constexpr const char* AutoPlaySwitch[] = { Off, AutoPlayVoice, AutoPlayAll };
+
+	constexpr const char SkipVoice[] =  u8"å¯¹è¯æ¡†å…³é—­æ—¶ç»ˆæ­¢è¯­éŸ³ï¼š%s";
+	constexpr const char DisableDialogSE[] =  u8"ç¦ç”¨å¯¹è¯æ¡†å…³é—­éŸ³æ•ˆï¼š%s";
+	constexpr const char DisableDududu[] =  u8"ç¦ç”¨æ–‡å­—æ˜¾ç¤ºéŸ³æ•ˆï¼š%s";
+	
+	constexpr const char ShowInfo[] =  u8"ä¿¡æ¯æ˜¾ç¤ºï¼š%s";
+	constexpr const char ShowInfoAuto[] =  u8"å¼€(æ˜¾ç¤ºè‡ªåŠ¨æ’­æ”¾ç¬¦å·)";
+	constexpr const char* ShowInfoSwitch[] = {Off, On, ShowInfoAuto};
+	
+	constexpr const char AutoPlayMark[] =  u8"AUTO";
 };
 
 

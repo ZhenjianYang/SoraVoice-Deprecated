@@ -7,9 +7,9 @@
 #endif // !D3DCALL
 
 #ifdef _SVDLL
-#define SVDECL _declspec(dllexport)
+#define SVDECL
 #else
-#define SVDECL _declspec(dllimport)
+#define SVDECL __declspec(dllimport)
 #endif // _SVDLL
 
 #ifdef __cplusplus
@@ -21,8 +21,6 @@ extern "C" {
 
 	SVDECL void SVCALL Play(void*, void*);
 	SVDECL void SVCALL Stop(void*);
-
-	SVDECL void SVCALL Input(void*);
 #ifdef __cplusplus
 }
 #endif // __cplusplus

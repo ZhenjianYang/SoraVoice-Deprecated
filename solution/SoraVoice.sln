@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Exporter_SNT", "Exporter_SNT\Exporter_SNT.vcxproj", "{110CF2DC-8DFD-4E47-BF88-6B3B0B2D6318}"
 EndProject
@@ -13,10 +13,22 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ed_voice", "ed_voice\ed_voi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ed_voice_Test", "ed_voice_Test\ed_voice_Test.vcxproj", "{91D113FA-DDE9-46EF-8646-ACB606B82898}"
 	ProjectSection(ProjectDependencies) = postProject
+		{D8822198-F4C6-4DC4-AD4C-EA04A8277CCB} = {D8822198-F4C6-4DC4-AD4C-EA04A8277CCB}
 		{34C20CDE-F449-4ECB-9957-46E6E109956E} = {34C20CDE-F449-4ECB-9957-46E6E109956E}
+		{876751F5-E162-4093-B897-9914C9118034} = {876751F5-E162-4093-B897-9914C9118034}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Importer_EXE", "Importer_EXE\Importer_EXE.vcxproj", "{E28E8E29-5BF7-42EE-B73F-173B5D64E16D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ZA_Exporter_PY", "ZA_Exporter_PY\ZA_Exporter_PY.vcxproj", "{151BCC7D-9544-4D01-8AF7-1828735626A5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ZA_Exporter_BIN", "ZA_Exporter_BIN\ZA_Exporter_BIN.vcxproj", "{04A89EF1-566E-4D52-834A-5D61185514F2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ZA_Importer_PY", "ZA_Importer_PY\ZA_Importer_PY.vcxproj", "{D2446DF7-7393-47A9-A4B7-CD3A9560CA14}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hooked_dinput8", "Hooked_dinput8\Hooked_dinput8.vcxproj", "{876751F5-E162-4093-B897-9914C9118034}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "za_voice", "za_voice\za_voice.vcxproj", "{D8822198-F4C6-4DC4-AD4C-EA04A8277CCB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +60,26 @@ Global
 		{E28E8E29-5BF7-42EE-B73F-173B5D64E16D}.Debug|x86.Build.0 = Debug|Win32
 		{E28E8E29-5BF7-42EE-B73F-173B5D64E16D}.Release|x86.ActiveCfg = Release|Win32
 		{E28E8E29-5BF7-42EE-B73F-173B5D64E16D}.Release|x86.Build.0 = Release|Win32
+		{151BCC7D-9544-4D01-8AF7-1828735626A5}.Debug|x86.ActiveCfg = Debug|Win32
+		{151BCC7D-9544-4D01-8AF7-1828735626A5}.Debug|x86.Build.0 = Debug|Win32
+		{151BCC7D-9544-4D01-8AF7-1828735626A5}.Release|x86.ActiveCfg = Release|Win32
+		{151BCC7D-9544-4D01-8AF7-1828735626A5}.Release|x86.Build.0 = Release|Win32
+		{04A89EF1-566E-4D52-834A-5D61185514F2}.Debug|x86.ActiveCfg = Debug|Win32
+		{04A89EF1-566E-4D52-834A-5D61185514F2}.Debug|x86.Build.0 = Debug|Win32
+		{04A89EF1-566E-4D52-834A-5D61185514F2}.Release|x86.ActiveCfg = Release|Win32
+		{04A89EF1-566E-4D52-834A-5D61185514F2}.Release|x86.Build.0 = Release|Win32
+		{D2446DF7-7393-47A9-A4B7-CD3A9560CA14}.Debug|x86.ActiveCfg = Debug|Win32
+		{D2446DF7-7393-47A9-A4B7-CD3A9560CA14}.Debug|x86.Build.0 = Debug|Win32
+		{D2446DF7-7393-47A9-A4B7-CD3A9560CA14}.Release|x86.ActiveCfg = Release|Win32
+		{D2446DF7-7393-47A9-A4B7-CD3A9560CA14}.Release|x86.Build.0 = Release|Win32
+		{876751F5-E162-4093-B897-9914C9118034}.Debug|x86.ActiveCfg = Debug|Win32
+		{876751F5-E162-4093-B897-9914C9118034}.Debug|x86.Build.0 = Debug|Win32
+		{876751F5-E162-4093-B897-9914C9118034}.Release|x86.ActiveCfg = Release|Win32
+		{876751F5-E162-4093-B897-9914C9118034}.Release|x86.Build.0 = Release|Win32
+		{D8822198-F4C6-4DC4-AD4C-EA04A8277CCB}.Debug|x86.ActiveCfg = Debug|Win32
+		{D8822198-F4C6-4DC4-AD4C-EA04A8277CCB}.Debug|x86.Build.0 = Debug|Win32
+		{D8822198-F4C6-4DC4-AD4C-EA04A8277CCB}.Release|x86.ActiveCfg = Release|Win32
+		{D8822198-F4C6-4DC4-AD4C-EA04A8277CCB}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
