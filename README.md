@@ -1,7 +1,7 @@
 SoraVoice
 =========
 
-This projcet is still in progress, its goal is making voice patches for the PC games series *The Legend of Heroes: Sora no Kiseki*
+This projcet is still in progress, its goal is making voice patches for the PC games series *Sora/Zero/Ao no Kiseki*
 
 **NOTE:** This projcet is licensed under the GPLv3. You MUST copy,
 distribute and/or modify any code or binaries from this projcet under
@@ -26,7 +26,7 @@ External libraries used in this project
 SoraVoice
 =========
 
-这是进行中的工程，目标为制作PC游戏《英雄传说：空之轨迹》系列的语音补丁
+这是进行中的工程，目标为制作PC游戏《空·零·碧之轨迹》系列的语音补丁
 
 **注意：** 本项目基于GPLv3开源协议，对本项目的任何代码或二进制文件的复制、修改、分发需遵循此协议。
 具体细节请参见[LICENSE](https://github.com/ZhenjianYang/SoraVoice/blob/master/LICENSE)文件
