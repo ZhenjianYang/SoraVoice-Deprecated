@@ -3,8 +3,8 @@
 #define _CMT_Volume					u8"#音量，范围为0~100，默认为100(最大值)"
 
 #define _CMT_OriginalVoice			u8"#禁用游戏中的原有剧情语音(仅碧之轨迹存在剧情语音)：\n"\
-									";    0    开启\n"\
-									";    1    关闭\n"\
+									";    0    关闭\n"\
+									";    1    开启\n"\
 									"#默认为1";
 
 #define _CMT_AutoPlay				u8"#自动播放。模式罗列如下：\n"\

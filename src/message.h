@@ -10,7 +10,7 @@ namespace Message {
 #endif // ZA
 
 	constexpr const char Version[] =  u8"版本 %s";
-	constexpr const char VersionNum[] =  u8"0.4.1";
+	constexpr const char VersionNum[] =  u8"0.5.0";
 
 	constexpr const char GameTitle[] =  u8"当前游戏为：%s";
 
