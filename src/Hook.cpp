@@ -41,7 +41,7 @@ HRESULT WINAPI Hooked_GetDeviceState(DID * This, DWORD cbData, LPVOID lpvData)
 	auto rst = pGetDeviceState(This, cbData, lpvData);
 
 	if (ip && cbData == 0x100) {
-		ip->addrs.p_keys = (const char*)lpvData;
+		ip->addrs.p_keys = (decltype(ip->addrs.p_keys))lpvData;
 			
 		if (ip->sv) {
 			((SoraVoice*)ip->sv)->Input();

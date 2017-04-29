@@ -1,6 +1,7 @@
 
 #include "SoraVoice.h"
 
+#include "Type.h"
 #include "InitParam.h"
 #include "Config.h"
 #include "Draw.h"
@@ -27,28 +28,28 @@ private:
 	Config _config;
 	
 	struct Keys {
-		const char* const &keys;
+		const u8* const &keys;
 		DID* const pDID;
-		char last[KEYS_NUM];
-		Keys(const char* &keys, void* pDID)
+		u8 last[KEYS_NUM];
+		Keys(const u8* &keys, void* pDID)
 			:keys(keys), pDID((decltype(this->pDID))pDID) {
 		}
 	} _keys;
 
 	struct AutoPlay {
-		const unsigned &now;
+		const u32 &now;
 
-		unsigned &count_ch;
-		char &wait;
-		unsigned &time_textbeg;
-		unsigned time_autoplay = 0;
+		u32 &count_ch;
+		u8 &wait;
+		u32 &time_textbeg;
+		u32 time_autoplay = 0;
 		
-		char &waitv;
-		unsigned time_autoplayv = 0;
+		u8 &waitv;
+		u32 time_autoplayv = 0;
 		
-		AutoPlay(unsigned& now, unsigned &count_ch, 
-			char &wait, unsigned &time_textbeg,
-			char &waitv)
+		AutoPlay(u32& now, u32 &count_ch,
+			u8 &wait, u32 &time_textbeg,
+			u8 &waitv)
 		:now(now), 
 		count_ch(count_ch), wait(wait), time_textbeg(time_textbeg),
 		waitv(waitv) {
@@ -57,7 +58,7 @@ private:
 
 private:
 	const char* const Comment;
-	char& ended;
+	u8& ended;
 
 	InitParam::Status* const status;
 	InitParam::Order* const order;

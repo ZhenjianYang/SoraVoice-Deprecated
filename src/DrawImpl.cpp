@@ -65,7 +65,7 @@ class DrawImpl : private Draw
 		showing = infos.size() > 0;
 	}
 
-	DrawImpl(char& showing, void* hWnd, void* pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName)
+	DrawImpl(u8& showing, void* hWnd, void* pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName)
 		:Draw(showing),
 		hWnd((HWND)hWnd), pD3DD((decltype(this->pD3DD))pD3DD), pD3DXCreateFontIndirect((CallCreateFont)p_D3DXCreateFontIndirect)
 	{
@@ -201,7 +201,7 @@ class DrawImpl : private Draw
 	PtrInfoList infos;
 };
 
-Draw * Draw::CreateDraw(char& showing, void * hWnd, void * pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName)
+Draw * Draw::CreateDraw(u8& showing, void * hWnd, void * pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName)
 {
 	DrawImpl* draw = new DrawImpl(showing, hWnd, pD3DD, p_D3DXCreateFontIndirect, fontName);
 	return draw;

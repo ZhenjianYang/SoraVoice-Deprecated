@@ -95,6 +95,8 @@ constexpr unsigned rvalist[] = {
 constexpr int num_name = sizeof(name_list) / sizeof(*name_list);
 constexpr int addr_code = 0x100;
 
+using byte = unsigned char;
+
 constexpr byte opjmp = 0xE9;
 constexpr byte opcall = 0xE8;
 constexpr byte opnop = 0x90;

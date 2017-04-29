@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Type.h"
+
 class Draw {
 public:
 	enum class InfoType
@@ -23,7 +25,7 @@ public:
 
 	static constexpr unsigned ShowTimeInfinity = 0;
 
-	static Draw * CreateDraw(char& showing, void * hWnd, void * pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName);
+	static Draw * CreateDraw(u8& showing, void * hWnd, void * pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName);
 	static void DestoryDraw(Draw * draw);
 
 	virtual void DrawInfos() = 0;
@@ -32,11 +34,11 @@ public:
 
 	virtual void RemoveInfo(InfoType type) = 0;
 
-	const char& Showing() const { return showing; }
+	const u8& Showing() const { return showing; }
 
 protected:
-	Draw(char& showing) : showing(showing) { }
-	char &showing;
+	Draw(u8& showing) : showing(showing) { }
+	u8 &showing;
 	virtual ~Draw() { };
 };
 

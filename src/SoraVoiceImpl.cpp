@@ -253,8 +253,8 @@ void SoraVoiceImpl::Input()
 {
 	if (!config->EnableKeys || !this->keys->keys) return;
 
-	const char* keys = this->keys->keys;
-	char* last = this->keys->last;
+	auto keys = this->keys->keys;
+	auto last = this->keys->last;
 
 	bool needsave = false;
 	bool needsetvolume = false;

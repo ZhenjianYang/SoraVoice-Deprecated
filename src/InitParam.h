@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Type.h"
+
 #pragma pack(push, 1)
 struct InitParam
 {
@@ -26,7 +28,7 @@ struct InitParam
 		//0x20
 		void*  p_mute;
 		//0x24
-		const char* p_keys;
+		const u8* p_keys;
 		//0x28
 		void** p_D3DXCreateFontIndirect;
 		//0x2C
@@ -34,27 +36,27 @@ struct InitParam
 	} addrs;
 
 	//0x30
-	unsigned exps[8];
+	u32 exps[8];
 
 	//0x50
 	struct {
-		unsigned next;
-		unsigned to;
+		u32 next;
+		u32 to;
 	} jcs[7];
 
 	//0x88
-	char scodes[8];
+	u8 scodes[8];
 
 	//0x90
 	struct {
 		//0x90
-		unsigned recent;
+		u32 recent;
 		//0x94
-		unsigned now;
+		u32 now;
 		//0x98
-		unsigned time_textbeg;
+		u32 time_textbeg;
 		//0x9C
-		unsigned count_ch;
+		u32 count_ch;
 	} rcd;
 	
 	//0xA0
@@ -63,28 +65,28 @@ struct InitParam
 	//0xA4
 	struct Status {
 	//0xA4
-		char ended;
-		char playing;
-		char mute;
-		char showing;
+		u8 ended;
+		u8 playing;
+		u8 mute;
+		u8 showing;
 
 	//0xA8
-		char wait;
-		char waitv;
-		char scode;
+		u8 wait;
+		u8 waitv;
+		u8 scode;
 
 	//0xAB
-		char reservedb[5];
+		u8 reservedb[5];
 	} status;
 
 	//0xB0
 	struct Order {
-		char disableDududu;
-		char disableDialogSE;
-		char autoPlay;
+		u8 disableDududu;
+		u8 disableDialogSE;
+		u8 autoPlay;
 
 	//0xB3
-		char reservedb[5];
+		u8 reservedb[5];
 	} order;
 
 	//0xB8
