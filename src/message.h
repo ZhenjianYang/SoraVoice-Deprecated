@@ -21,6 +21,9 @@ namespace Message {
 	constexpr const char Volume[] =  u8"音量：%d";
 	constexpr const char Mute[] =  u8"静音";
 
+	constexpr const char* OriginalVoiceSwitch[] = { Off, On };
+	constexpr const char OriginalVoice[] = u8"禁用原有剧情语音：%s";
+
 	constexpr const char Reset[] =  u8"重置设置";
 	
 	constexpr const char AutoPlay[] =  u8"自动播放：%s";

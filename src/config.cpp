@@ -91,6 +91,7 @@ bool Config::LoadConfig(const char * configFn)
 	}
 
 	GET_VALUE_MAXFIX(Volume, kv);
+	GET_VALUE_BOOLFIX(OriginalVoice, kv);
 
 	GET_VALUE_MAXFIX(AutoPlay, kv);
 	GET_VALUE(WaitTimePerChar, kv);
@@ -121,6 +122,11 @@ bool Config::SaveConfig(const char * configFn) const
 	OUTPUT_VALUE(Volume, ofs);
 	ofs << '\n';
 
+#ifdef ZA
+	OUTPUT_VALUE(OriginalVoice, ofs);
+	ofs << '\n';
+#endif // ZA
+
 	OUTPUT_VALUE(AutoPlay, ofs);
 	OUTPUT_VALUE(WaitTimePerChar, ofs);
 	OUTPUT_VALUE(WaitTimeDialog, ofs);
@@ -147,6 +153,7 @@ bool Config::SaveConfig(const char * configFn) const
 void Config::load_default(bool all)
 {
 	SET_DEFAULT(Volume);
+	SET_DEFAULT(OriginalVoice);
 
 	SET_DEFAULT(AutoPlay);
 	SET_DEFAULT(WaitTimePerChar);

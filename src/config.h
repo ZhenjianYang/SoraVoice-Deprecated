@@ -2,6 +2,11 @@
 
 #define _CMT_Volume					u8"#音量，范围为0~100，默认为100(最大值)"
 
+#define _CMT_OriginalVoice			u8"#禁用游戏中的原有剧情语音(仅碧之轨迹存在剧情语音)：\n"\
+									";    0    开启\n"\
+									";    1    关闭\n"\
+									"#默认为1";
+
 #define _CMT_AutoPlay				u8"#自动播放。模式罗列如下：\n"\
 									";    0    关闭\n"\
 									";    1    仅在有语音时启用自动播放\n"\
@@ -28,6 +33,7 @@
 #define _CMT_FontColor	u8"#信息字体颜色。格式为0xAARRGGBB。默认为0xFFFFFFFF(白色)"
 
 #define _CMT_EnableKeys	u8"#启用按键控制，按键配置如下：\n"\
+						";   退格  切换OriginalVoice的值\n"\
 						";    +    Volume加1(若同时按住SHIFT则加5)\n"\
 						";    -    Volume减1(若同时按住SHIFT则减5)\n"\
 						";    0    静音/取消静音(若在静音状态调整了Volume，静音状态会被取消)\n"\
@@ -72,6 +78,7 @@ struct Config
 	static constexpr int AutoPlay_ALL = 2;
 
 	DEFINE_CONFIG_WMAX(Volume, 100, 100);
+	DEFINE_CONFIG(OriginalVoice, 1);
 
 	DEFINE_CONFIG_WMAX(AutoPlay, AutoPlay_ALL, 2);
 	DEFINE_CONFIG(WaitTimePerChar, 60);

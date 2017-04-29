@@ -12,7 +12,7 @@
 #define DID IDirectInputDevice
 #endif // !DID
 
-constexpr int KEYS_NUM = 8;
+constexpr int KEYS_NUM = 16;
 
 class SoraVoiceImpl : private SoraVoice
 {

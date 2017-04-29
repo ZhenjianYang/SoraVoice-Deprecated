@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 		ifs_excp.close();
 	}
 
-	map<string, string> map_vid;
+	unordered_map<string, string> map_vid;
 #define BUFF_LEN 7
 	constexpr int buff_len = BUFF_LEN;
 	static_assert(buff_len >= MAX_VOICEID_LEN_NEED_MAPPING + 1, "buff_len not enougt");
@@ -154,6 +154,7 @@ int main(int argc, char* argv[])
 		string name = fn_snt.substr(0, fn_snt.rfind(ATTR_SNT));
 		for_each(name.begin(), name.end(), [](char& c) { c = toupper(c); });
 		ofs_rp << "处理" << fn_snt << "..." << endl;
+		cout << "处理" << fn_snt << "..." << endl;
 
 		bool enbaleMapping = enbaleMappingGlobal && exception_list.find(name) == exception_list.end()
 			|| !enbaleMappingGlobal && exception_list.find(name) != exception_list.end();
@@ -180,10 +181,10 @@ int main(int argc, char* argv[])
 					}
 
 					if (it_mapping != map_vid.cend()) {
-						ofs << STR_4TBL << '#' << it_mapping->second << 'V' << buff + 4 << '\n';
+						ofs << STR_4TBL << '#' << it_mapping->second << 'v' << buff + 4 << '\n';
 					}
 					else {
-						ofs << STR_4TBL << '#' << it_mlv->second << 'V' << buff + 4 << '\n';
+						ofs << STR_4TBL << '#' << it_mlv->second << 'v' << buff + 4 << '\n';
 					}
 
 				}

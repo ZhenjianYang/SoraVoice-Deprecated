@@ -9,6 +9,7 @@ public:
 		AutoPlayMark,
 
 		Volume,
+		OriginalVoice,
 		AutoPlay,
 		SkipVoice,
 		DisableDialogSE,

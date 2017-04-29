@@ -83,7 +83,8 @@ static auto GetMapVid(const string& py_out, const string& bin_out, bool lineNoMo
 				pos++;
 				while (buff_bin[pos] >= '0' && buff_bin[pos] <= '9') pos++;
 				if (buff_bin[pos] == 'V' && pos - start > 1) {
-					vid.assign(buff_bin + start, pos - start + 1);
+					vid.assign(buff_bin + start, pos - start);
+					vid.push_back('v');
 					break;
 				}
 			}

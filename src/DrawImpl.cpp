@@ -143,6 +143,7 @@ class DrawImpl : private Draw
 			DT_BOTTOM | DT_LEFT,//AutoPlayMark,
 	#endif
 			DT_TOP | DT_LEFT   ,//Volume,
+			DT_TOP | DT_LEFT   ,//OriginalVoice,
 			DT_TOP | DT_LEFT   ,//AutoPlay,
 			DT_TOP | DT_LEFT   ,//SkipVoice,
 			DT_TOP | DT_LEFT   ,//DisableDialogSE,

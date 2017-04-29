@@ -19,6 +19,8 @@
 #define MAX_VOICEID_LEN_NEED_MAPPING 5
 #endif // !MAX_VOICEID_LEN_NEED_MAPPING
 
+constexpr int ORIVOICEID_LEN = 4;
+
 #ifdef ZA
 constexpr char CONFIG_FILE[] = "za_voice.ini";
 constexpr char VOICEFILE_PREFIX[] = "voice\\ogg\\v";
@@ -32,7 +34,7 @@ constexpr int VOLUME_STEP = 1;
 constexpr int VOLUME_STEP_BIG = 5;
 
 constexpr int KEY_MIN = DIK_5;
-constexpr int KEY_MAX = DIK_EQUALS;
+constexpr int KEY_MAX = DIK_BACKSPACE;
 static_assert(KEY_MAX - KEY_MIN + 1 <= KEYS_NUM, "KEYS_NUM not enougt");
 
 constexpr int KEY_VOLUME_UP = DIK_EQUALS;
@@ -41,6 +43,7 @@ constexpr int KEY_VOLUME_0 = DIK_0;
 constexpr int KEY_VOLUME_BIGSTEP1 = DIK_LSHIFT;
 constexpr int KEY_VOLUME_BIGSTEP2 = DIK_RSHIFT;
 
+constexpr int KEY_ORIVOICE = DIK_BACKSPACE;
 constexpr int KEY_AUTOPLAY = DIK_9;
 constexpr int KEY_SKIPVOICE = DIK_8;
 constexpr int KEY_DLGSE = DIK_7;
@@ -98,6 +101,7 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 {
 	LOG("Config loaded");
 	LOG("config.Volume = %d", config->Volume);
+	LOG("config.OriginalVoice = %d", config->OriginalVoice);
 	LOG("config.AutoPlay = %d", config->AutoPlay);
 	LOG("config.WaitTimePerChar = %d", config->WaitTimePerChar);
 	LOG("config.WaitTimeDialog = %d", config->WaitTimeDialog);
@@ -156,7 +160,7 @@ void SoraVoiceImpl::Play(const char* t)
 
 		t++;
 	}
-	if (*t != 'V' || str_vid.empty()) return;
+	if (*t != 'v' || str_vid.empty()) return;
 
 	LOG("iptut Voice ID is \"%s\"", str_vid.c_str());
 	LOG("The max length of voice id need mapping is %d", MAX_VOICEID_LEN_NEED_MAPPING);
@@ -185,6 +189,22 @@ void SoraVoiceImpl::Play(const char* t)
 
 	std::string oggFileName = VOICEFILE_PREFIX + str_vid + VOICEFILE_ATTR;
 	LOG("Ogg filename: %s", oggFileName.c_str());
+
+#ifdef ZA
+	if (config->OriginalVoice) {
+		++t;
+		while (*t == '#') {
+			t++;
+			const char* p = t;
+			while (*p >= '0' && *p <= '9') p++;
+			if (*p == 'V' && p - t == ORIVOICEID_LEN) {
+				*(unsigned*)t = 0x39393939;
+			}
+			t = p + 1;
+		}
+	}
+#endif // ZA
+
 
 	LOG("Now playing new file...");
 	{
@@ -256,6 +276,9 @@ void SoraVoiceImpl::Input()
 			if (config->ShowInfo) {
 				//inf->addText(InfoType::ConfigReset, INFO_TIME, Message::Reset);
 				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
+#ifdef ZA
+				draw->AddInfo(InfoType::OriginalVoice, INFO_TIME, config->FontColor, Message::OriginalVoice, Message::OriginalVoiceSwitch[config->OriginalVoice]);
+#endif // ZA
 				draw->AddInfo(InfoType::AutoPlay, INFO_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
 				draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 				draw->AddInfo(InfoType::DisableDialogSE, INFO_TIME, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
@@ -309,15 +332,31 @@ void SoraVoiceImpl::Input()
 			status->mute = 1 - status->mute;
 			needsetvolume = true;
 
-			if (config->ShowInfo && status->mute) {
-				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Mute);
-			}
-			else {
-				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
+			if (config->ShowInfo) {
+				if (status->mute) {
+					draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Mute);
+				}
+				else {
+					draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
+				}
 			}
 
 			LOG("Set mute : %d", status->mute);
 		}//if(KEY_VOLUME_0)
+
+#ifdef ZA
+		if (keys[KEY_ORIVOICE] && !last[KEY_ORIVOICE - KEY_MIN]) {
+			config->OriginalVoice = 1 - config->OriginalVoice;
+			needsave = true;
+
+			if (config->ShowInfo) {
+				draw->AddInfo(InfoType::OriginalVoice, INFO_TIME, config->FontColor, Message::OriginalVoice,
+					Message::OriginalVoiceSwitch[config->OriginalVoice]);
+			}
+
+			LOG("Set OriginalVoice : %d", config->OriginalVoice);
+		}//if(KEY_ORIVOICE)
+#endif // ZA
 
 		if (keys[KEY_AUTOPLAY] && !last[KEY_AUTOPLAY - KEY_MIN]) {
 			(config->AutoPlay += 1) %= (Config::MAX_AutoPlay + 1);

@@ -38,7 +38,7 @@ loop:
 	jbe     short loop
 
 loopend:
-	cmp     byte [eadx], 'V'
+	cmp     byte [eadx], 'v'
 	pop     eadx
 	jnz     short text_return
 
