@@ -21,10 +21,10 @@
 
 #ifdef ZA
 constexpr char CONFIG_FILE[] = "za_voice.ini";
-constexpr char VOICEFILE_PREFIX[] = "voice\\v";
+constexpr char VOICEFILE_PREFIX[] = "voice\\ogg\\v";
 #else
 constexpr char CONFIG_FILE[] = "ed_voice.ini";
-constexpr char VOICEFILE_PREFIX[] = "voice\\ch";
+constexpr char VOICEFILE_PREFIX[] = "voice\\ogg\\ch";
 #endif
 constexpr char VOICEFILE_ATTR[] = ".ogg";
 

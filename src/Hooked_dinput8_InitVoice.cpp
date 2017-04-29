@@ -17,8 +17,14 @@ using namespace std;
 
 #define SoraData "SORADATA"
 
+#ifdef LOG_NOLOG
+#define LOG(...)
+#else
 FILE* _flog;
 #define LOG(...) _flog = fopen("ilog.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
+#endif // LOG_NOLOG
+
+
 
 //constexpr char STR_vorbisfile_dll[] = "vorbisfile.dll";
 //constexpr char STR_libvorbisfile_dll[] = "libvorbisfile.dll";
