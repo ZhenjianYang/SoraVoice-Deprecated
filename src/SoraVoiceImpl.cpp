@@ -451,10 +451,16 @@ void SoraVoiceImpl::Show()
 			if (config->ShowInfo == Config::ShowInfo_WithMark) {
 				draw->RemoveInfo(InfoType::AutoPlayMark);
 			}
+
+			order->disableDududu = 0;
 		}
 		else if (aup->wait && !aup->time_autoplay) {
 			aup->time_autoplay = aup->time_textbeg
 				+ (aup->count_ch - 1) * config->WaitTimePerChar + config->WaitTimeDialog - TIME_PREC / 2;
+#ifdef ZA
+			aup->time_autoplay += (aup->count_ch - 1) * config->WaitTimePerChar;
+#endif
+			order->disableDududu = 0;
 		}
 
 		if ((aup->waitv && aup->time_autoplayv <= aup->now)

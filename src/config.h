@@ -12,7 +12,7 @@
 #define _CMT_WaitTimePerChar		u8"#无语音时，为每个字分配的等待时间。默认为60(单位毫秒，下同)";
 #define _CMT_WaitTimeDialog			u8"#无语音时，为对话框分配的额外等待时间。默认为800。\n"\
 									"#则在默认配置下，一个20字的对话框的等待时间为800+20x60=2000毫秒";
-#define _CMT_WaitTimeDialogVoice	u8"#有语音时，语音播放结束后额外的等待时间。默认为100"
+#define _CMT_WaitTimeDialogVoice	u8"#有语音时，语音播放结束后额外的等待时间。默认为500"
 
 #define _CMT_SkipVoice			u8"#对话框关闭时，终止语音。默认为1(启用此项功能)\n"\
 								"###注意：当关闭此选项时，会强制关闭选项AutoPlay。###";
@@ -76,7 +76,7 @@ struct Config
 	DEFINE_CONFIG_WMAX(AutoPlay, AutoPlay_ALL, 2);
 	DEFINE_CONFIG(WaitTimePerChar, 60);
 	DEFINE_CONFIG(WaitTimeDialog, 800);
-	DEFINE_CONFIG(WaitTimeDialogVoice, 100);
+	DEFINE_CONFIG(WaitTimeDialogVoice, 500);
 
 	DEFINE_CONFIG(SkipVoice, 1);
 	DEFINE_CONFIG(DisableDialogSE, 1);

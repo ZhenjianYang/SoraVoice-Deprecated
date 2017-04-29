@@ -29,7 +29,7 @@ static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
 
 constexpr int MAX_TEXT_LEN = 63;
 
-constexpr int MIN_FONT_SIZE = 25;
+constexpr int MIN_FONT_SIZE = 20;
 constexpr int TEXT_NUM_SCRH = 25;
 
 constexpr double VBOUND_RATE = 0.3;
