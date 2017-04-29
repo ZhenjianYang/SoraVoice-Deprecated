@@ -17,8 +17,8 @@ using KeyValue = map<string, string>;
 				if(name > MAX_##name) name = MAX_##name;}
 #define GET_VALUE_BOOLFIX(name, kv) {_getValue(name, kv, STR_##name); if(name) name = 1;}
 
-#define OUTPUT_VALUE(name, ofs) ofs << CMT_##name << '\n' << STR_##name << " = " << name << '\n' << '\n'
-#define OUTPUT_VALUE_WFMT(name, ofs, format) ofs << CMT_##name << '\n' << STR_##name << " = " << format << name << '\n' << '\n'
+#define OUTPUT_VALUE(name, ofs) ofs << STR_##name << " = " << name << '\n' << CMT_##name << '\n' << '\n'
+#define OUTPUT_VALUE_WFMT(name, ofs, format) ofs<< STR_##name << " = " << format << name << '\n'  << CMT_##name << '\n' << '\n'
 
 #define SET_DEFAULT(name) name = DFT_##name
 #define SET_DEFAULT_STR(name) strcpy(name, DFT_##name)
@@ -119,6 +119,7 @@ bool Config::SaveConfig(const char * configFn) const
 	ofstream ofs(configFn);
 	if (!ofs) return false;
 	
+	ofs << '\n';
 	OUTPUT_VALUE(Volume, ofs);
 	ofs << '\n';
 
