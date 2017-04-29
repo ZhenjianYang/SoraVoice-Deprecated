@@ -18,7 +18,7 @@
     <ClCompile Include="..\..\src\main_ZA_Exporter_BIN.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common.cpp">
+    <ClCompile Include="..\..\src\Common.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

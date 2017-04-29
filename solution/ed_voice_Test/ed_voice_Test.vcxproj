@@ -71,7 +71,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hook.cpp" />
-    <ClCompile Include="..\..\src\ini.cpp" />
+    <ClCompile Include="..\..\src\INI.cpp" />
     <ClCompile Include="..\..\src\main_ed_voice_Test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

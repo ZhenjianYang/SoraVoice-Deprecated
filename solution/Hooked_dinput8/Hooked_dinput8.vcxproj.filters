@@ -18,7 +18,7 @@
     <ClInclude Include="..\..\src\Hooked_dinput8.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ini.h">
+    <ClInclude Include="..\..\src\INI.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\rc_hk_dinput8\resource.h">
@@ -32,7 +32,7 @@
     <ClCompile Include="..\..\src\Hooked_dinput8.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ini.cpp">
+    <ClCompile Include="..\..\src\INI.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Hooked_dinput8_InitVoice.cpp">

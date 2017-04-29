@@ -65,11 +65,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\common.cpp" />
+    <ClCompile Include="..\..\src\Common.cpp" />
     <ClCompile Include="..\..\src\main_Exporter_MBIN.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\common.h" />
+    <ClInclude Include="..\..\src\Common.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

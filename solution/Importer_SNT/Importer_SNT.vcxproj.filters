@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\common.h">
+    <ClInclude Include="..\..\src\Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -23,7 +23,7 @@
     <ClCompile Include="..\..\src\main_Importer_SNT.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common.cpp">
+    <ClCompile Include="..\..\src\Common.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -83,13 +83,13 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\Hooked_dinput8.h" />
     <ClInclude Include="..\..\src\Hooked_dinput8_InitVoice.h" />
-    <ClInclude Include="..\..\src\ini.h" />
+    <ClInclude Include="..\..\src\INI.h" />
     <ClInclude Include="..\..\src\rc_hk_dinput8\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hooked_dinput8.cpp" />
     <ClCompile Include="..\..\src\Hooked_dinput8_InitVoice.cpp" />
-    <ClCompile Include="..\..\src\ini.cpp" />
+    <ClCompile Include="..\..\src\INI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\rc_hk_dinput8\Hooked_dinput8.rc" />
