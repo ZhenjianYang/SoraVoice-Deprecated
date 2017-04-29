@@ -75,6 +75,10 @@ void SoraVoiceImpl::stopCallBack(PlayID playID, StopType stopType)
 			aup->waitv = 1;
 			aup->time_autoplayv = aup->now + config->WaitTimeDialogVoice - TIME_PREC / 2;
 		}
+		else {
+			order->disableDududu = 0;
+			order->disableDialogSE = 0;
+		}
 		status->playing = 0;
 	} //if (playID == this->playID)
 }
@@ -457,9 +461,7 @@ void SoraVoiceImpl::Show()
 		else if (aup->wait && !aup->time_autoplay) {
 			aup->time_autoplay = aup->time_textbeg
 				+ (aup->count_ch - 1) * config->WaitTimePerChar + config->WaitTimeDialog - TIME_PREC / 2;
-#ifdef ZA
-			aup->time_autoplay += (aup->count_ch - 1) * config->WaitTimePerChar;
-#endif
+
 			order->disableDududu = 0;
 		}
 

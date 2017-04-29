@@ -15,26 +15,6 @@ dududu_start:
 	mov     dword [ebx + tmp], eax
 	pop     eax
 
-checkcode:
-	mov     al, byte [ebx + status_scode]
-	cmp     al, byte [ebx + scode_TEXT]
-	je      count
-	cmp     al, byte [ebx + scode_SAY]
-	je      count
-	cmp     al, byte [ebx + scode_TALK]
-	je      count
-	jmp     dududu
-count:
-	cmp     dword [ebx + ptr_cnt], 0
-	jne     notfirst
-	mov     eax, dword [ebx + ptr_now]
-	mov     dword [ebx + ptr_ttb], eax
-
-notfirst:
-	mov     eax, dword [ebx + ptr_cnt]
-	inc     eax
-	mov     dword [ebx + ptr_cnt], eax
-
 dududu:
 	cmp     byte [ebx + order_dududu], 0
 	je      short close_dududu_over

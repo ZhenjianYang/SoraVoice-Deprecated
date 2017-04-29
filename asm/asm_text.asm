@@ -27,7 +27,7 @@ text_start:
 	jb      jcode
 
 	cmp     byte [eadx], '#'
-	jnz     short text_return
+	jnz     short checkcode
 
 	push    eadx
 loop:
@@ -50,6 +50,37 @@ loopend:
 	call    dword [ebx + voice_play]
 	pop     edx
 	pop     ecx
+	pop     eax
+	jmp     short text_return
+
+checkcode:
+	push    eax
+	mov     al, byte [ebx + status_scode]
+	cmp     al, byte [ebx + scode_TEXT]
+	je      checkwait
+	cmp     al, byte [ebx + scode_SAY]
+	je      checkwait
+	cmp     al, byte [ebx + scode_TALK]
+	je      checkwait
+
+	pop     eax
+	jmp     text_return
+
+checkwait:
+	cmp     byte [ebx + status_wait], 0
+	je      count
+	mov     byte [ebx + status_wait], 0
+	mov     dword [ebx + ptr_cnt], 0
+count:
+	cmp     dword [ebx + ptr_cnt], 0
+	jne     notfirst
+	mov     eax, dword [ebx + ptr_now]
+	mov     dword [ebx + ptr_ttb], eax
+
+notfirst:
+	mov     eax, dword [ebx + ptr_cnt]
+	inc     eax
+	mov     dword [ebx + ptr_cnt], eax
 	pop     eax
 
 text_return:
