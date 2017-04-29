@@ -21,8 +21,11 @@ namespace Message {
 	constexpr const char Volume[] =  u8"音量：%d";
 	constexpr const char Mute[] =  u8"静音";
 
-	constexpr const char* OriginalVoiceSwitch[] = { Off, On };
-	constexpr const char OriginalVoice[] = u8"禁用原有剧情语音：%s";
+	constexpr const char OriEvoVoiceBoth[] = u8"与进化版语音同时播放";
+	constexpr const char EvoVoicOnly[] = u8"仅播放进化版语音(禁用原有语音)";
+	constexpr const char OriVoiceOnly[] = u8"仅播放原有语音";
+	constexpr const char* OriginalVoiceSwitch[] = { OriEvoVoiceBoth, EvoVoicOnly, OriVoiceOnly };
+	constexpr const char OriginalVoice[] = u8"存在原有剧情语音时：%s";
 
 	constexpr const char Reset[] =  u8"重置设置";
 	

@@ -95,7 +95,10 @@
     <ClInclude Include="..\..\src\Log.h" />
     <ClInclude Include="..\..\src\rc\resource.h" />
     <ClInclude Include="..\..\src\SoraVoiceImpl.h" />
+    <ClInclude Include="..\..\src\SoundFile.h" />
     <ClInclude Include="..\..\src\SoundPlayer.h" />
+    <ClInclude Include="..\..\src\SoundPlayerImpl.h" />
+    <ClInclude Include="..\..\src\Type.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Clock.cpp" />

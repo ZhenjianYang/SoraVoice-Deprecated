@@ -91,7 +91,7 @@ bool Config::LoadConfig(const char * configFn)
 	}
 
 	GET_VALUE_MAXFIX(Volume, kv);
-	GET_VALUE_BOOLFIX(OriginalVoice, kv);
+	GET_VALUE_MAXFIX(OriginalVoice, kv);
 
 	GET_VALUE_MAXFIX(AutoPlay, kv);
 	GET_VALUE(WaitTimePerChar, kv);

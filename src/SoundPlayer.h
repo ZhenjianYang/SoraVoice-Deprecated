@@ -6,6 +6,10 @@ class SoundPlayer
 {
 public:
 	static constexpr int MaxVolume = 100;
+	enum class FileType {
+		Ogg,
+		Wav
+	};
 	enum class Status
 	{
 		Playing,
@@ -33,7 +37,7 @@ public:
 		StopCallBack stopCallBack = nullptr);
 	static void DestorySoundPlayer(SoundPlayer* player);
 
-	virtual PlayID Play(const char* fileName, int volume) = 0;
+	virtual PlayID Play(const char* fileName, FileType type, int volume) = 0;
 
 	virtual void Stop() = 0;
 

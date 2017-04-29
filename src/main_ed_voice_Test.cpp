@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 	InitParam p;
 	memset(&p, 0, sizeof(p));
 
-	bool ao = false;
+	bool ao = true;
 
 	constexpr char STR_DLL_ZA[] = "za_voice.dll";
 	constexpr char STR_DLL[] = "ed_voice.dll";
@@ -70,13 +70,18 @@ int main(int argc, char* argv[])
 	constexpr char STR_Play[] = "Play";
 	constexpr char STR_Stop[] = "Stop";
 
-	//HMODULE dll1 = LoadLibraryA("D:\\ZJ.Yang\\Documents\\GitHub\\SoraVoice\\bin\\Debug\\dll\\ogg.dll");
-	//HMODULE dll2 = LoadLibraryA("D:\\ZJ.Yang\\Documents\\GitHub\\SoraVoice\\bin\\Debug\\dll\\vorbis.dll");
-	//HMODULE dll3 = LoadLibraryA("D:\\ZJ.Yang\\Documents\\GitHub\\SoraVoice\\bin\\Debug\\dll\\vorbisfile.dll");
-	//if (!dll3) {
-	//	auto e = GetLastError();
-	//	cout << e << endl;
-	//}
+
+	HMODULE dll3 = LoadLibraryA("libvorbisfile.dll");
+	decltype(ov_open_callbacks) *vf_ov_open_callbacks;
+	decltype(ov_info) *vf_ov_info;
+	decltype(ov_read) *vf_ov_read;
+	decltype(ov_clear) *vf_ov_clear;
+	if (dll3) {
+		vf_ov_open_callbacks = (decltype(vf_ov_open_callbacks))GetProcAddress(dll3, "ov_open_callbacks");
+		vf_ov_info = (decltype(vf_ov_info))GetProcAddress(dll3, "ov_info");;
+		vf_ov_read = (decltype(vf_ov_read))GetProcAddress(dll3, "ov_read");;
+		vf_ov_clear = (decltype(vf_ov_clear))GetProcAddress(dll3, "ov_clear");;
+	}
 
 	HMODULE dll = LoadLibrary(ao ? STR_DLL_ZA : STR_DLL);
 	decltype(::Init)* Init = nullptr;

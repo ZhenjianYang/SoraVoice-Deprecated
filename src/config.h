@@ -2,10 +2,13 @@
 
 #define _CMT_Volume					u8"#音量，范围为0~100，默认为100(最大值)"
 
-#define _CMT_OriginalVoice			u8"#禁用游戏中的原有剧情语音(仅碧之轨迹存在剧情语音)：\n"\
-									";    0    关闭\n"\
-									";    1    开启\n"\
-									"#默认为1";
+#define _CMT_OriginalVoice			u8"#当游戏中的原有剧情语音与进化版语音同时存在时：\n"\
+									";    0    同时播放(即不作任何特殊处理)\n"\
+									";    1    仅播放进化版语音(禁用原有语音)\n"\
+									";    2    仅播放原版语音(不播放进化版语音)\n"\
+									"#默认为1\n"\
+									"###注意：此项配置为2时，原版语音的播放是由本补丁进行的；"\
+									"         这意味着对于该条语音，游戏原本的音量配置将不会起作用。###";
 
 #define _CMT_AutoPlay				u8"#自动播放。模式罗列如下：\n"\
 									";    0    关闭\n"\
@@ -14,9 +17,9 @@
 									";接下来的3个参数为设置自动播放时间的选项。\n"\
 									"#默认为2\n"\
 									"###注意：当启用此选项时，会强制启用选项SkipVoice。###";
-#define _CMT_WaitTimePerChar		u8"#无语音时，为每个字分配的等待时间。默认为60(单位毫秒，下同)";
+#define _CMT_WaitTimePerChar		u8"#无语音时，为每个字分配的等待时间。默认为60(单位毫秒，下同)"
 #define _CMT_WaitTimeDialog			u8"#无语音时，为对话框分配的额外等待时间。默认为800。\n"\
-									"#则在默认配置下，一个20字的对话框的等待时间为800+20x60=2000毫秒";
+									"#则在默认配置下，一个20字的对话框的等待时间为800+20x60=2000毫秒"
 #define _CMT_WaitTimeDialogVoice	u8"#有语音时，语音播放结束后额外的等待时间。默认为500"
 
 #define _CMT_SkipVoice			u8"#对话框关闭时，终止语音。默认为1(启用此项功能)\n"\
@@ -77,8 +80,12 @@ struct Config
 	static constexpr int AutoPlay_Voice = 1;
 	static constexpr int AutoPlay_ALL = 2;
 
+	static constexpr int OriginalVoice_Both = 0;
+	static constexpr int OriginalVoice_EvoOnly = 1;
+	static constexpr int OriginalVoice_OriOnly = 2;
+
 	DEFINE_CONFIG_WMAX(Volume, 100, 100);
-	DEFINE_CONFIG(OriginalVoice, 1);
+	DEFINE_CONFIG_WMAX(OriginalVoice, OriginalVoice_EvoOnly, 2);
 
 	DEFINE_CONFIG_WMAX(AutoPlay, AutoPlay_ALL, 2);
 	DEFINE_CONFIG(WaitTimePerChar, 60);
