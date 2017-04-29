@@ -267,19 +267,23 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 
 	auto it = infos.end();
 
+	bool creatNew = true;
 	if (type != InfoType::Hello) {
 		for (it = infos.begin(); it != infos.end(); ++it) {
 			if ((*it)->type == type) {
-				LOG("No need to Create new Text.");
+				creatNew = false;
 				break;
 			}
 		}
 	}
 
-	if (it == infos.end()) {
+	if (creatNew) {
 		LOG("Create new Text.");
 		infos.push_back(PtrInfo(new Info));
 		it = --infos.end();
+	}
+	else {
+		LOG("No need to create new Text.");
 	}
 	(*it)->type = type;
 	(*it)->color = color;
@@ -299,34 +303,36 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 	LOG("Text width is %d", text_width);
 
 	auto& rect = (*it)->rect;
-	memset(&rect, 0, sizeof(rect));
-
-	std::set<int> invalid_bottom, invalid_top;
-	for (auto it2 = infos.begin(); it2 != infos.end(); ++it2) {
-		if (it == it2 || (((*it)->format & DT_RIGHT) != ((*it2)->format & DT_RIGHT))) continue;
-		invalid_top.insert((*it2)->rect.top);
-		invalid_bottom.insert((*it2)->rect.bottom);
-	}
-
-	if ((*it)->format & DT_BOTTOM) {
-		for (int bottom = height - vbound - vfix; ; bottom -= h + vbound) {
-			if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
-				rect.bottom = bottom;
-				break;
-			}
-		}
-		rect.top = rect.bottom - h - linespace;
-	}
-	else {
-		for (int top = vbound + vfix; ; top += h + linespace) {
-			if (invalid_top.find(top) == invalid_top.end()) {
-				rect.top = top;
-				break;
-			}
+	
+	if (creatNew) {
+		memset(&rect, 0, sizeof(rect));
+		std::set<int> invalid_bottom, invalid_top;
+		for (auto it2 = infos.begin(); it2 != infos.end(); ++it2) {
+			if (it == it2 || (((*it)->format & DT_RIGHT) != ((*it2)->format & DT_RIGHT))) continue;
+			invalid_top.insert((*it2)->rect.top);
+			invalid_bottom.insert((*it2)->rect.bottom);
 		}
 
-		rect.bottom = rect.top + h + linespace;
-	}
+		if ((*it)->format & DT_BOTTOM) {
+			for (int bottom = height - vbound - vfix; ; bottom -= h + vbound) {
+				if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
+					rect.bottom = bottom;
+					break;
+				}
+			}
+			rect.top = rect.bottom - h - linespace;
+		}
+		else {
+			for (int top = vbound + vfix; ; top += h + linespace) {
+				if (invalid_top.find(top) == invalid_top.end()) {
+					rect.top = top;
+					break;
+				}
+			}
+
+			rect.bottom = rect.top + h + linespace;
+		}
+	} //if (creatNew)
 
 	if ((*it)->format & DT_RIGHT) {
 		rect.right = width - hbound;

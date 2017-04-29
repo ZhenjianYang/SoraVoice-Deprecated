@@ -36,22 +36,20 @@ constexpr char VOICEFILE_ATTR[] = ".ogg";
 constexpr int VOLUME_STEP = 1;
 constexpr int VOLUME_STEP_BIG = 5;
 
-constexpr int KEY_MIN = DIK_5;
-constexpr int KEY_MAX = DIK_BACKSPACE;
-static_assert(KEY_MAX - KEY_MIN + 1 <= KEYS_NUM, "KEYS_NUM not enougt");
-
 constexpr int KEY_VOLUME_UP = DIK_EQUALS;
 constexpr int KEY_VOLUME_DOWN = DIK_MINUS;
-constexpr int KEY_VOLUME_0 = DIK_0;
 constexpr int KEY_VOLUME_BIGSTEP1 = DIK_LSHIFT;
 constexpr int KEY_VOLUME_BIGSTEP2 = DIK_RSHIFT;
 
 constexpr int KEY_ORIVOICE = DIK_BACKSPACE;
-constexpr int KEY_AUTOPLAY = DIK_9;
-constexpr int KEY_SKIPVOICE = DIK_8;
-constexpr int KEY_DLGSE = DIK_7;
-constexpr int KEY_DU = DIK_6;
-constexpr int KEY_INFO = DIK_5;
+constexpr int KEY_AUTOPLAY = DIK_0;
+constexpr int KEY_SKIPVOICE = DIK_9;
+constexpr int KEY_DLGSE = DIK_8;
+constexpr int KEY_DU = DIK_7;
+constexpr int KEY_INFOONOFF = DIK_6;
+constexpr int KEY_ALLINFO = DIK_BACKSLASH;
+constexpr int KEY_RESETA = DIK_LBRACKET;
+constexpr int KEY_RESETB = DIK_RBRACKET;
 
 #ifdef ZA
 constexpr char SCODE_TEXT = 0x55;
@@ -65,10 +63,10 @@ constexpr char SCODE_TALK = 0x5C;
 constexpr char SCODE_MENU = 0x5D;
 #endif // ZA
 
-constexpr unsigned INFO_TIME = 2000;
-constexpr unsigned HELLO_TIME = 6000;
+constexpr unsigned INFO_TIME = 3000;
+constexpr unsigned HELLO_TIME = 8000;
 constexpr unsigned INFINITY_TIME = Draw::ShowTimeInfinity;
-constexpr unsigned REMAIN_TIME = 1000;
+constexpr unsigned REMAIN_TIME = 2000;
 
 constexpr unsigned TIME_PREC = 16;
 
@@ -260,52 +258,95 @@ void SoraVoiceImpl::Input()
 	bool needsetvolume = false;
 	int volume_old = config->Volume;
 
-	if (keys[KEY_VOLUME_UP] && keys[KEY_VOLUME_DOWN]) {
-		if (!last[KEY_VOLUME_UP - KEY_MIN] || !last[KEY_VOLUME_DOWN - KEY_MIN]) {
-			if (config->SaveChange) {
-				config->Reset();
-				needsave = true;
-				needsetvolume = true;
-			}
-			else {
-				config->LoadConfig(CONFIG_FILE);
-				config->EnableKeys = 1;
-				config->SaveChange = 0;
-				needsetvolume = true;
-			}
-			status->mute = 0;
-			if (status->playing) {
-				order->disableDialogSE = config->DisableDialogSE;
-				order->disableDududu = config->DisableDududu;
-			}
-			LOG("Reset config");
+	unsigned info_time = INFO_TIME;
 
-			if (config->ShowInfo) {
-				//inf->addText(InfoType::ConfigReset, INFO_TIME, Message::Reset);
-				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
+	if (keys[KEY_ALLINFO]) {
+		info_time = INFINITY_TIME;
+		if (!last[KEY_ALLINFO]) {
+			draw->RemoveInfo(InfoType::Volume);
 #ifdef ZA
-				draw->AddInfo(InfoType::OriginalVoice, INFO_TIME, config->FontColor, Message::OriginalVoice, Message::OriginalVoiceSwitch[config->OriginalVoice]);
+			draw->RemoveInfo(InfoType::OriginalVoice);
 #endif // ZA
-				draw->AddInfo(InfoType::AutoPlay, INFO_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
-				draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
-				draw->AddInfo(InfoType::DisableDialogSE, INFO_TIME, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
-				draw->AddInfo(InfoType::DisableDududu, INFO_TIME, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
-				draw->AddInfo(InfoType::InfoOnoff, INFO_TIME, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+			draw->RemoveInfo(InfoType::AutoPlay);
+			draw->RemoveInfo(InfoType::SkipVoice);
+			draw->RemoveInfo(InfoType::DisableDialogSE);
+			draw->RemoveInfo(InfoType::DisableDududu);
+			draw->RemoveInfo(InfoType::InfoOnoff);
 
-				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
-				}
-				else {
-					draw->RemoveInfo(InfoType::AutoPlayMark);
-				}
+			if(status->mute) draw->AddInfo(InfoType::Volume, INFINITY_TIME, config->FontColor, Message::Mute);
+			else draw->AddInfo(InfoType::Volume, INFINITY_TIME, config->FontColor, Message::Volume, config->Volume);
+#ifdef ZA
+			draw->AddInfo(InfoType::OriginalVoice, INFINITY_TIME, config->FontColor, Message::OriginalVoice, Message::OriginalVoiceSwitch[config->OriginalVoice]);
+#endif // ZA
+			draw->AddInfo(InfoType::AutoPlay, INFINITY_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+			draw->AddInfo(InfoType::SkipVoice, INFINITY_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+			draw->AddInfo(InfoType::DisableDialogSE, INFINITY_TIME, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+			draw->AddInfo(InfoType::DisableDududu, INFINITY_TIME, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+			draw->AddInfo(InfoType::InfoOnoff, INFINITY_TIME, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+		}
+	}
+	else if (last[KEY_ALLINFO]) {
+		draw->RemoveInfo(InfoType::Volume);
+#ifdef ZA
+		draw->RemoveInfo(InfoType::OriginalVoice);
+#endif // ZA
+		draw->RemoveInfo(InfoType::AutoPlay);
+		draw->RemoveInfo(InfoType::SkipVoice);
+		draw->RemoveInfo(InfoType::DisableDialogSE);
+		draw->RemoveInfo(InfoType::DisableDududu);
+		draw->RemoveInfo(InfoType::InfoOnoff);
+	}//keys[KEY_ALLINFO]
+
+	if ((keys[KEY_RESETA] && keys[KEY_RESETB])
+		&& !(last[KEY_RESETA] && last[KEY_RESETB])) {
+		if (config->SaveChange) {
+			config->Reset();
+			needsave = true;
+			needsetvolume = true;
+		}
+		else {
+			config->LoadConfig(CONFIG_FILE);
+			config->EnableKeys = 1;
+			config->SaveChange = 0;
+			needsetvolume = true;
+		}
+		status->mute = 0;
+		if (status->playing) {
+			order->disableDialogSE = config->DisableDialogSE;
+			order->disableDududu = config->DisableDududu;
+		}
+		LOG("Reset config");
+
+		if (config->ShowInfo || info_time == INFINITY_TIME) {
+			//draw->AddText(InfoType::ConfigReset, INFO_TIME, config->FontColor, Message::Reset);
+			draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Volume, config->Volume);
+#ifdef ZA
+			draw->AddInfo(InfoType::OriginalVoice, info_time, config->FontColor, Message::OriginalVoice, Message::OriginalVoiceSwitch[config->OriginalVoice]);
+#endif // ZA
+			draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+			draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+			draw->AddInfo(InfoType::DisableDialogSE, info_time, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+			draw->AddInfo(InfoType::DisableDududu, info_time, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+			draw->AddInfo(InfoType::InfoOnoff, info_time, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+
+			if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
+				draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
 			}
 			else {
-				draw->RemoveInfo(InfoType::All);
+				draw->RemoveInfo(InfoType::AutoPlayMark);
 			}
 		}
-	} //if(KEY_VOLUME_UP & KEY_VOLUME_DOWN)
+		else if (info_time != INFINITY_TIME) {
+			draw->RemoveInfo(InfoType::All);
+		}
+		else {
+			draw->RemoveInfo(InfoType::AutoPlayMark);
+			draw->RemoveInfo(InfoType::Hello);
+		}
+	} //keys[KEY_RESETA] && keys[KEY_RESETB]
 	else {
-		if (keys[KEY_VOLUME_UP] && !last[KEY_VOLUME_UP - KEY_MIN] && !keys[KEY_VOLUME_DOWN] && !keys[KEY_VOLUME_0]) {
+		bool show_info = config->ShowInfo || info_time == INFINITY_TIME;
+		if (keys[KEY_VOLUME_UP] && !last[KEY_VOLUME_UP] && !keys[KEY_VOLUME_DOWN]) {
 			if (keys[KEY_VOLUME_BIGSTEP1] || keys[KEY_VOLUME_BIGSTEP2]) config->Volume += VOLUME_STEP_BIG;
 			else config->Volume += VOLUME_STEP;
 
@@ -314,13 +355,13 @@ void SoraVoiceImpl::Input()
 			needsetvolume = volume_old != config->Volume;
 			needsave = needsetvolume;
 
-			if (config->ShowInfo) {
-				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
+			if (show_info) {
+				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Volume, config->Volume);
 			}
 
 			LOG("Set Volume : %d", config->Volume);
 		} //if(KEY_VOLUME_UP)
-		else if (keys[KEY_VOLUME_DOWN] && !last[KEY_VOLUME_DOWN - KEY_MIN] && !keys[KEY_VOLUME_UP] && !keys[KEY_VOLUME_0]) {
+		else if (keys[KEY_VOLUME_DOWN] && !last[KEY_VOLUME_DOWN] && !keys[KEY_VOLUME_UP]) {
 			if (keys[KEY_VOLUME_BIGSTEP1] || keys[KEY_VOLUME_BIGSTEP2]) config->Volume -= VOLUME_STEP_BIG;
 			else config->Volume -= VOLUME_STEP;
 
@@ -329,35 +370,30 @@ void SoraVoiceImpl::Input()
 			needsetvolume = volume_old != config->Volume;
 			needsave = needsetvolume;
 
-			if (config->ShowInfo) {
-				draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
+			if (show_info) {
+				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Volume, config->Volume);
 			}
 
 			LOG("Set Volume : %d", config->Volume);
 		}//if(KEY_VOLUME_DOWN)
-		else if (keys[KEY_VOLUME_0] && !last[KEY_VOLUME_0 - KEY_MIN] && !keys[KEY_VOLUME_UP] && !keys[KEY_VOLUME_DOWN]) {
-			status->mute = 1 - status->mute;
+		else if (keys[KEY_VOLUME_UP] && keys[KEY_VOLUME_DOWN] && !(last[KEY_VOLUME_UP] && last[KEY_VOLUME_DOWN])) {
+			status->mute = 1;
 			needsetvolume = true;
 
-			if (config->ShowInfo) {
-				if (status->mute) {
-					draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Mute);
-				}
-				else {
-					draw->AddInfo(InfoType::Volume, INFO_TIME, config->FontColor, Message::Volume, config->Volume);
-				}
+			if (show_info) {
+				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Mute);
 			}
 
 			LOG("Set mute : %d", status->mute);
-		}//if(KEY_VOLUME_0)
+		}//keys[KEY_VOLUME_UP] && keys[KEY_VOLUME_DOWN]
 
 #ifdef ZA
-		if (keys[KEY_ORIVOICE] && !last[KEY_ORIVOICE - KEY_MIN]) {
+		if (keys[KEY_ORIVOICE] && !last[KEY_ORIVOICE]) {
 			(config->OriginalVoice += 1) %= (Config::MAX_OriginalVoice + 1);
 			needsave = true;
 
-			if (config->ShowInfo) {
-				draw->AddInfo(InfoType::OriginalVoice, INFO_TIME, config->FontColor, Message::OriginalVoice,
+			if (show_info) {
+				draw->AddInfo(InfoType::OriginalVoice, info_time, config->FontColor, Message::OriginalVoice,
 					Message::OriginalVoiceSwitch[config->OriginalVoice]);
 			}
 
@@ -365,12 +401,12 @@ void SoraVoiceImpl::Input()
 		}//if(KEY_ORIVOICE)
 #endif // ZA
 
-		if (keys[KEY_AUTOPLAY] && !last[KEY_AUTOPLAY - KEY_MIN]) {
+		if (keys[KEY_AUTOPLAY] && !last[KEY_AUTOPLAY]) {
 			(config->AutoPlay += 1) %= (Config::MAX_AutoPlay + 1);
 			needsave = true;
 
-			if (config->ShowInfo) {
-				draw->AddInfo(InfoType::AutoPlay, INFO_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+			if (show_info) {
+				draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
 				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
 					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
 				}
@@ -383,62 +419,62 @@ void SoraVoiceImpl::Input()
 			if (config->AutoPlay && !config->SkipVoice) {
 				config->SkipVoice = 1;
 
-				if (config->ShowInfo) {
-					draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+				if (show_info) {
+					draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 				}
 				LOG("Set SkipVoice : %d", config->SkipVoice);
 			}
 		}//if(KEY_AUTOPLAY)
 
-		if (keys[KEY_SKIPVOICE] && !last[KEY_SKIPVOICE - KEY_MIN]) {
+		if (keys[KEY_SKIPVOICE] && !last[KEY_SKIPVOICE]) {
 			config->SkipVoice = 1 - config->SkipVoice;
 			needsave = true;
 
-			if (config->ShowInfo) {
-				draw->AddInfo(InfoType::SkipVoice, INFO_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+			if (show_info) {
+				draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
 			}
 
 			LOG("Set SkipVoice : %d", config->SkipVoice);
 
 			if (!config->SkipVoice && config->AutoPlay) {
 				config->AutoPlay = 0;
-				if (config->ShowInfo) {
-					draw->AddInfo(InfoType::AutoPlay, INFO_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
-					draw->RemoveInfo(InfoType::AutoPlayMark);
+				if (show_info) {
+					draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
 				}
+				draw->RemoveInfo(InfoType::AutoPlayMark);
 				LOG("Set AutoPlay : %d", config->AutoPlay);
 			}
 		}//if(KEY_SKIPVOICE)
 
-		if (keys[KEY_DLGSE] && !last[KEY_DLGSE - KEY_MIN]) {
+		if (keys[KEY_DLGSE] && !last[KEY_DLGSE]) {
 			config->DisableDialogSE = 1 - config->DisableDialogSE;
 			if (status->playing) {
 				order->disableDialogSE = config->DisableDialogSE;
 			}
 			needsave = true;
 
-			if (config->ShowInfo) {
-				draw->AddInfo(InfoType::DisableDialogSE, INFO_TIME, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+			if (show_info) {
+				draw->AddInfo(InfoType::DisableDialogSE, info_time, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
 			}
 
 			LOG("Set DisableDialogSE : %d", config->DisableDialogSE);
 		}//if(KEY_DLGSE)
 
-		if (keys[KEY_DU] && !last[KEY_DU - KEY_MIN]) {
+		if (keys[KEY_DU] && !last[KEY_DU]) {
 			config->DisableDududu = 1 - config->DisableDududu;
 			if (status->playing) {
 				order->disableDududu = config->DisableDududu;
 			}
 			needsave = true;
 
-			if (config->ShowInfo) {
-				draw->AddInfo(InfoType::DisableDududu, INFO_TIME, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+			if (show_info) {
+				draw->AddInfo(InfoType::DisableDududu, info_time, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
 			}
 
 			LOG("Set DisableDududu : %d", config->DisableDududu);
 		}//if(KEY_DU)
 
-		if (keys[KEY_INFO] && !last[KEY_INFO - KEY_MIN]) {
+		if (keys[KEY_INFOONOFF] && !last[KEY_INFOONOFF]) {
 			config->ShowInfo = (config->ShowInfo + 1) % (Config::MAX_ShowInfo + 1);
 			needsave = true;
 
@@ -450,10 +486,14 @@ void SoraVoiceImpl::Input()
 					draw->RemoveInfo(InfoType::AutoPlayMark);
 				}
 			}
-			else {
+			else if (info_time == INFINITY_TIME) {
+				draw->RemoveInfo(InfoType::AutoPlayMark);
+				draw->RemoveInfo(InfoType::Hello);
+			}
+			else { 
 				draw->RemoveInfo(InfoType::All);
 			}
-			draw->AddInfo(InfoType::InfoOnoff, INFO_TIME, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+			draw->AddInfo(InfoType::InfoOnoff, info_time, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
 
 			LOG("Set ShowInfo : %d", config->ShowInfo);
 		}//if(KEY_INFO)
@@ -471,7 +511,7 @@ void SoraVoiceImpl::Input()
 		LOG("Config file saved");
 	}
 
-	memcpy(last, keys + KEY_MIN, KEYS_NUM);
+	memcpy(last, keys, KEYS_NUM);
 }
 
 void SoraVoiceImpl::Show()
