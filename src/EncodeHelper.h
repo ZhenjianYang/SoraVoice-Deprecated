@@ -7,7 +7,7 @@ struct ConvertResult {
 	int cnt2;
 	int cnt4;
 };
-static ConvertResult ResultZero {};
+static const ConvertResult ResultZero {};
 
 template<typename CharType, typename = std::enable_if_t<(sizeof(CharType) >= 2)>>
 static ConvertResult ConvertUtf8toUtf16(CharType* dst_buff, int size_dst, const char* src_buff) {
