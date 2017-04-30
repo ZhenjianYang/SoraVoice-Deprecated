@@ -32,7 +32,7 @@ struct InitParam
 		//0x28
 		void** p_D3DXCreateFontIndirect;
 		//0x2C
-		void** reserved;
+		void** p_global;
 	} addrs;
 
 	//0x30

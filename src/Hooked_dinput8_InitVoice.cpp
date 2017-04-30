@@ -24,24 +24,6 @@ FILE* _flog;
 #define LOG(...) _flog = fopen("ilog.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
 #endif // LOG_NOLOG
 
-
-
-//constexpr char STR_vorbisfile_dll[] = "vorbisfile.dll";
-//constexpr char STR_libvorbisfile_dll[] = "libvorbisfile.dll";
-//
-//constexpr char STR_ov_open_callbacks[] = "ov_open_callbacks";
-//constexpr char STR_ov_info[] = "ov_info";
-//constexpr char STR_ov_read[] = "ov_read";
-//constexpr char STR_ov_clear[] = "ov_clear";
-//
-//constexpr const char* OggApis[] = {
-//	STR_ov_open_callbacks,
-//	STR_ov_info,
-//	STR_ov_read,
-//	STR_ov_clear
-//};
-//constexpr int NumOggApis = sizeof(OggApis) / sizeof(*OggApis);
-
 constexpr char dll_name_sora[] = "ed_voice.dll";
 constexpr char dll_name_za[] = "za_voice.dll";
 constexpr char import_names[][16] = {
@@ -75,6 +57,8 @@ constexpr const char* addr_list[] = {
 
 	"p_mute",
 	"p_keys",
+	"p_D3DXCreateFontIndirect",
+	"p_global"
 };
 constexpr int num_addr = sizeof(addr_list) / sizeof(*addr_list);
 
@@ -105,12 +89,6 @@ constexpr byte scode_sora[] = { 0x54, 0x5B, 0x5C, 0x5D };
 constexpr byte scode_za[] = { 0x55, 0x5C, 0x5D, 0x5E };
 
 constexpr int Size = 0x1000;
-
-//void* ov_open_callbacks = nullptr;
-//void* ov_info = nullptr;
-//void* ov_read = nullptr;
-//void* ov_clear = nullptr;
-//IDirectSound* pDS = nullptr;
 
 InitParam *ip = nullptr;
 static HINSTANCE hd;
@@ -213,17 +191,12 @@ void Init(void* hDll)
 	}
 	LOG("Data found, %d, %s", group->Num(), group->Name());
 
+	bool isZa = GetUIntFromValue(group->GetValue(str_Game.c_str()));
+
 	unsigned * const addrs = (decltype(addrs))&tp->addrs;
 	for (int j = 0; j < num_addr; j++) {
 		addrs[j] = GetUIntFromValue(group->GetValue(addr_list[j]));
 	}
-
-	if (!tp->addrs.p_d3dd || !tp->addrs.p_Hwnd) {
-		LOG("parameters lost.");
-		return;
-	}
-
-	bool isZa = GetUIntFromValue(group->GetValue(str_Game.c_str()));
 
 	const char* comment = group->GetValue(str_Comment.c_str());
 	if (comment) {
@@ -254,40 +227,6 @@ void Init(void* hDll)
 		return;
 	}
 	LOG("Read bin finished.");
-
-//	if (isZa) {
-//		HMODULE ogg_dll = LoadLibraryA(STR_vorbisfile_dll);
-//		if (!ogg_dll) {
-//			ogg_dll = LoadLibraryA(STR_libvorbisfile_dll);
-//		}
-//
-//		if (ogg_dll) {
-//			ov_open_callbacks = (void*)GetProcAddress(ogg_dll, STR_ov_open_callbacks);
-//			ov_info = (void*)GetProcAddress(ogg_dll, STR_ov_info);
-//			ov_read = (void*)GetProcAddress(ogg_dll, STR_ov_read);
-//			ov_clear = (void*)GetProcAddress(ogg_dll, STR_ov_clear);
-//		}
-//
-//		if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
-//			LOG("Get ogg api failed.");
-//			return;
-//		}
-//		LOG("ogg loaded.");
-//
-//		DirectSoundCreate(NULL, &pDS, NULL);
-//		if (!pDS || DS_OK != pDS->SetCooperativeLevel((HWND)*tp->addrs.p_Hwnd, DSSCL_PRIORITY)) {
-//			LOG("Init DSD failed.");
-//			return;
-//		};
-//		LOG("DSD opened.");
-//
-//		tp->addrs.p_pDS = (void**)&pDS;
-//		tp->addrs.p_ov_open_callbacks = (void**)&ov_open_callbacks;
-//		tp->addrs.p_ov_info = (void**)&ov_info;
-//		tp->addrs.p_ov_read = (void**)&ov_read;
-//		tp->addrs.p_ov_clear = (void**)&ov_clear;
-//	}
-	
 
 	HMODULE voice_dll = LoadLibraryA(isZa ? dll_name_za : dll_name_sora);
 	if (voice_dll) {

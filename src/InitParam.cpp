@@ -56,6 +56,19 @@ bool InitAddrs(InitParam* initParam)
 	LOG("p->p_mute = 0x%08X", ip->addrs.p_mute);
 	LOG("p->p_keys = 0x%08X", ip->addrs.p_keys);
 	LOG("p->p_D3DXCreateFontIndirect = 0x%08X", ip->addrs.p_D3DXCreateFontIndirect);
+	LOG("p->p_global = 0x%08X", ip->addrs.p_global);
+
+#ifdef ZA
+	if (ip->addrs.p_global) {
+		if (ip->addrs.p_d3dd) ip->addrs.p_d3dd = (void**)((char*)*ip->addrs.p_global + (int)ip->addrs.p_d3dd);
+		if (ip->addrs.p_did) ip->addrs.p_did = (void**)((char*)*ip->addrs.p_global + (int)ip->addrs.p_did);
+		if (ip->addrs.p_Hwnd) ip->addrs.p_Hwnd = (void**)((char*)*ip->addrs.p_global + (int)ip->addrs.p_Hwnd);
+
+		LOG("Adjuested p->p_d3dd = 0x%08X", ip->addrs.p_d3dd);
+		LOG("Adjuested p->p_did = 0x%08X", ip->addrs.p_did);
+		LOG("Adjuested p->p_Hwnd = 0x%08X", ip->addrs.p_Hwnd);
+	}
+#endif // ZA
 
 	BIND(ov_open_callbacks, ip->addrs.p_ov_open_callbacks);
 	BIND(ov_info, ip->addrs.p_ov_info);

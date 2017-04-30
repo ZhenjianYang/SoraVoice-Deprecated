@@ -66,7 +66,7 @@ static unsigned GetUIntFromValue(const char* str) {
 	return std::strtoul(str, &p, rad);
 }
 
-const char addr_list[][20] = {
+constexpr const char* addr_list[] = {
 	"p_ov_open_callbacks",
 	"p_ov_info",
 	"p_ov_read",
@@ -79,6 +79,8 @@ const char addr_list[][20] = {
 
 	"p_mute",
 	"p_keys",
+	"p_D3DXCreateFontIndirect",
+	"p_global"
 };
 const int num_addr = sizeof(addr_list) / sizeof(*addr_list);
 
