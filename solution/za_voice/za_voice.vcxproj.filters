@@ -63,6 +63,9 @@
     <ClInclude Include="..\..\src\SoundFile.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\ApiPack.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ed_voice.cpp">
@@ -90,6 +93,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\SoundPlayerImpl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ApiPack.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

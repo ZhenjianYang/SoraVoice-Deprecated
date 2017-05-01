@@ -30,9 +30,9 @@ struct InitParam
 		//0x24
 		const u8* p_keys;
 		//0x28
-		void** p_D3DXCreateFontIndirect;
-		//0x2C
 		void** p_global;
+		//0x2C
+		void** reserved;
 	} addrs;
 
 	//0x30
@@ -76,7 +76,7 @@ struct InitParam
 		u8 scode;
 
 	//0xAB
-		u8 reservedb[5];
+		u8 reserved[5];
 	} status;
 
 	//0xB0
@@ -86,7 +86,7 @@ struct InitParam
 		u8 autoPlay;
 
 	//0xB3
-		u8 reservedb[5];
+		u8 reserved[5];
 	} order;
 
 	//0xB8

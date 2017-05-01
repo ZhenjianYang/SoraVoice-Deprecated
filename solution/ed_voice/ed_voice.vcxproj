@@ -80,6 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\ApiPack.h" />
     <ClInclude Include="..\..\src\EncodeHelper.h" />
     <ClInclude Include="..\..\src\Mapping.h" />
     <ClInclude Include="..\..\src\Clock.h" />
@@ -95,9 +96,11 @@
     <ClInclude Include="..\..\src\SoraVoiceImpl.h" />
     <ClInclude Include="..\..\src\SoundFile.h" />
     <ClInclude Include="..\..\src\SoundPlayer.h" />
+    <ClInclude Include="..\..\src\SoundPlayerImpl.h" />
     <ClInclude Include="..\..\src\Type.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\ApiPack.cpp" />
     <ClCompile Include="..\..\src\Clock.cpp" />
     <ClCompile Include="..\..\src\Config.cpp" />
     <ClCompile Include="..\..\src\DrawImpl.cpp" />

@@ -5,6 +5,7 @@
 
 #include "Log.h"
 #include "Clock.h"
+#include "ApiPack.h"
 
 #include <dsound.h>
 
@@ -14,6 +15,10 @@
 #include <mutex>
 #include <queue>
 
+constexpr char STR_ov_open_callbacks[] = "ov_open_callbacks";
+constexpr char STR_ov_info[] = "ov_info";
+constexpr char STR_ov_read[] = "ov_read";
+constexpr char STR_ov_clear[] = "ov_clear";
 
 class SoundPlayerImpl : private SoundPlayer
 {
@@ -96,9 +101,7 @@ private:
 		WaitForSingleObject(hEvent_End, DELTA_TIME * 3);
 	}
 
-	SoundPlayerImpl(void * pDSD,
-			void * ov_open_callbacks, void * ov_info, void * ov_read, void * ov_clear,
-			StopCallBack stopCallBack)
+	SoundPlayerImpl(void * pDSD, StopCallBack stopCallBack)
 		:
 		pDSD((decltype(this->pDSD))pDSD),
 		stopCallBack(stopCallBack),
@@ -107,7 +110,10 @@ private:
 		th_playing(&SoundPlayerImpl::thread_Playing, this)
 	{
 		th_playing.detach();
-		Ogg::SetOggApis(ov_open_callbacks, ov_info, ov_read, ov_clear);
+		Ogg::SetOggApis(ApiPack::GetApi(STR_ov_open_callbacks),
+						ApiPack::GetApi(STR_ov_info),
+						ApiPack::GetApi(STR_ov_read),
+						ApiPack::GetApi(STR_ov_read));
 	}
 	PlayID playID = InvalidPlayID;
 	std::string fileName;

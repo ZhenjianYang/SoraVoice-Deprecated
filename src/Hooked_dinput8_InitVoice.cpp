@@ -57,7 +57,6 @@ constexpr const char* addr_list[] = {
 
 	"p_mute",
 	"p_keys",
-	"p_D3DXCreateFontIndirect",
 	"p_global"
 };
 constexpr int num_addr = sizeof(addr_list) / sizeof(*addr_list);

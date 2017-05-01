@@ -2,6 +2,7 @@
 
 #include "Log.h"
 #include "Clock.h"
+#include "ApiPack.h"
 #include "EncodeHelper.h"
 
 #ifdef ZA
@@ -41,6 +42,8 @@ constexpr unsigned SHADOW_COLOR = 0x40404040;
 
 constexpr unsigned TIME_MAX = 0xFFFFFFFF;
 
+constexpr char STR_D3DXCreateFontIndirect[] = "D3DXCreateFontIndirect";
+
 class DrawImpl : private Draw 
 {
 	friend class Draw;
@@ -65,18 +68,19 @@ class DrawImpl : private Draw
 		showing = infos.size() > 0;
 	}
 
-	DrawImpl(u8& showing, void* hWnd, void* pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName)
+	DrawImpl(u8& showing, void* hWnd, void* pD3DD, const char* fontName)
 		:Draw(showing),
-		hWnd((HWND)hWnd), pD3DD((decltype(this->pD3DD))pD3DD), pD3DXCreateFontIndirect((CallCreateFont)p_D3DXCreateFontIndirect)
+		hWnd((HWND)hWnd), pD3DD((decltype(this->pD3DD))pD3DD), 
+		pD3DXCreateFontIndirect((CallCreateFont)ApiPack::GetApi(STR_D3DXCreateFontIndirect))
 	{
-#ifdef ZA
+#if DIRECT3D_VERSION == 0x900
 		ConvertUtf8toUtf16(desca.FaceName, fontName);
 #else
 		constexpr int lfFaceName_len = std::extent<decltype(lf.lfFaceName)>::value;
 		wchar buff[lfFaceName_len];
 		ConvertUtf8toUtf16(buff, fontName);
 		WideCharToMultiByte(CP_OEMCP, 0, buff, -1, desca.FaceName, sizeof(desca.FaceName), 0, 0);
-#endif // ZA
+#endif // DIRECT3D_VERSION == 0x900
 		desca.Height = -MIN_FONT_SIZE;
 		desca.Weight = FW_NORMAL;
 		desca.CharSet = DEFAULT_CHARSET;
@@ -128,11 +132,11 @@ class DrawImpl : private Draw
 	};
 	using PtrInfo = std::unique_ptr<Info>;
 	using PtrInfoList = std::list<PtrInfo>;
-#ifdef ZA
+#if DIRECT3D_VERSION == 0x900
 	using CallCreateFont = decltype(D3DXCreateFontIndirectW)*;
 #else
-	using CallCreateFont = void*;
-#endif // ZA
+	using CallCreateFont = decltype(D3DXCreateFontIndirect)*;
+#endif // DIRECT3D_VERSION == 0x900
 
 	static constexpr const unsigned DftFormatList[] = {
 			DT_TOP | DT_LEFT   ,//Hello = 0,
@@ -201,9 +205,9 @@ class DrawImpl : private Draw
 	PtrInfoList infos;
 };
 
-Draw * Draw::CreateDraw(u8& showing, void * hWnd, void * pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName)
+Draw * Draw::CreateDraw(u8& showing, void * hWnd, void * pD3DD, const char* fontName)
 {
-	DrawImpl* draw = new DrawImpl(showing, hWnd, pD3DD, p_D3DXCreateFontIndirect, fontName);
+	DrawImpl* draw = new DrawImpl(showing, hWnd, pD3DD, fontName);
 	return draw;
 }
 
@@ -215,21 +219,17 @@ void Draw::DestoryDraw(Draw * draw)
 void DrawImpl::DrawInfos() {
 	if (width == 0 || !pD3DD) return;
 
-	pD3DD->BeginScene();
-	//D3DXFONT_DESCA desca;
-
-
-#if DIRECT3D_VERSION == 0x900
 	if (!pFont 	&& pD3DXCreateFontIndirect) {
+#if DIRECT3D_VERSION == 0x900
 		pD3DXCreateFontIndirect(pD3DD, &desca, &pFont);
-	}
 #else
-	if (!pFont) {
-		D3DXCreateFontIndirect(pD3DD, &lf, &pFont);
+		pD3DXCreateFontIndirect(pD3DD, &lf, &pFont);
+#endif
 	}
-#endif	
 
 	if (pFont) {
+		pD3DD->BeginScene();
+
 		RECT rect_shadow;
 
 		for (const auto& info : infos) {
@@ -247,12 +247,9 @@ void DrawImpl::DrawInfos() {
 		for (const auto& info : infos) {
 			pFont->DrawTextW(SPRITE info->text, -1, &info->rect, info->format, info->color);
 		}
-	}
 
-	pD3DD->EndScene();
-	//if (font) {
-	//	font->Release(); font = NULL;
-	//}
+		pD3DD->EndScene();
+	}
 }
 
 constexpr const unsigned DrawImpl::DftFormatList[];

@@ -14,14 +14,9 @@
 #include <mutex>
 #include <queue>
 
-SoundPlayer * SoundPlayer::CreatSoundPlayer(void * pDSD,
-		void * ov_open_callbacks, void * ov_info, void * ov_read, void * ov_clear,
-		StopCallBack stopCallBack)
+SoundPlayer * SoundPlayer::CreatSoundPlayer(void * pDSD, StopCallBack stopCallBack)
 {
-	SoundPlayer* soundPlayer = new SoundPlayerImpl(pDSD,
-			ov_open_callbacks, ov_info, ov_read, ov_clear,
-			stopCallBack);
-	return soundPlayer;
+	return new SoundPlayerImpl(pDSD, stopCallBack);
 }
 
 void SoundPlayer::DestorySoundPlayer(SoundPlayer * player)

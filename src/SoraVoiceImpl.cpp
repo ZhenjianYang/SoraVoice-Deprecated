@@ -94,10 +94,8 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	_aup(initParam->rcd.now, initParam->rcd.count_ch, initParam->status.wait, initParam->rcd.time_textbeg, initParam->status.waitv),
 	Comment(initParam->Comment),
 	ended(initParam->status.ended), status(&initParam->status), order(&initParam->order), 
-	draw(Draw::CreateDraw(initParam->status.showing, *initParam->addrs.p_Hwnd, *initParam->addrs.p_d3dd, 
-		*initParam->addrs.p_D3DXCreateFontIndirect,_config.FontName)),
+	draw(Draw::CreateDraw(initParam->status.showing, *initParam->addrs.p_Hwnd, *initParam->addrs.p_d3dd, _config.FontName)),
 	player(SoundPlayer::CreatSoundPlayer(*initParam->addrs.p_pDS, 
-		*initParam->addrs.p_ov_open_callbacks, *initParam->addrs.p_ov_info, *initParam->addrs.p_ov_read, *initParam->addrs.p_ov_clear,
 		std::bind(&SoraVoiceImpl::stopCallBack, this, std::placeholders::_1, std::placeholders::_2)))
 {
 	LOG("Config loaded");

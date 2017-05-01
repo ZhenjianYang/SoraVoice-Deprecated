@@ -31,10 +31,7 @@ public:
 	virtual PlayID GetCurrentPlayID() const = 0;
 	virtual const char* GetCurrentFile() const = 0;
 
-	static SoundPlayer* CreatSoundPlayer(
-		void* pDSD, 
-		void* ov_open_callbacks, void* ov_info, void* ov_read, void* ov_clear,
-		StopCallBack stopCallBack = nullptr);
+	static SoundPlayer* CreatSoundPlayer(void* pDSD, StopCallBack stopCallBack = nullptr);
 	static void DestorySoundPlayer(SoundPlayer* player);
 
 	virtual PlayID Play(const char* fileName, FileType type, int volume) = 0;

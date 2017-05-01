@@ -25,7 +25,7 @@ public:
 
 	static constexpr unsigned ShowTimeInfinity = 0;
 
-	static Draw * CreateDraw(u8& showing, void * hWnd, void * pD3DD, void* p_D3DXCreateFontIndirect, const char* fontName);
+	static Draw * CreateDraw(u8& showing, void * hWnd, void * pD3DD, const char* fontName);
 	static void DestoryDraw(Draw * draw);
 
 	virtual void DrawInfos() = 0;
