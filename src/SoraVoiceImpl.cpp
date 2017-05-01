@@ -129,6 +129,7 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::ShowInfo, Message::OriginalVoiceSwitch[0]);
 	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::OriginalVoiceSwitch[1]);
 	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::OriginalVoiceSwitch[2]);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::AutoPlayMark);
 	draw->DrawInfos();
 	draw->RemoveInfo(InfoType::All);
 
