@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <map>
-#include <tuple>
+#include <unordered_map>
 #include <algorithm>
 #include <cstdarg>
 
@@ -18,11 +18,14 @@ using namespace std;
 
 #define MAX_LINENO 0x7FFFFFFF
 
+const string mark_talk_id = "#talk#";
+const string mark_line_id = "#line#";
+
 constexpr char AnonymousTalk[] = "AnonymousTalk";
 constexpr char ChrTalk[] = "ChrTalk";
 constexpr char NpcTalk[] = "NpcTalk";
 
-const string Talks[] = { AnonymousTalk, ChrTalk, NpcTalk };
+const string TalkTypes[] = { AnonymousTalk, ChrTalk, NpcTalk };
 
 static int cnt_err = 0;
 static ofstream ofs;
@@ -39,37 +42,41 @@ static void Error(const char* foramt, ...) {
 	ofs << buff << endl;
 }
 
-static auto GetMapVid(const string& py_out, const string& bin_out, bool lineNoMode = false) {
-	map<int, tuple<int, int, int, string>> map_vid{ { MAX_LINENO,{} } };
+struct LineInfo
+{
+	string vid;
+	int line_no;
+};
+using LinesInTalk = unordered_map<int, LineInfo>;
+using Talks = unordered_map<int, LinesInTalk>;
+
+static auto GetMapTalkVid(const string& py_out, const string& bin_out) {
+	Talks rst;
 
 	ifstream ifs_py(py_out);
 	ifstream ifs_bin(bin_out);
 
-	if (!ifs_py || !ifs_bin) return map_vid;
+	if (!ifs_py || !ifs_bin) return rst;
 
 	static char buff_py[MAXCH_ONELINE + 1];
 	static char buff_bin[MAXCH_ONELINE + 1];
 
-	for (int i = 0;
+	for (int line_no = 0;
 		ifs_py.getline(buff_py, sizeof(buff_py)) && ifs_bin.getline(buff_bin, sizeof(buff_bin));
-		i++ ) {
+		line_no++ ) {
 
-		if ((buff_py[0] == '#' && buff_bin[0] != '#')
-				|| (buff_py[0] != '#' && buff_bin[0] == '#')) {
-			Error("%s, %d: 注释行不匹配！", py_out.c_str(), i);
+		bool empty_py = buff_py[0] == '#' || buff_py[0] == '\0';
+		bool empty_bin = buff_bin[0] == '#' || buff_bin[0] == '\0';
+
+		if (empty_py != empty_bin) {
+			Error("%s, %d: 空行不匹配！", py_out.c_str(), line_no);
 		}
-		if (buff_py[0] == '#' || buff_bin[0] == '#') continue;
+		if (empty_py || empty_bin) continue;
 
-		if ((buff_py[0] == '\0' && buff_bin[0] != '\0')
-				|| (buff_py[0] != '\0' && buff_bin[0] == '\0')) {
-			Error("%s, %d: 空行不匹配！", py_out.c_str(), i);
-		}
-		if (buff_py[0] == '\0' || buff_bin[0] == '\0') continue;
-
-		int msg_cnt = -1, cnt = -1, line_no = -1;
+		int talk_id = -1, line_id = -1, ori_line_no = -1;
 		char type = 0;
-		if (sscanf(buff_py, "%c%04d,%02d,%05d,", &type, &msg_cnt, &cnt, &line_no) < 4) {
-			Error("%s, %d: 错误的行！", py_out.c_str(), i);
+		if (sscanf(buff_py, "%c%04d,%02d,%05d,", &type, &talk_id, &line_id, &ori_line_no) < 4) {
+			Error("%s, %d: 错误的行！", py_out.c_str(), line_no);
 			continue;
 		}
 
@@ -90,46 +97,32 @@ static auto GetMapVid(const string& py_out, const string& bin_out, bool lineNoMo
 			}
 		}
 		if (!vid.empty()) {
-			int key = lineNoMode ? i : msg_cnt * 100 + cnt;
-			auto inrst = map_vid.insert({ key, { msg_cnt, cnt, line_no, vid } });
+			auto &Talk = rst[talk_id];
+			auto inrst = Talk.insert({ line_id, { vid, line_no } });
+
 			if (!inrst.second) {
-				Error("%s, %d: %04d,%02d,%05d, 重复的键值！", py_out.c_str(), i, msg_cnt, cnt, line_no);
+				Error("%s, %d: %04d,%02d,%05d, 重复的键值！", py_out.c_str(), line_no, talk_id, line_id, ori_line_no);
 			}
 		}
 	}
 
-	return map_vid;
+	return rst;
 }
 
 int main(int argc, char* argv[])
 {
-	bool LineNoMode = false;
 
-	int argi = 1;
-	if (argc > 1 && argv[argi][0] == '-') {
-		if (argv[argi][1] == 'l') {
-			LineNoMode = true;
-			++argi;
-		}
-	}
-
-	if (argc - argi < 4) {
+	if (argc <= 4) {
 		cout << "Usage:\n"
-			"\t" "ZA_Importer_PY [-l] dir_py_new dir_py_old dir_py_out dir_bin_out\n"
-			"\t\t" "-l : line no mode"
+			"\t" "ZA_Importer_PY dir_py_new dir_py_old dir_py_out dir_bin_out\n"
 			<< endl;
 		return 0;
 	}
 
-	int iarg = 1;
-	if (argv[iarg][0] == '-') {
-		if (argv[iarg][1] == 'l') { LineNoMode = true; iarg++; }
-	}
-
-	string dir_py_new = argv[iarg];
-	string dir_py = argv[iarg + 1];
-	string dir_py_out = argv[iarg + 2];
-	string dir_bin_out = argv[iarg + 3];
+	string dir_py_new = argv[1];
+	string dir_py = argv[2];
+	string dir_py_out = argv[3];
+	string dir_bin_out = argv[4];
 
 	Sora::MakeDirectory(dir_py_new);
 	if (dir_py_new.length() > 0 && dir_py_new.back() != '\\') dir_py_new.push_back('\\');
@@ -145,21 +138,22 @@ int main(int argc, char* argv[])
 		string name = fn_py.substr(0, fn_py.rfind(ATTR_PY));
 		cout << "处理" << fn_py << "..." << endl;
 
-		const auto map_vid = GetMapVid(dir_py_out + name + ATTR_OUT, dir_bin_out + name + ATTR_OUT, LineNoMode);
+		const auto talks = GetMapTalkVid(dir_py_out + name + ATTR_OUT, dir_bin_out + name + ATTR_OUT);
 
 		ifstream ifs(dir_py + fn_py);
 		ofstream ofs(dir_py_new + fn_py);
 
 		char buff[MAXCH_ONELINE + 1];
 
-		string talk;
+		string talk_type;
 		int bra_cnt = 0;
 
-		int msg_cnt = 0;
-		int cnt = 0;
+		int talk_id_cnt = 0;
+		int line_id_cnt = 0;
+		auto it_talk = talks.end();
 
-		int key = 0;
-		auto it = map_vid.cbegin();
+		int talk_id = talk_id_cnt;
+		int line_id = line_id_cnt;
 
 		for (int line_no = 1;
 			ifs.getline(buff, sizeof(buff));
@@ -167,9 +161,7 @@ int main(int argc, char* argv[])
 		{
 			string s = buff;
 
-			if (!talk.empty()) {
-				cnt++;
-
+			if (!talk_type.empty()) {
 				if (s.find('"') == string::npos) {
 					for (char c : s) {
 						if (c == '(') ++bra_cnt;
@@ -178,46 +170,60 @@ int main(int argc, char* argv[])
 				}
 
 				if (bra_cnt <= 0) {
-					talk.clear();
-				}
-				
-				key = LineNoMode ? line_no : msg_cnt * 100 + cnt;
-
-				while (key > it->first)
-				{
-					Error("%s, %04d,%02d,%05d,%s: 未找到插入位置！", name.c_str(), get<0>(it->second), get<1>(it->second), get<2>(it->second), get<3>(it->second).c_str());
-					++it;
+					talk_type.clear();
 				}
 
-				if (key == it->first) {
-					auto idx = s.find('"');
-					if (idx == string::npos) {
-						Error("%s, %04d,%02d,%05d: 该行无文本！", name.c_str(), line_no, msg_cnt, cnt);
+				if (it_talk != talks.end()) {
+					auto index = s.find(mark_line_id);
+					if (index != string::npos) {
+						if (0 == sscanf(s.c_str() + index + mark_line_id.length(), "%d", &line_id)) {
+							line_id = -1;
+							Error("%s, %04d: 无效的line_id！", name.c_str(), line_no);
+						}
 					}
 					else {
-						s = s.insert(idx + 1, get<3>(it->second));
+						++line_id_cnt;
+						line_id = line_id_cnt;
 					}
-					++it;
+
+					auto it_line = it_talk->second.find(line_id);
+
+					if (it_line != it_talk->second.end()) {
+						auto idx = s.find('"');
+						if (idx == string::npos) {
+							Error("%s, %04d,%02d,%05d: 该行无文本！", name.c_str(), line_no, talk_id_cnt, line_id_cnt);
+						}
+						else {
+							s = s.insert(idx + 1, it_line->second.vid);
+						}
+					}
 				}
 			} //if (talk) 
 			else {
-				for (const auto& search : Talks) {
+				for (const auto& search : TalkTypes) {
 					if (s.find(search) != string::npos) {
 						bra_cnt = 1;
-						cnt = 0;
-						++msg_cnt;
-						talk = search;
+						line_id_cnt = 0;
+						talk_type = search;
+
+						auto index = s.find(mark_talk_id);
+						if (index != string::npos) {
+							if (0 == sscanf(s.c_str() + index + mark_talk_id.length(), "%d", &talk_id)) {
+								talk_id = -1;
+								Error("%s, %04d: 无效的talk_id！", name.c_str(), line_no);
+							}
+						}
+						else {
+							++talk_id_cnt;
+							talk_id = talk_id_cnt;
+						}
+
+						it_talk = talks.find(talk_id);
 					}
 				}
 			}
 
 			ofs << s << '\n';
-		}
-
-		while (MAX_LINENO > it->first)
-		{
-			Error("%s, %04d,%02d,%05d,%s: 未找到插入位置！", name.c_str(), get<0>(it->second), get<1>(it->second), get<2>(it->second), get<3>(it->second).c_str());
-			++it;
 		}
 
 		ifs.close();
