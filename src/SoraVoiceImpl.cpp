@@ -115,6 +115,8 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	LOG("config.EnableKeys = %d", config->EnableKeys);
 	LOG("config.SaveChange = %d", config->SaveChange);
 
+	static_assert(Config::MAX_Volume == SoundPlayer::MaxVolume, "Max Volume not same!");
+
 	InitHook_SetInitParam(initParam);
 
 	draw->AddInfo(InfoType::Hello, 1, 0, "Init Text");
