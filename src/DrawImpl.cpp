@@ -14,14 +14,20 @@
 #if DIRECT3D_VERSION == 0x0900
 #define D3D IDirect3D9
 #define D3DD IDirect3DDevice9
-#define SPRITE NULL,
 #elif DIRECT3D_VERSION == 0x0800
 #define D3D IDirect3D8
 #define D3DD IDirect3DDevice8
-#define SPRITE
 #else
 static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
 	"DIRECT3D_VERSION must be 0x0900 or 0x0800")
+#endif
+
+#if DIRECT3D_VERSION == 0x0900
+#define SPRITE_BEGIN_FLAG D3DXSPRITE_ALPHABLEND
+#define SPRITE pSprite,
+#else
+#define SPRITE_BEGIN_FLAG
+#define SPRITE
 #endif
 
 #include <list>
@@ -43,6 +49,7 @@ constexpr unsigned SHADOW_COLOR = 0x40404040;
 constexpr unsigned TIME_MAX = 0xFFFFFFFF;
 
 constexpr char STR_D3DXCreateFontIndirect[] = "D3DXCreateFontIndirect";
+constexpr char STR_D3DXCreateSprite[] = "D3DXCreateSprite";
 
 class DrawImpl : private Draw 
 {
@@ -71,7 +78,8 @@ class DrawImpl : private Draw
 	DrawImpl(u8& showing, void* hWnd, void* pD3DD, const char* fontName)
 		:Draw(showing),
 		hWnd((HWND)hWnd), pD3DD((decltype(this->pD3DD))pD3DD), 
-		pD3DXCreateFontIndirect((CallCreateFont)ApiPack::GetApi(STR_D3DXCreateFontIndirect))
+		pD3DXCreateFontIndirect((CallCreateFont)ApiPack::GetApi(STR_D3DXCreateFontIndirect)),
+		pD3DXCreateSprite((CallCreateSprite)ApiPack::GetApi(STR_D3DXCreateSprite))
 	{
 #if DIRECT3D_VERSION == 0x900
 		ConvertUtf8toUtf16(desca.FaceName, fontName);
@@ -111,11 +119,24 @@ class DrawImpl : private Draw
 			LOG("screen height = %d", height);
 			LOG("Font Size = %d", fontSize);
 			LOG("Font Name = %s", desca.FaceName);
+
+			if (pD3DXCreateFontIndirect) {
+#if DIRECT3D_VERSION == 0x900
+				pD3DXCreateFontIndirect(this->pD3DD, &desca, &pFont);
+#else
+				pD3DXCreateFontIndirect(this->pD3DD, &lf, &pFont);
+#endif
+			}
+
+			if (pD3DXCreateSprite) {
+				pD3DXCreateSprite(this->pD3DD, &pSprite);
+			}
 		}
 	}
 
 	~DrawImpl() {
 		if (pFont) pFont->Release();
+		if (pSprite) pSprite->Release();
 	}
 
 	using wchar = wchar_t;
@@ -132,6 +153,8 @@ class DrawImpl : private Draw
 	};
 	using PtrInfo = std::unique_ptr<Info>;
 	using PtrInfoList = std::list<PtrInfo>;
+	using CallCreateSprite = decltype(D3DXCreateSprite)*;
+
 #if DIRECT3D_VERSION == 0x900
 	using CallCreateFont = decltype(D3DXCreateFontIndirectW)*;
 #else
@@ -191,8 +214,10 @@ class DrawImpl : private Draw
 	const HWND hWnd;
 	D3DD* const pD3DD;
 	CallCreateFont pD3DXCreateFontIndirect;
-
 	ID3DXFont *pFont = nullptr;
+
+	CallCreateSprite pD3DXCreateSprite;
+	ID3DXSprite *pSprite = nullptr;
 
 	int width = 0;
 	int height = 0;
@@ -219,17 +244,12 @@ void Draw::DestoryDraw(Draw * draw)
 void DrawImpl::DrawInfos() {
 	if (width == 0 || !pD3DD) return;
 
-	if (!pFont 	&& pD3DXCreateFontIndirect) {
-#if DIRECT3D_VERSION == 0x900
-		pD3DXCreateFontIndirect(pD3DD, &desca, &pFont);
-#else
-		pD3DXCreateFontIndirect(pD3DD, &lf, &pFont);
-#endif
-	}
-
 	if (pFont) {
 		pD3DD->BeginScene();
 
+		if (pSprite) {
+			pSprite->Begin(SPRITE_BEGIN_FLAG);
+		}
 		RECT rect_shadow;
 
 		for (const auto& info : infos) {
@@ -248,6 +268,9 @@ void DrawImpl::DrawInfos() {
 			pFont->DrawTextW(SPRITE info->text, -1, &info->rect, info->format, info->color);
 		}
 
+		if (pSprite) {
+			pSprite->End();
+		}
 		pD3DD->EndScene();
 	}
 }

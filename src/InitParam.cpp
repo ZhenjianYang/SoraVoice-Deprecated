@@ -24,7 +24,7 @@ constexpr const char* DllDirs[] = { ".\\dll\\", ".\\voice\\dll\\" };
 constexpr char STR_d3dx_dll[] = "d3dx9_42.dll";
 constexpr const char* STR_D3DX9_APIS[][2] = {
 	{"D3DXCreateFontIndirect", "D3DXCreateFontIndirectW"},
-	//{"D3DXCreateSprite", "D3DXCreateSprite" }
+	{"D3DXCreateSprite", "D3DXCreateSprite" }
 };
 #else
 #include <d3d8\d3dx8.h>
