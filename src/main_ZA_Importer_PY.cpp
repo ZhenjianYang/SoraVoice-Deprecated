@@ -27,6 +27,9 @@ constexpr char NpcTalk[] = "NpcTalk";
 
 const string TalkTypes[] = { AnonymousTalk, ChrTalk, NpcTalk };
 
+const string mark_ex = "#extra";
+const string SPACE = "    ";
+
 static int cnt_err = 0;
 static ofstream ofs;
 static void Error(const char* foramt, ...) {
@@ -46,6 +49,8 @@ struct LineInfo
 {
 	string vid;
 	int line_no;
+	string ex1;
+	string ex2;
 };
 using LinesInTalk = unordered_map<int, LineInfo>;
 using Talks = unordered_map<int, LinesInTalk>;
@@ -96,9 +101,32 @@ static auto GetMapTalkVid(const string& py_out, const string& bin_out) {
 				}
 			}
 		}
-		if (!vid.empty()) {
+
+		string ex1;
+		string s = buff_bin;
+		auto idx = s.find(mark_ex);
+		if (idx != string::npos) {
+			ex1 = s.substr(idx + mark_ex.length());
+		}
+
+		string ex2;
+		pos = 0;
+		while (buff_bin[pos])
+		{
+			while (buff_bin[pos] && buff_bin[pos] != '#') pos++;
+			if (buff_bin[pos] == '#') {
+				int start = pos;
+				pos++;
+				while (buff_bin[pos] >= '0' && buff_bin[pos] <= '9') pos++;
+				if ((buff_bin[pos] == 'A' || buff_bin[pos] == 'W') && pos - start > 1) {
+					ex2.append(buff_bin + start, pos - start + 1);
+				}
+			}
+		}
+
+		if (!vid.empty() || !ex1.empty() || !ex2.empty()) {
 			auto &Talk = rst[talk_id];
-			auto inrst = Talk.insert({ line_id, { vid, line_no } });
+			auto inrst = Talk.insert({ line_id, { vid, line_no, ex1, ex2 } });
 
 			if (!inrst.second) {
 				Error("%s, %d: %04d,%02d,%05d, 重复的键值！", py_out.c_str(), line_no, talk_id, line_id, ori_line_no);
@@ -195,6 +223,10 @@ int main(int argc, char* argv[])
 						}
 						else {
 							s = s.insert(idx + 1, it_line->second.vid);
+							if(!it_line->second.ex1.empty())
+								s = s.append(SPACE).append(it_line->second.ex1);
+							if (!it_line->second.ex2.empty())
+								s = s.append(SPACE).append(it_line->second.ex2);
 						}
 					}
 				}

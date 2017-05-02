@@ -41,6 +41,11 @@ constexpr byte SCPSTR_CODE_COLOR = 0x07;
 constexpr byte SCPSTR_CODE_09 = 0x09;
 constexpr byte SCPSTR_CODE_ITEM = 0x1F;
 
+constexpr byte CODE_Sleep = 0x08;
+const string Str_sleep = "#sleep#";
+const string mark_ex = "#extra";
+const string SPACE = "    ";
+
 static const map<byte, int> scp_str_list = {
 		{0x01,0},     //SCPSTR_CODE_LINE_FEED
 		{0x02,0},     //SCPSTR_CODE_ENTER
@@ -120,6 +125,17 @@ public:
 
 		if(texts.size() == 0 || texts.rbegin()->second.find("\\x02") == string::npos) {
 			len = 0;
+		}
+		else {
+			bool first = true;
+			while (len + 2 < max_len && buf[len] == CODE_Sleep) {
+				len++;
+				if (first) {
+					texts.back().second.append(SPACE).append(mark_ex).append(Str_sleep);
+				}
+				texts.back().second.append(std::to_string(*(short*)(buf + len)));
+				len += 2;
+			}
 		}
 	}
 
