@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 			const auto& item = snt[i];
 			if(item.Type == AllItemTypes::Nomarl) continue;
 
-			if(out_cnt == 0) ofs.open(dir_out + fn_snt);
+			if(out_cnt == 0) ofs.open(dir_out + name + ATTR_OUT);
 
 			talk_cnt++;
 			ofs << Seperator << "\n" << Seperator << "\n\n";

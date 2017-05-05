@@ -67,9 +67,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\Common.cpp" />
     <ClCompile Include="..\..\src\main_Exporter_MBIN.cpp" />
+    <ClCompile Include="..\..\src\SoraIE.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Common.h" />
+    <ClInclude Include="..\..\src\SoraIE.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

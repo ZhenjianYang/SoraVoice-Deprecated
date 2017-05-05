@@ -1,6 +1,8 @@
 #include "SoraIE.h"
 
 #include <assert.h>
+#include <memory>
+#include <fstream>
 
 #define STR_4TBL "\t\t\t\t"
 #define MAXCH_ONELINE 10000
@@ -11,25 +13,32 @@ static const ExDataList emptyExDataList;
 
 const string STR_NORAML = "";
 const string STR_SAY = "say";
-const string STR_TEXT = "text";
 const string STR_TALK = "talk";
+const string STR_TEXT = "text";
 
 constexpr int TS_NORMAL = 0;
 constexpr int TS_SAY = 2;
-constexpr int TS_TEXT = 1;
 constexpr int TS_TALK = 3;
+constexpr int TS_TEXT = 1;
+
+constexpr int MCODE_SAY = 1;
+constexpr int MCODE_TALK = 2;
+constexpr int MCODE_TEXT = 3;
+constexpr int MAX_TALKS_IN_MBIN = 5000;
 
 const char MARK_NORAML = '\0';
 const char MARK_SAY = 'S';
-const char MARK_TEXT = 'X';
 const char MARK_TALK = 'T';
+const char MARK_TEXT = 'X';
 
 const ItemType ItemType::All::_normal(TS_NORMAL, STR_NORAML, MARK_NORAML);
 const ItemType ItemType::All::_say(TS_SAY, STR_SAY, MARK_SAY);
-const ItemType ItemType::All::_text(TS_TEXT, STR_TEXT, MARK_TEXT);
 const ItemType ItemType::All::_talk(TS_TALK, STR_TALK, MARK_TALK);
+const ItemType ItemType::All::_text(TS_TEXT, STR_TEXT, MARK_TEXT);
 
 constexpr PItemType SoraSNT::TalkTypes[];
+
+using byte = unsigned char;
 
 void SNTItem::Output(std::ostream & ostr) const
 {
@@ -169,4 +178,125 @@ void SoraSNT::Output(std::ostream & ostr) const
 	for (const auto& item : items) {
 		item.Output(ostr);
 	}
+}
+
+#define GET_INT(ptr) *(const int*)(ptr)
+static const unordered_map<byte, int> scp_str_list = {
+	//{ 0x01,0 },     //SCPSTR_CODE_LINE_FEED
+	//{ 0x02,0 },     //SCPSTR_CODE_ENTER
+	//{ 0x03,0 },     //SCPSTR_CODE_CLEAR
+	//{ 0x04,0 },
+	//{ 0x05,0 },
+	//{ 0x06,0 },     //SCPSTR_CODE_05
+	{ 0x07,1 },     //SCPSTR_CODE_COLOR
+	//{ 0x09,0 },     //SCPSTR_CODE_09
+	//{ 0x0A,0 },
+	//{ 0x0D,0 },
+	//{ 0x18,0 },
+	{ 0x1F,2 },     //SCPSTR_CODE_ITEM
+};
+
+MbinTalk::MbinTalkList MbinTalk::GetMbinTalks(const std::string & mbin, bool utf8)
+{
+	ifstream ifs(mbin, ios::binary);
+	ifs.seekg(0, ios::end);
+	int len = (int)ifs.tellg();
+	unique_ptr<byte[]> sbuff(new byte[len]);
+	ifs.seekg(0, ios::beg);
+	ifs.read((char*)sbuff.get(), len);
+	ifs.close();
+	const byte* const buff = sbuff.get();
+
+	int ib = 0;
+	int num = GET_INT(buff); ib += 4;
+	assert(num < MAX_TALKS_IN_MBIN);
+
+	vector<pair<int, int>> type_off_list;
+	type_off_list.reserve(num);
+
+	for (int i = 0; i < num; i++) {
+		int type = GET_INT(buff + ib); ib += 4;
+		int roff = GET_INT(buff + ib); ib += 4;
+
+		if (type != 0) type_off_list.push_back({ type, roff + 4 + 8 * num });
+	}
+
+	MbinTalkList rst;
+	rst.reserve(type_off_list.size());
+	for (size_t i = 0; i < type_off_list.size(); i++) {
+		rst.push_back(MbinTalk());
+		auto& talk = rst.back();
+		auto& len = talk.len;
+
+		talk.id = i + 1;
+		len = 0;
+
+		const int mbin_code = type_off_list[i].first;
+		const byte* const ps = buff + type_off_list[i].second;
+
+		len += 3;
+		switch (mbin_code)
+		{
+		case MCODE_SAY:
+			talk.type = AllItemTypes::Say;
+			break;
+		case MCODE_TALK:
+			talk.type = AllItemTypes::Talk;
+			talk.name = (char*)(ps + len);
+			len += talk.name.length() + 1;
+			break;
+		case MCODE_TEXT:
+			talk.type = AllItemTypes::Text;
+		default:
+			assert(false || "Unknow mbin code!");
+			break;
+		}
+
+		talk.texts.push_back(string());
+
+		bool preSimbol = false;
+		while (ps[len]) {
+			if (ps[len] < 0x20) {
+				if (ps[len] <= 3) {
+					talk.texts.back().push_back('\\');
+					talk.texts.back().push_back('0' + ps[len]);
+					preSimbol = true;
+					len++;
+				}
+				else {
+					if (preSimbol) talk.texts.push_back(string());
+					preSimbol = false;
+
+					auto it = scp_str_list.find(ps[len]);
+					int oplen = it == scp_str_list.end() ? 0 : it->second;
+
+					talk.texts.back().append("[");
+					char tb[4];
+					for (int j = 0; j <= oplen; j++, len++) {
+						if (j != 0) talk.texts.back().push_back(' ');
+						sprintf(tb, "%02d", ps[len]);
+						talk.texts.back().append(tb);
+					}
+					talk.texts.back().append("]");
+				}
+			}
+			else {
+				if (preSimbol) talk.texts.push_back(string());
+				preSimbol = false;
+
+				int cnt = 1;
+				if (!utf8) {
+					if (ps[len] >= 0x80) cnt = 2;
+				}
+				else {
+					if (ps[len] >= 0xC0 && ps[len] < 0xE0) cnt = 2;
+					else if(ps[len] >= 0xE0) cnt = 3;
+				}
+
+				for(int j = 0; j < cnt; j++)
+					talk.texts.back().push_back(ps[len++]);
+			}
+		}
+	}
+	return rst;
 }

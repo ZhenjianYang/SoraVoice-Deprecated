@@ -28,14 +28,14 @@ public:
 	private:
 		static const ItemType _normal;
 		static const ItemType _say;
-		static const ItemType _text;
 		static const ItemType _talk;
+		static const ItemType _text;
 
 	public:
 		static constexpr const ItemType* Nomarl = &_normal;
 		static constexpr const ItemType* Say = &_say;
-		static constexpr const ItemType* Text = &_text;
 		static constexpr const ItemType* Talk = &_talk;
+		static constexpr const ItemType* Text = &_text;
 
 	private:
 		All() = delete;
@@ -99,7 +99,7 @@ class SoraSNT
 public:
 	using ItemsList = std::vector<SNTItem>;
 
-	static constexpr PItemType TalkTypes[] = { AllItemTypes::Say, AllItemTypes::Text, AllItemTypes::Talk };
+	static constexpr PItemType TalkTypes[] = { AllItemTypes::Say, AllItemTypes::Talk, AllItemTypes::Text };
 	static constexpr int TalksNum = std::extent<decltype(TalkTypes)>::value;
 
 	SoraSNT(std::istream& istr);
@@ -132,5 +132,39 @@ public:
 	}
 private:
 	ItemsList items;
+};
+
+class MbinTalk {
+public:
+	using TalkTexts = std::vector<std::string>;
+	using MbinTalkList = std::vector<MbinTalk>;
+
+	const int& ID = id;
+	const int& Len = len;
+	const std::string& Name = name;
+	const TalkTexts& Texts = texts;
+	const PItemType& Type = type;
+
+	MbinTalk(const MbinTalk& _Other)
+		:id(_Other.id), len(_Other.len), type(type), name(_Other.name), texts(_Other.texts) { }
+	MbinTalk& operator=(const MbinTalk& _Other) {
+		id = _Other.id; len = _Other.len; type = _Other.type;  name = _Other.name; texts = _Other.texts;
+	}
+
+	MbinTalk(MbinTalk&& _Right)
+		:id(_Right.id), len(_Right.len), type(type), name(std::move(_Right.name)), texts(std::move(_Right.texts)) { }
+	MbinTalk& operator=(MbinTalk&& _Right) {
+		id = _Right.id; len = _Right.len; type = _Right.type; name = std::move(_Right.name); texts = std::move(_Right.texts);
+	}
+
+	static MbinTalkList GetMbinTalks(const std::string & mbin, bool utf8 = false);
+private:
+	MbinTalk() : id(-1), len(0) { }
+
+	int id;
+	int len;
+	PItemType type;
+	std::string name;
+	TalkTexts texts;
 };
 
