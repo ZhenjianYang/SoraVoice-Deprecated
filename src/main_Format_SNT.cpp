@@ -16,13 +16,13 @@ int main(int argc, char* argv[])
 		cout << "Usage:\n"
 			"\t" "Foramt_SNT dir_snt [dir_out]\n"
 			"\n"
-			"Default: dir_out = dir_snt.out"
+			"Default: dir_out = dir_snt.fmt"
 			<< endl;
 		return 0;
 	}
 
 	string dir_snt = argv[1];  while (dir_snt.back() == '/' || dir_snt.back() == '\\') dir_snt.pop_back();
-	string dir_out = argc > 2 ? argv[2] : dir_snt + ".out";
+	string dir_out = argc > 2 ? argv[2] : dir_snt + ".fmt";
 
 	Sora::MakeDirectory(dir_out);
 	if (dir_out.length() > 0 && dir_out.back() != '\\') dir_out.push_back('\\');

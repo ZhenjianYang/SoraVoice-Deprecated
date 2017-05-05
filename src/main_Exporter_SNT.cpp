@@ -1,28 +1,14 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <assert.h>
 
 #include "Common.h"
+#include "SoraSNT.h"
 
 #define ATTR_SNT "._SN.txt"
 #define ATTR_OUT ".txt"
 #define REP_NAME "snt_report.txt"
-
-#define MAXCH_ONELINE 2048
-
-#define FLAG_CLEAR 0
-#define FLAG_SAY 1
-#define FLAG_TEXT 2
-#define FLAG_TALK 4
-#define FLAG_MENU 8
-
-
-#define STR_SAY "say"
-#define STR_TEXT "text"
-#define STR_TALK "talk"
-#define STR_4TBL "\t\t\t\t"
-#define CH_TBL '\t'
-#define CH_SQ '\''
 
 constexpr char Seperator[] = "#-------------------------------------------------------------------#";
 
@@ -49,30 +35,43 @@ int main(int argc, char* argv[])
 	vector<string> fn_snts;
 	Sora::SearchFiles(dir_snt + "*" ATTR_SNT, fn_snts);
 
+	const string TextBeg = "'";
+	const string TextEnd = "\"";
+
 	ofstream ofs_rp(REP_NAME);
 	for (const auto &fn_snt : fn_snts) {
 		const string name = fn_snt.substr(0, fn_snt.rfind(ATTR_SNT));
 		cout << "处理" << fn_snt << "..." << endl;
 
 		ifstream ifs(dir_snt + fn_snt);
+		SoraSNT snt(ifs);
+		ifs.close();
+
 		ofstream ofs;
 		int out_cnt = 0;
-		
-		char buff_snt[MAXCH_ONELINE + 1];
-		int line_cnt = 0;
+		int talk_cnt = 0;
+		for(int i = 0; i < snt.Num(); i++) {
+			const auto& item = snt[i];
+			if(item.Type == AllItemTypes::Nomarl) continue;
 
-		int flag = FLAG_CLEAR;
-		int line_no = 0;
-		string text;
+			if(out_cnt == 0) ofs.open(dir_out + fn_snt);
 
-		while (ifs.getline(buff_snt, sizeof(buff_snt)).good())
-		{
-			line_cnt++;
+			talk_cnt++;
+			ofs << Seperator << "\n" << Seperator << "\n\n";
 
+			assert(item.Num() >= item.Type->TextStartLine + 3);
+			assert(item.Lines[item.Type->TextStartLine].content == TextBeg);
+			assert(item.Lines.back().content == TextEnd);
+			for(auto j = item.Type->TextStartLine + 1; j < item.Lines.size() - 1; j++) {
+				out_cnt++;
 
+				ofs << item.Type->Mark
+					<< setfill('0') << setw(4) << setiosflags(ios::right) << talk_cnt << ","
+					<< setfill('0') << setw(2) << setiosflags(ios::right) << j << ","
+					<< item[j].content
+					<< "\n\n";
+			}
 		}
-
-		ifs.close();
 		if(out_cnt > 0) ofs.close();
 
 		ofs_rp << name << '\t' <<  out_cnt << endl;

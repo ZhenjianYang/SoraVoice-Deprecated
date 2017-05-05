@@ -9,68 +9,97 @@ class ExData {
 };
 using ExDataList = std::unordered_map<int, ExData*>;
 
+class ItemType
+{
+private:
+	friend class All;
+	unsigned text_start;
+	std::string name;
+	char mark;
+	ItemType(unsigned text_start, const std::string& name, char mark)
+		: text_start(text_start), name(name), mark(mark) {}
+	ItemType(const ItemType&) = delete;
+	ItemType& operator=(const ItemType&) = delete;
+	ItemType(ItemType&&) = delete;
+	ItemType& operator=(ItemType&&) = delete;
+
+public:
+	class All {
+	private:
+		static const ItemType _normal;
+		static const ItemType _text;
+		static const ItemType _say;
+		static const ItemType _talk;
+
+	public:
+		static constexpr const ItemType* Nomarl = &_normal;
+		static constexpr const ItemType* Text = &_text;
+		static constexpr const ItemType* Say = &_say;
+		static constexpr const ItemType* Talk = &_talk;
+
+	private:
+		All() = delete;
+	};
+
+public:
+	const unsigned &TextStartLine = text_start;
+	const std::string Name = name;
+	const char &Mark = mark;
+};
+using PItemType = const ItemType*;
+using AllItemTypes = ItemType::All;
+
 class SNTItem
 {
 	friend class SoraSNT;
 public:
-	class Type
-	{
-	private:
-		friend class All;
-		unsigned text_start;
-		std::string name;
-		Type(unsigned text_start, const std::string& name) : text_start(text_start), name(name) {}
-
-	public:
-		class All {
-		private:
-			static const Type _normal;
-			static const Type _text;
-			static const Type _say;
-			static const Type _talk;
-
-		public:
-			static constexpr const Type* Nomarl = &_normal;
-			static constexpr const Type* Text = &_text;
-			static constexpr const Type* Say = &_say;
-			static constexpr const Type* Talk = &_talk;
-
-		private:
-			All() = delete;
-		};
-
-	public:
-		const unsigned &TextStartLine = text_start;
-		const std::string &Name = name;
-	};
-	using PType = const Type*;
-
-	using Line = struct { std::string content; ExData* exData; };
-	using Lines = std::vector<Line>;
+	using ItemLine = struct { std::string content; ExData* exData; };
+	using ItemLinesList = std::vector<ItemLine>;
 
 	unsigned Num() const { return lines.size(); }
-	PType GetType() const { return type; }
-	int GetId() const { return id; }
-	Lines& GetLines() { return lines; }
-	const Lines& GetLines() const { return lines; }
-	
+	const PItemType& Type = type;
+	const int& ID =  id;
+	ItemLinesList &Lines = lines;
+
+	ItemLine& Get(int id) { return lines[id]; }
+	const ItemLine& Get(int id) const { return lines[id]; }
+
+	ItemLine& operator[](int id) { return Get(id); }
+	const ItemLine& operator[](int id) const { return Get(id); }
+
 	void Output(std::ostream& ostr) const;
-	SNTItem(int id, PType type = Type::All::Nomarl) : id(id), type(type) { };
+	SNTItem(int id, PItemType type = ItemType::All::Nomarl) : id(id), type(type) { };
+
+	SNTItem(const SNTItem& _Other)
+		: id(_Other.id), type(_Other.type), lines(_Other.lines) {}
+	SNTItem& operator=(const SNTItem& _Other) {
+		id = _Other.id;
+		type = _Other.type;
+		lines = _Other.lines;
+		return *this;
+	}
+
+	SNTItem(SNTItem&& _Right)
+			: id(_Right.id), type(_Right.type), lines(std::move(_Right.lines)) {}
+	SNTItem& operator=(SNTItem&& _Right) {
+			id = _Right.id;
+			type = _Right.type;
+			lines = std::move(_Right.lines);
+			return *this;
+	}
+
 private:
-	int id = 0;
-	PType type;
-	Lines lines;
+	int id;
+	PItemType type;
+	ItemLinesList lines;
 };
 
 class SoraSNT
 {
 public:
-	using Type = SNTItem::Type;
-	using PType = SNTItem::PType;
-	using Types = Type::All;
-	using Items = std::vector<SNTItem>;
+	using ItemsList = std::vector<SNTItem>;
 
-	static constexpr PType TalkTypes[] = { Types::Text, Types::Say, Types::Talk };
+	static constexpr PItemType TalkTypes[] = { AllItemTypes::Text, AllItemTypes::Say, AllItemTypes::Talk };
 	static constexpr int TalksNum = std::extent<decltype(TalkTypes)>::value;
 
 	SoraSNT(std::istream& istr);
@@ -78,8 +107,7 @@ public:
 
 	int Num() const { return items.size(); }
 
-	Items& GetItems() { return items; }
-	const Items& GetItems() const { return items; }
+	ItemsList& Items = items;
 	
 	SNTItem& Get(int id) { return items[id]; }
 	const SNTItem& Get(int id) const { return items[id]; }
@@ -88,7 +116,21 @@ public:
 	const SNTItem& operator[](int id) const { return Get(id); }
 
 	void Output(std::ostream& ostr) const;
+
+	SoraSNT(const SoraSNT& _Other)
+		: items(_Other.items) {}
+	SoraSNT& operator=(const SoraSNT& _Other) {
+		items = _Other.items;
+		return *this;
+	}
+
+	SoraSNT(SoraSNT&& _Right)
+		: items(std::move(_Right.items)) { }
+	SoraSNT& operator=(SoraSNT&& _Right) {
+		items = std::move(_Right.items);
+		return *this;
+	}
 private:
-	Items items;
+	ItemsList items;
 };
 
