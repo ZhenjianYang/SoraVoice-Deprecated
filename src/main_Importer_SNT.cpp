@@ -5,84 +5,117 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include <cstdarg>
+
 #include "Common.h"
 #include "Mapping.h"
+#include "SoraIE.h"
 
 #define ATTR_SNT "._SN.txt"
 #define ATTR_IPT ".txt"
 #define REP_NAME "import_snt_report.txt"
 
-#define MAXCH_ONELINE 2048
-#define MAX_LINENO_LEN 9
-
-#define MAX_LINENO 0x7FFFFFFF
-
-#define FLAG_CLEAR 0
-#define FLAG_SAY 1
-#define FLAG_TEXT 2
-#define FLAG_TALK 4
-#define FLAG_MENU 8
-
-#define STR_SAY "say"
-#define STR_TEXT "text"
-#define STR_TALK "talk"
-#define STR_MENU "menu"
-#define STR_4TBL "\t\t\t\t"
-#define CH_TBL '\t'
-#define CH_SQ '\''
+#define MAXCH_ONELINE 10000
 
 using namespace std;
 
-static void GetMapLineVid(map<int, string>& map_line_vid, const string& fn_snt_exp, const string& fn_mbin_exp, ofstream& ofs_rp)
+static int cnt_err = 0;
+static ofstream ofs;
+static void Error(const char* foramt, ...) {
+	if (cnt_err == 0) ofs.open(REP_NAME);
+
+	cnt_err++;
+	static char buff[MAXCH_ONELINE];
+	va_list argptr;
+	va_start(argptr, foramt);
+	vsnprintf(buff, sizeof(buff), foramt, argptr);
+	va_end(argptr);
+
+	ofs << buff << endl;
+}
+
+struct LineInfo
 {
-	ifstream ifs_snt(fn_snt_exp);
-	ifstream ifs_mbin(fn_mbin_exp);
+	string vid;
+	int line_no;
+	string ex1;
+};
+using LinesInTalk = unordered_map<int, LineInfo>;
+using Talks = unordered_map<int, LinesInTalk>;
 
-	if (!ifs_snt || !ifs_mbin) return;
+static auto GetMapTalkVid(const string& snt_out, const string& bin_out) {
+	Talks rst;
 
-	char buf_snt[MAXCH_ONELINE + 1], buf_mbin[MAXCH_ONELINE + 1];
-	while (ifs_snt.getline(buf_snt, sizeof(buf_snt)).good()
-		&& ifs_mbin.getline(buf_mbin, sizeof(buf_mbin)).good())
-	{
-		int line_no = 0;
-		for (int i = 0; i < MAX_LINENO_LEN; i++) {
-			if (buf_snt[i] == ',') break;
-			else if (buf_snt[i] >= '0' && buf_snt[i] <= '9') {
-				line_no = line_no * 10 + buf_snt[i] - '0';
-			}
-			else {
-				line_no = 0;
-				break;
-			}
+	ifstream ifs_snt(snt_out);
+	ifstream ifs_bin(bin_out);
+
+	if (!ifs_snt || !ifs_bin) return rst;
+
+	static char buff_snt[MAXCH_ONELINE + 1];
+	static char buff_bin[MAXCH_ONELINE + 1];
+
+	for (int line_no = 1;
+		ifs_snt.getline(buff_snt, sizeof(buff_snt)) && ifs_bin.getline(buff_bin, sizeof(buff_bin));
+		line_no++) {
+
+		bool empty_py = buff_snt[0] == '#' || buff_snt[0] == '\0';
+		bool empty_bin = buff_bin[0] == '#' || buff_bin[0] == '\0';
+
+		if (empty_py != empty_bin) {
+			Error("%s, %d: 空行不匹配！", snt_out.c_str(), line_no);
 		}
-		if (line_no <= 0) continue;
+		if (empty_py || empty_bin) continue;
+
+		int talk_id = -1, line_id = -1;
+		char type = 0;
+		if (sscanf(buff_snt, "%c%04d,%02d,", &type, &talk_id, &line_id) < 3) {
+			Error("%s, %d: 错误的行！", snt_out.c_str(), line_no);
+			continue;
+		}
 
 		int pos = 0;
 		string vid;
-		while (vid.empty() && buf_mbin[pos])
+		while (vid.empty() && buff_bin[pos])
 		{
-			while (buf_mbin[pos] && buf_mbin[pos] != '#') pos++;
-			if (buf_mbin[pos] == '#') {
+			while (buff_bin[pos] && buff_bin[pos] != '#') pos++;
+			if (buff_bin[pos] == '#') {
 				int start = pos;
 				pos++;
-				while (buf_mbin[pos] >= '0' && buf_mbin[pos] <= '9') pos++;
-				if (buf_mbin[pos] == 'V' && pos - start > 1) {
-					vid.assign(buf_mbin + start + 1, pos - start - 1);
+				while (buff_bin[pos] >= '0' && buff_bin[pos] <= '9') pos++;
+				if (buff_bin[pos] == 'V' && pos - start > 1) {
+					vid.assign(buff_bin + start, pos - start);
+					vid.push_back('v');
 					break;
 				}
 			}
 		}
-		if (map_line_vid[line_no].empty()) {
-			if (!vid.empty()) map_line_vid[line_no] = vid;
-		}
-		else {
-			ofs_rp << ">>【警告】行 " << line_no << " ：在SNT.OUT中发现重复的该行号。" << endl;
+
+		string ex1;
+		pos = 0;
+		while (buff_bin[pos])
+		{
+			while (buff_bin[pos] && buff_bin[pos] != '#') pos++;
+			if (buff_bin[pos] == '#') {
+				int start = pos;
+				pos++;
+				while (buff_bin[pos] >= '0' && buff_bin[pos] <= '9') pos++;
+				if ((buff_bin[pos] == 'A' || buff_bin[pos] == 'W') && pos - start > 1) {
+					ex1.append(buff_bin + start, pos - start + 1);
+				}
+			}
 		}
 
+		if (!vid.empty() || !ex1.empty()) {
+			auto &Talk = rst[talk_id];
+			auto inrst = Talk.insert({ line_id,{ vid, line_no, ex1} });
+
+			if (!inrst.second) {
+				Error("%s, %d: %04d,%02d,%05d, 重复的键值！", snt_out.c_str(), line_no, talk_id, line_id);
+			}
+		}
 	}
 
-	ifs_snt.close();
-	ifs_mbin.close();
+	return rst;
 }
 
 int main(int argc, char* argv[])
@@ -132,7 +165,9 @@ int main(int argc, char* argv[])
 		for (int i = VoiceIdAdjustAdder[vid_len]; i < VoiceIdAdjustAdder[vid_len - 1] && i < NUM_MAPPING; i++) {
 			if (VoiceIdMapping[i][0]) {
 				sprintf(buff_vid, "%07d", i - VoiceIdAdjustAdder[vid_len]);
-				auto rst = map_vid.insert({ VoiceIdMapping[i], buff_vid + buff_len - vid_len });
+				string vid_ori = '#' + string(VoiceIdMapping[i]) + 'v';
+				string vid_mapped = '#' + string(buff_vid + buff_len - vid_len) + 'v';
+				auto rst = map_vid.insert({ vid_ori, vid_mapped } );
 				if (!rst.second) {
 					cout << "Duplicate voice ID: " << VoiceIdMapping[i] << endl;
 				}
@@ -159,50 +194,56 @@ int main(int argc, char* argv[])
 		bool enbaleMapping = enbaleMappingGlobal && exception_list.find(name) == exception_list.end()
 			|| !enbaleMappingGlobal && exception_list.find(name) != exception_list.end();
 
-		map<int, string> map_line_vid;
-		GetMapLineVid(map_line_vid, dir_snt_exp + name + ATTR_IPT, dir_mbin_exp + name + ATTR_IPT, ofs_rp);
-		map_line_vid.insert({ MAX_LINENO,"" });
-
-		auto it_mlv = map_line_vid.cbegin();
+		const auto map_talk_vid = GetMapTalkVid(dir_snt_exp + name + ATTR_IPT, dir_mbin_exp + name + ATTR_IPT);
 
 		ifstream ifs(dir_snt + fn_snt);
-		ofstream ofs(dir_out + fn_snt);
+		SoraSNT snt(ifs);
+		ifs.close();
 
-		char buff[MAXCH_ONELINE + 1];
-		for (int line_no = 1;
-			ifs.getline(buff, sizeof(buff)).good();
-			line_no++)
-		{
-			if (line_no == it_mlv->first) {
-				if (buff[0] == '\t' && buff[1] == '\t' && buff[2] == '\t' && buff[3] == '\t') {
-					auto it_mapping = map_vid.cend();
-					if (enbaleMapping) {
-						it_mapping = map_vid.find(it_mlv->second);
-					}
+		int cnt_talk = 0;
+		for (int i = 0; i < snt.Num(); i++) {
+			auto &item = snt[i];
 
-					if (it_mapping != map_vid.cend()) {
-						ofs << STR_4TBL << '#' << it_mapping->second << 'v' << buff + 4 << '\n';
-					}
-					else {
-						ofs << STR_4TBL << '#' << it_mlv->second << 'v' << buff + 4 << '\n';
-					}
+			if (item.Type == AllItemTypes::Nomarl) continue;
 
+			cnt_talk++;
+			auto it_talk = map_talk_vid.find(cnt_talk);
+			if (it_talk == map_talk_vid.end()) continue;
+
+			for (auto &line : it_talk->second) {
+				if (line.second.vid.empty()) continue;
+
+				if (line.first <= (int)item.Type->TextStartLine || line.first >= (int)item.Num() - 1) {
+					Error("%s, %c%04d, %02d: 无法在此处插入语音 %s (来自行%d)！",
+						name.c_str(), item.Type->Mark, cnt_talk, line.first,
+						line.second.vid.c_str(), line.second.vid);
 				}
 				else {
-					ofs_rp << ">>【警告】行 " << line_no << " ：在SNT的该行没有发现有效文本。" << endl;
-					ofs << buff << '\n';
-				}
-				it_mlv++;
-			}
-			else {
-				ofs << buff << '\n';
-			}
+					auto it = map_vid.end();
+
+					if (enbaleMapping) {
+						it = map_vid.find(line.second.vid);
+					}
+
+					if (it == map_vid.end()) {
+						item[line.first].content = line.second.vid + item[line.first].content;
+					}
+					else {
+						item[line.first].content = it->second + item[line.first].content;
+					}
+				} //else
+			}//for (auto &line : it_talk->second)
 		}
 
-		ifs.close();
+		ofstream ofs(dir_out + fn_snt);
+		snt.Output(ofs);
 		ofs.close();
 	}
-	ofs_rp.close();
 
+	if (cnt_err > 0) {
+		ofs_rp.close();
+		cout << "存在错误，参阅报告：" << REP_NAME << endl;
+		getchar();
+	}
 	return 0;
 }
