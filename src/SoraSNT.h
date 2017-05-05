@@ -27,14 +27,14 @@ public:
 	class All {
 	private:
 		static const ItemType _normal;
-		static const ItemType _text;
 		static const ItemType _say;
+		static const ItemType _text;
 		static const ItemType _talk;
 
 	public:
 		static constexpr const ItemType* Nomarl = &_normal;
-		static constexpr const ItemType* Text = &_text;
 		static constexpr const ItemType* Say = &_say;
+		static constexpr const ItemType* Text = &_text;
 		static constexpr const ItemType* Talk = &_talk;
 
 	private:
@@ -99,7 +99,7 @@ class SoraSNT
 public:
 	using ItemsList = std::vector<SNTItem>;
 
-	static constexpr PItemType TalkTypes[] = { AllItemTypes::Text, AllItemTypes::Say, AllItemTypes::Talk };
+	static constexpr PItemType TalkTypes[] = { AllItemTypes::Say, AllItemTypes::Text, AllItemTypes::Talk };
 	static constexpr int TalksNum = std::extent<decltype(TalkTypes)>::value;
 
 	SoraSNT(std::istream& istr);

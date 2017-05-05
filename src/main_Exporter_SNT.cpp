@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 		}
 		if(out_cnt > 0) ofs.close();
 
-		ofs_rp << name << '\t' <<  out_cnt << endl;
+		ofs_rp << name << '\t' << talk_cnt << '\t' << out_cnt << endl;
 	}
 	ofs_rp.close();
 

@@ -10,23 +10,23 @@ using namespace std;
 static const ExDataList emptyExDataList;
 
 const string STR_NORAML = "";
-const string STR_TEXT = "text";
 const string STR_SAY = "say";
+const string STR_TEXT = "text";
 const string STR_TALK = "talk";
 
 constexpr int TS_NORMAL = 0;
-constexpr int TS_TEXT = 1;
 constexpr int TS_SAY = 2;
+constexpr int TS_TEXT = 1;
 constexpr int TS_TALK = 3;
 
 const char MARK_NORAML = '\0';
-const char MARK_TEXT = 'X';
 const char MARK_SAY = 'S';
+const char MARK_TEXT = 'X';
 const char MARK_TALK = 'T';
 
 const ItemType ItemType::All::_normal(TS_NORMAL, STR_NORAML, MARK_NORAML);
-const ItemType ItemType::All::_text(TS_TEXT, STR_TEXT, MARK_TEXT);
 const ItemType ItemType::All::_say(TS_SAY, STR_SAY, MARK_SAY);
+const ItemType ItemType::All::_text(TS_TEXT, STR_TEXT, MARK_TEXT);
 const ItemType ItemType::All::_talk(TS_TALK, STR_TALK, MARK_TALK);
 
 constexpr PItemType SoraSNT::TalkTypes[];
