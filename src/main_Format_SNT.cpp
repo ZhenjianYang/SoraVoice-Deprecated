@@ -35,12 +35,20 @@ int main(int argc, char* argv[])
 		cout << "处理" << fn_snt << "..." << endl;
 
 		ifstream ifs(dir_snt + fn_snt);
-		ofstream ofs(dir_out + fn_snt);
-
 		SoraSNT snt(ifs);
-		snt.Output(ofs);
-
 		ifs.close();
+		
+		ofstream ofs(dir_out + fn_snt);
+		int cnt_talk = 0;
+		for (int i = 0; i < snt.Num(); i++) {
+			if (snt[i].Type != AllItemTypes::Nomarl) {
+				cnt_talk++;
+				ofs << ";" << snt[i].Type->Mark
+					<< setfill('0') << setw(4) << setiosflags(ios::right) << cnt_talk << '\n';
+			}
+
+			snt[i].Output(ofs);
+		}
 		ofs.close();
 
 	}
