@@ -188,7 +188,6 @@ int main(int argc, char* argv[])
 	for (const auto &fn_snt : fn_snts) {
 		string name = fn_snt.substr(0, fn_snt.rfind(ATTR_SNT));
 		for_each(name.begin(), name.end(), [](char& c) { c = toupper(c); });
-		ofs_rp << "处理" << fn_snt << "..." << endl;
 		cout << "处理" << fn_snt << "..." << endl;
 
 		bool enbaleMapping = enbaleMappingGlobal && exception_list.find(name) == exception_list.end()
