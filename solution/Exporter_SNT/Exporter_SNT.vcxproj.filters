@@ -18,12 +18,18 @@
     <ClInclude Include="..\..\src\Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\SoraIE.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Common.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main_Exporter_SNT.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SoraIE.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

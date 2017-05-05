@@ -68,10 +68,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\Common.cpp" />
     <ClCompile Include="..\..\src\main_Format_SNT.cpp" />
-    <ClCompile Include="..\..\src\SoraSNT.cpp" />
+    <ClCompile Include="..\..\src\SoraIE.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\SoraSNT.h" />
+    <ClInclude Include="..\..\src\SoraIE.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
