@@ -9,37 +9,39 @@ using namespace std;
 
 static const ExDataList emptyExDataList;
 
-const string STR_SAY = "say";
+const string STR_NORAML = "";
 const string STR_TEXT = "text";
+const string STR_SAY = "say";
 const string STR_TALK = "talk";
 
-const string Talks[] = { STR_TEXT, STR_SAY, STR_TALK };
-const unsigned TextStart[] = { 1, 2, 3 };
-const SNTItem::Type Types[] = { SNTItem::Type::Text, SNTItem::Type::Say, SNTItem::Type::Talk };
-constexpr int TalksNum = std::extent<decltype(Talks)>::value;
+constexpr int TS_NORMAL = 0;
+constexpr int TS_TEXT = 1;
+constexpr int TS_SAY = 2;
+constexpr int TS_TALK = 3;
+
+const SNTItem::Type SNTItem::Type::All::_normal(TS_NORMAL, STR_NORAML);
+const SNTItem::Type SNTItem::Type::All::_text(TS_TEXT, STR_TEXT);
+const SNTItem::Type SNTItem::Type::All::_say(TS_SAY, STR_SAY);
+const SNTItem::Type SNTItem::Type::All::_talk(TS_TALK, STR_TALK);
+
+constexpr SoraSNT::PType SoraSNT::TalkTypes[];
 
 void SNTItem::Output(std::ostream & ostr) const
 {
-	int i = 0;
 	ostr << lines[0].content << '\n';
 
-	for (int j = 0; j < TalksNum; j++) {
-		if (type == Types[j]) {
-			for (int i = 1; i < lines.size(); i++) {
-				if (i == 1 && i < TextStart[j]) {
-					ostr << lines[i].content << '\n';
-				}
-				else if (i == 2 && i < TextStart[j]) {
-					ostr << STR_4TBL << lines[i].content << '\n';
-				}
-				else if (lines[i].content != "'" && lines[i].content != "\"") {
-					ostr << STR_4TBL << lines[i].content << '\n';
-				}
-				else {
-					ostr << lines[i].content << '\n';
-				}
-			}
-			break;
+	for (size_t i = 1; i < lines.size(); i++) {
+		if (i == 1 && i < type->TextStartLine) {
+			ostr << lines[i].content << '\n';
+		}
+		else if (i == 2 && i < type->TextStartLine) {
+			ostr << STR_4TBL << lines[i].content << '\n';
+		}
+		else if (lines[i].content != "'" && lines[i].content != "\"") {
+			ostr << STR_4TBL << lines[i].content << '\n';
+		}
+		else {
+			ostr << lines[i].content << '\n';
 		}
 	}
 }
@@ -50,33 +52,33 @@ SoraSNT::SoraSNT(std::istream & istr, const ExDataList & exDataList)
 {
 	char buff[MAXCH_ONELINE + 1];
 
-	unsigned text_start = 0;
+	PType type = Types::Nomarl;
 	for (int line_no = 1; istr.getline(buff, sizeof(buff)); line_no++) {
 		auto it = exDataList.find(line_no);
 		ExData* exData = it == exDataList.end() ? nullptr : it->second;
 
 		string s = buff;
 		size_t is = 0;
-		if (text_start == 0 && (s[0] == ';' || s.find(".def") == 0)) {
+		if (type == Types::Nomarl && (s[0] == ';' || s.find(".def") == 0)) {
 			items.push_back(SNTItem(items.size()));
 			items.back().lines.push_back({ s, exData });
 		}
 		else {
 			while (is < s.length())
 			{
-				if (text_start == 0) {
+				if (type == Types::Nomarl) {
 					auto idx = string::npos;
-					for (int i = 0; i < TalksNum; i++) {
-						if ((idx = s.find(Talks[i], is)) != string::npos) {
-							text_start = TextStart[i];
+					for (auto it_type : TalkTypes) {
+						if ((idx = s.find(it_type->Name, is)) != string::npos) {
+							type = it_type;
 
 							if (idx > 0) {
 								items.push_back(SNTItem(items.size()));
 								items.back().lines.push_back({ s.substr(is, idx - is), exData });
 							}
 
-							items.push_back(SNTItem(items.size(), Types[i]));
-							auto len = Talks[i].length();
+							items.push_back(SNTItem(items.size(), type));
+							auto len = type->Name.length();
 							while (s[len] == ' ') len++;
 							items.back().lines.push_back({ s.substr(idx, len), exData });
 
@@ -86,13 +88,13 @@ SoraSNT::SoraSNT(std::istream & istr, const ExDataList & exDataList)
 					}
 				}
 
-				if (text_start == 0) {
+				if (type == Types::Nomarl) {
 					items.push_back(SNTItem(items.size()));
 					items.back().lines.push_back({ s.substr(is), exData });
 					is += s.length();
-				} // if (text_start == 0)
+				} // if (type == Types::Nomarl)
 				else {
-					if (items.back().lines.size() == 1 && items.back().lines.size() < text_start) {
+					if (items.back().lines.size() == 1 && items.back().lines.size() < type->TextStartLine) {
 						auto idx = s.find('\'', is);
 						if (idx == string::npos) {
 							items.back().lines.push_back({ s.substr(is), exData });
@@ -104,7 +106,7 @@ SoraSNT::SoraSNT(std::istream & istr, const ExDataList & exDataList)
 						}
 						while (items.back().lines.back().content.back() == '\t') items.back().lines.back().content.pop_back();
 					}
-					else if (items.back().lines.size() == 2 && items.back().lines.size() < text_start) {
+					else if (items.back().lines.size() == 2 && items.back().lines.size() < type->TextStartLine) {
 						while (s[is] == '\t') is++;
 						assert(s[is] == '\'');
 						auto idx = s.find('"', is + 1);
@@ -112,13 +114,13 @@ SoraSNT::SoraSNT(std::istream & istr, const ExDataList & exDataList)
 						items.back().lines.push_back({ s.substr(is, idx + 1 - is), exData });
 						is = idx + 1;
 					}
-					else if (items.back().lines.size() == text_start) {
+					else if (items.back().lines.size() == type->TextStartLine) {
 						while (s[is] == '\t') is++;
 						assert(s[is] == '\'');
 						items.back().lines.push_back({ s.substr(is, 1), exData });
 						is = is + 1;
 					}
-					else if ((int)items.back().lines.size() > text_start) {
+					else if (items.back().lines.size() > type->TextStartLine) {
 						auto idx = s.find('"', is);
 						while (is < s.length() && is < idx) {
 							if (s[is] == '\t') { is++; continue; };
@@ -134,7 +136,7 @@ SoraSNT::SoraSNT(std::istream & istr, const ExDataList & exDataList)
 							}
 
 							const string& pre_line = items.back().lines.back().content;
-							if (items.back().lines.size() == text_start + 1
+							if (items.back().lines.size() == type->TextStartLine + 1
 								|| (s[is] != '\\' && pre_line.length() >= 2 && pre_line[pre_line.length() - 2] == '\\')) {
 								items.back().lines.push_back({ "", exData });
 							}
@@ -146,10 +148,10 @@ SoraSNT::SoraSNT(std::istream & istr, const ExDataList & exDataList)
 						if (s[is] == '"') {
 							items.back().lines.push_back({ s.substr(is, 1), exData });
 							is = is + 1;
-							text_start = 0;
+							type = Types::Nomarl;
 						}
 					}
-				} //else (text_start == 0)
+				} //else (type == Types::Nomarl)
 			} //while
 		} //else
 	}//for
