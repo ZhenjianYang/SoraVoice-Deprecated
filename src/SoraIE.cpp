@@ -5,6 +5,7 @@
 #include <fstream>
 
 #define STR_4TBL "\t\t\t\t"
+#define STR_TBL "\t"
 #define MAXCH_ONELINE 10000
 
 using namespace std;
@@ -40,6 +41,10 @@ const ItemType ItemType::All::_text(TS_TEXT, STR_TEXT, MARK_TEXT);
 
 constexpr PItemType SoraSNT::TalkTypes[];
 
+const string STR_CMT = "##";
+constexpr int cmt_start = 52;
+constexpr int len_tbl = 4;
+
 using byte = unsigned char;
 
 void SNTItem::Output(std::ostream & ostr) const
@@ -54,7 +59,19 @@ void SNTItem::Output(std::ostream & ostr) const
 			ostr << STR_4TBL << lines[i].content << '\n';
 		}
 		else if (lines[i].content != "'" && lines[i].content != "\"") {
-			ostr << STR_4TBL << lines[i].content << '\n';
+			auto idx = lines[i].content.find(STR_CMT);
+			if(idx == string::npos)
+				ostr << STR_4TBL << lines[i].content << '\n';
+			else {
+				ostr << STR_4TBL;
+				for (size_t j = 0; j < idx; j++) ostr << lines[i].content[j];
+				
+				int cnt_tbl = cmt_start / len_tbl - idx / len_tbl;
+				if (cnt_tbl < 2) cnt_tbl = 2;
+				for (int j = 0; j < cnt_tbl; j++) ostr << STR_TBL;
+				for (size_t j = idx; j < lines[i].content.length(); j++) ostr << lines[i].content[j];
+			}
+			ostr << '\n';
 		}
 		else {
 			ostr << lines[i].content << '\n';

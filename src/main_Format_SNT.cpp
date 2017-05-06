@@ -10,6 +10,10 @@
 
 using namespace std;
 
+const string mark_opA = "op#A";
+const string mark_opW = "op#W";
+const string mark_op5 = "op#5";
+
 int main(int argc, char* argv[])
 {
 	if (argc <= 1) {
@@ -41,13 +45,40 @@ int main(int argc, char* argv[])
 		ofstream ofs(dir_out + fn_snt);
 		int cnt_talk = 0;
 		for (int i = 0; i < snt.Num(); i++) {
-			if (snt[i].Type != AllItemTypes::Nomarl) {
+			const auto& item = snt[i];
+
+			if (item.Type != AllItemTypes::Nomarl) {
 				cnt_talk++;
 				ofs << ";" << snt[i].Type->Mark
-					<< setfill('0') << setw(4) << setiosflags(ios::right) << cnt_talk << '\n';
+					<< setfill('0') << setw(4) << setiosflags(ios::right) << cnt_talk;
+
+				bool has_opA = false;
+				bool has_opW = false;
+				bool has_op5 = false;
+
+				for (size_t j = item.Type->TextStartLine + 1; j < item.Num() - 1; j++) {
+					const string& line = item[j].content;
+
+					if (line.find("\\5") != string::npos) has_op5 = true;
+					size_t k = 0;
+					while (k < line.length()) {
+						while (k < line.length() && line[k] != '#') k++;
+						if(line[k] == '#')  k++;
+						while (line[k] >= '0' && line[k] <= '9') k++;
+						if (line[k] == 'A') has_opA = true;
+						if (line[k] == 'W') has_opW = true;
+						k++;
+					}
+				}
+
+				if (has_opA) ofs << ' ' << mark_opA;
+				if (has_opW) ofs << ' ' << mark_opW;
+				if (has_op5) ofs << ' ' << mark_op5;
+
+				ofs << '\n';
 			}
 
-			snt[i].Output(ofs);
+			item.Output(ofs);
 		}
 		ofs.close();
 

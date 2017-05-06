@@ -39,6 +39,7 @@ struct LineInfo
 	string vid;
 	int line_no;
 	string ex1;
+	string ex2;
 };
 using LinesInTalk = unordered_map<int, LineInfo>;
 using Talks = unordered_map<int, LinesInTalk>;
@@ -91,6 +92,19 @@ static auto GetMapTalkVid(const string& snt_out, const string& bin_out) {
 		}
 
 		string ex1;
+
+		pos = 0;
+		while (buff_bin[pos])
+		{
+			while (buff_bin[pos] && buff_bin[pos] != '\\') pos++;
+			if (buff_bin[pos] == '\\' && buff_bin[pos + 1] >= '1' && buff_bin[pos + 1] <= '3') {
+				ex1.push_back(buff_bin[pos]);
+				ex1.push_back(buff_bin[pos + 1]);
+			}
+			pos += 2;
+		}
+
+		if (!ex1.empty()) ex1.push_back(' ');
 		pos = 0;
 		while (buff_bin[pos])
 		{
@@ -99,15 +113,23 @@ static auto GetMapTalkVid(const string& snt_out, const string& bin_out) {
 				int start = pos;
 				pos++;
 				while (buff_bin[pos] >= '0' && buff_bin[pos] <= '9') pos++;
-				if ((buff_bin[pos] == 'A' || buff_bin[pos] == 'W') && pos - start > 1) {
+				if ((buff_bin[pos] == 'A' || buff_bin[pos] == 'W' || buff_bin[pos] == 'V') && pos - start > 1) {
 					ex1.append(buff_bin + start, pos - start + 1);
+					ex1.push_back(' ');
 				}
 			}
 		}
 
-		if (!vid.empty() || !ex1.empty()) {
+		string ex2;
+		for (pos = 0; buff_bin[pos + 1]; pos++) {
+			if (buff_bin[pos] == '#' && buff_bin[pos + 1] == '#') {
+				ex2 = buff_bin + pos + 2;
+			}
+		}
+
+		if (!vid.empty() || !ex1.empty() || !ex2.empty()) {
 			auto &Talk = rst[talk_id];
-			auto inrst = Talk.insert({ line_id,{ vid, line_no, ex1} });
+			auto inrst = Talk.insert({ line_id,{ vid, line_no, ex1, ex2} });
 
 			if (!inrst.second) {
 				Error("%s, %d: %04d,%02d,%05d, 重复的键值！", snt_out.c_str(), line_no, talk_id, line_id);
@@ -210,25 +232,31 @@ int main(int argc, char* argv[])
 			if (it_talk == map_talk_vid.end()) continue;
 
 			for (auto &line : it_talk->second) {
-				if (line.second.vid.empty()) continue;
-
 				if (line.first <= (int)item.Type->TextStartLine || line.first >= (int)item.Num() - 1) {
-					Error("%s, %c%04d, %02d: 无法在此处插入语音 %s (来自行%d)！",
+					Error("%s, %c%04d, %02d: 无法在此处插入 %s (来自行%d)！",
 						name.c_str(), item.Type->Mark, cnt_talk, line.first,
 						line.second.vid.c_str(), line.second.vid);
 				}
 				else {
-					auto it = map_vid.end();
+					if (!line.second.vid.empty()) {
+						auto it = map_vid.end();
 
-					if (enbaleMapping) {
-						it = map_vid.find(line.second.vid);
+						if (enbaleMapping) {
+							it = map_vid.find(line.second.vid);
+						}
+
+						if (it == map_vid.end()) {
+							item[line.first].content = line.second.vid + item[line.first].content;
+						}
+						else {
+							item[line.first].content = it->second + item[line.first].content;
+						}
 					}
 
-					if (it == map_vid.end()) {
-						item[line.first].content = line.second.vid + item[line.first].content;
-					}
-					else {
-						item[line.first].content = it->second + item[line.first].content;
+					if (!line.second.ex1.empty() || !line.second.ex2.empty()) {
+						item[line.first].content.append("##");
+						item[line.first].content.append(line.second.ex2).append(" ");
+						item[line.first].content.append(line.second.ex1);
 					}
 				} //else
 			}//for (auto &line : it_talk->second)
