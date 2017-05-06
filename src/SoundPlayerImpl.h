@@ -113,7 +113,7 @@ private:
 		Ogg::SetOggApis(ApiPack::GetApi(STR_ov_open_callbacks),
 						ApiPack::GetApi(STR_ov_info),
 						ApiPack::GetApi(STR_ov_read),
-						ApiPack::GetApi(STR_ov_read));
+						ApiPack::GetApi(STR_ov_clear));
 	}
 	PlayID playID = InvalidPlayID;
 	std::string fileName;
