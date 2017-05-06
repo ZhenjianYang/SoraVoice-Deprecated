@@ -70,8 +70,8 @@ static auto GetMapTalkVid(const string& py_out, const string& bin_out) {
 		ifs_py.getline(buff_py, sizeof(buff_py)) && ifs_bin.getline(buff_bin, sizeof(buff_bin));
 		line_no++ ) {
 
-		bool empty_py = buff_py[0] == '#' || buff_py[0] == '\0';
-		bool empty_bin = buff_bin[0] == '#' || buff_bin[0] == '\0';
+		bool empty_py = buff_py[0] == '#' || buff_py[0] == '\0' || buff_py[0] == '\t';
+		bool empty_bin = buff_bin[0] == '#' || buff_bin[0] == '\0' || buff_bin[0] == '\t';
 
 		if (empty_py != empty_bin) {
 			Error("%s, %d: 空行不匹配！", py_out.c_str(), line_no);
