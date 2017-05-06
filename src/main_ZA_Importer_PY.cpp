@@ -27,7 +27,7 @@ constexpr char NpcTalk[] = "NpcTalk";
 
 const string TalkTypes[] = { AnonymousTalk, ChrTalk, NpcTalk };
 
-const string mark_ex = "#extra";
+const string mark_ex = "##";
 const string SPACE = "    ";
 
 static int cnt_err = 0;
@@ -106,7 +106,7 @@ static auto GetMapTalkVid(const string& py_out, const string& bin_out) {
 		string s = buff_bin;
 		auto idx = s.find(mark_ex);
 		if (idx != string::npos) {
-			ex1 = s.substr(idx + mark_ex.length());
+			ex1 = s.substr(idx);
 		}
 
 		string ex2;

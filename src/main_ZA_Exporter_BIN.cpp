@@ -42,8 +42,8 @@ constexpr byte SCPSTR_CODE_09 = 0x09;
 constexpr byte SCPSTR_CODE_ITEM = 0x1F;
 
 constexpr byte CODE_Sleep = 0x08;
-const string Str_sleep = "#sleep#";
-const string mark_ex = "#extra";
+const string Str_sleep = "sleep#";
+const string mark_ex = "##";
 const string SPACE = "    ";
 
 static const map<byte, int> scp_str_list = {

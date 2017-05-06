@@ -19,6 +19,8 @@ const string Str_Sound = "Sound(";
 const string SoundAdd = "    #voice#";
 const string TalkIDAdd = "#";
 
+const string Str_MarkAuto = "    #Auto";
+
 const string mark_talk_id = "#talk#";
 const string mark_line_id = "#line#";
 
@@ -77,6 +79,9 @@ int main(int argc, char* argv[])
 		string talk_type;
 		int bra_cnt = 0;
 		
+		bool aut = false;
+		string auto_mark;
+
 		for(int line_no = 1;
 			ifs.getline(buff, sizeof(buff));
 			line_no++) 
@@ -94,6 +99,17 @@ int main(int argc, char* argv[])
 
 				if (bra_cnt <= 0) {
 					talk_type.clear();
+					if (aut) auto_mark = Str_MarkAuto;
+					aut = false;
+				}
+
+				size_t k = 0;
+				while (!aut && k < s.length()) {
+					while (k < s.length() && s[k] != '#') k++;
+					if (s[k] == '#')  k++;
+					while (s[k] >= '0' && s[k] <= '9') k++;
+					if (s[k] == 'A') aut = true;
+					k++;
 				}
 
 				auto idx = s.find(mark_line_id);
@@ -125,7 +141,7 @@ int main(int argc, char* argv[])
 							talk_type = search;
 
 							ofs << s.substr(0, idx) << TalkIDAdd
-								<< talk_type[0] << setfill('0') << setw(4) << setiosflags(ios::right) << talk_id_cnt << endl;
+								<< talk_type[0] << setfill('0') << setw(4) << setiosflags(ios::right) << talk_id_cnt << '\n';
 						}
 
 						idx = s.find(mark_talk_id);
@@ -137,7 +153,11 @@ int main(int argc, char* argv[])
 				}
 			}
 
-			ofs << s << endl;
+			ofs << s << '\n';
+			if (!auto_mark.empty()) {
+				ofs << auto_mark << '\n';
+				auto_mark.clear();
+			}
 		}
 
 		ifs.close();
