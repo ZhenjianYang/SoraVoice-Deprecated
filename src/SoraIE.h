@@ -136,32 +136,39 @@ private:
 
 class MbinTalk {
 public:
-	using TalkTexts = std::vector<std::string>;
+	using TalkLine = struct { int offset; int len; std::string text; };
+	using TalkTexts = std::vector<TalkLine>;
 	using MbinTalkList = std::vector<MbinTalk>;
 
 	const int& ID = id;
+	const int& Offset = offset;
 	const int& Len = len;
+	const PItemType& Type = type;
 	const std::string& Name = name;
 	const TalkTexts& Texts = texts;
-	const PItemType& Type = type;
-
+	
 	MbinTalk(const MbinTalk& _Other)
-		:id(_Other.id), len(_Other.len), type(type), name(_Other.name), texts(_Other.texts) { }
+		:id(_Other.id), offset(_Other.offset), len(_Other.len), 
+		type(type), name(_Other.name), texts(_Other.texts) { }
 	MbinTalk& operator=(const MbinTalk& _Other) {
-		id = _Other.id; len = _Other.len; type = _Other.type;  name = _Other.name; texts = _Other.texts;
+		id = _Other.id; offset = _Other.offset; len = _Other.len; 
+		type = _Other.type;  name = _Other.name; texts = _Other.texts;
 	}
 
 	MbinTalk(MbinTalk&& _Right)
-		:id(_Right.id), len(_Right.len), type(type), name(std::move(_Right.name)), texts(std::move(_Right.texts)) { }
+		:id(_Right.id), offset(_Right.offset), len(_Right.len), type(type), 
+		name(std::move(_Right.name)), texts(std::move(_Right.texts)) { }
 	MbinTalk& operator=(MbinTalk&& _Right) {
-		id = _Right.id; len = _Right.len; type = _Right.type; name = std::move(_Right.name); texts = std::move(_Right.texts);
+		id = _Right.id; offset = _Right.offset; len = _Right.len; 
+		type = _Right.type; name = std::move(_Right.name); texts = std::move(_Right.texts);
 	}
 
 	static MbinTalkList GetMbinTalks(const std::string & mbin, bool utf8 = false);
 private:
-	MbinTalk() : id(-1), len(0) { }
+	MbinTalk() : id(-1), offset(0), len(0) { }
 
 	int id;
+	int offset;
 	int len;
 	PItemType type;
 	std::string name;

@@ -21,6 +21,8 @@ constexpr int TS_SAY = 2;
 constexpr int TS_TALK = 3;
 constexpr int TS_TEXT = 1;
 
+constexpr int MAX_TALKS_IN_SNT = 2000;
+
 constexpr int MCODE_SAY = 1;
 constexpr int MCODE_TALK = 2;
 constexpr int MCODE_TEXT = 3;
@@ -65,6 +67,8 @@ SoraSNT::SoraSNT(std::istream& istr) : SoraSNT(istr, emptyExDataList) { }
 SoraSNT::SoraSNT(std::istream & istr, const ExDataList & exDataList)
 {
 	char buff[MAXCH_ONELINE + 1];
+
+	items.reserve(MAX_TALKS_IN_SNT);
 
 	PItemType type = AllItemTypes::Nomarl;
 	for (int line_no = 1; istr.getline(buff, sizeof(buff)); line_no++) {
@@ -224,15 +228,18 @@ MbinTalk::MbinTalkList MbinTalk::GetMbinTalks(const std::string & mbin, bool utf
 	MbinTalkList rst;
 	rst.reserve(type_off_list.size());
 	for (size_t i = 0; i < type_off_list.size(); i++) {
+		assert(i == 0 || type_off_list[i].second >= rst.back().Offset + rst.back().Len);
+
 		rst.push_back(MbinTalk());
 		auto& talk = rst.back();
+		talk.offset = type_off_list[i].second;
 		auto& len = talk.len;
 
 		talk.id = i + 1;
 		len = 0;
 
 		const int mbin_code = type_off_list[i].first;
-		const byte* const ps = buff + type_off_list[i].second;
+		const byte* const ps = buff + talk.offset;
 
 		len += 3;
 		switch (mbin_code)
@@ -252,36 +259,39 @@ MbinTalk::MbinTalkList MbinTalk::GetMbinTalks(const std::string & mbin, bool utf
 			break;
 		}
 
-		talk.texts.push_back(string());
+		talk.texts.push_back({ talk.offset + len, 0, "" });
 
 		bool preSimbol = false;
 		while (ps[len]) {
 			if (ps[len] < 0x20) {
 				if (ps[len] <= 3) {
-					talk.texts.back().push_back('\\');
-					talk.texts.back().push_back('0' + ps[len]);
+					talk.texts.back().text.push_back('\\');
+					talk.texts.back().text.push_back('0' + ps[len]);
 					preSimbol = true;
-					len++;
+
+					len++; talk.texts.back().len++;
 				}
 				else {
-					if (preSimbol) talk.texts.push_back(string());
+					if (preSimbol) talk.texts.push_back({ talk.offset + len, 0, "" });
 					preSimbol = false;
 
 					auto it = scp_str_list.find(ps[len]);
 					int oplen = it == scp_str_list.end() ? 0 : it->second;
 
-					talk.texts.back().append("[");
+					talk.texts.back().text.append("[");
 					char tb[4];
-					for (int j = 0; j <= oplen; j++, len++) {
-						if (j != 0) talk.texts.back().push_back(' ');
-						sprintf(tb, "%02d", ps[len]);
-						talk.texts.back().append(tb);
+					for (int j = 0; j <= oplen; j++) {
+						if (j != 0) talk.texts.back().text.push_back(' ');
+						sprintf(tb, "%02X", ps[len]);
+						talk.texts.back().text.append(tb);
+
+						len++; talk.texts.back().len++;
 					}
-					talk.texts.back().append("]");
+					talk.texts.back().text.append("]");
 				}
 			}
 			else {
-				if (preSimbol) talk.texts.push_back(string());
+				if (preSimbol) talk.texts.push_back({ talk.offset + len, 0, "" });
 				preSimbol = false;
 
 				int cnt = 1;
@@ -293,10 +303,13 @@ MbinTalk::MbinTalkList MbinTalk::GetMbinTalks(const std::string & mbin, bool utf
 					else if(ps[len] >= 0xE0) cnt = 3;
 				}
 
-				for(int j = 0; j < cnt; j++)
-					talk.texts.back().push_back(ps[len++]);
+				for (int j = 0; j < cnt; j++) {
+					talk.texts.back().text.push_back(ps[len]);
+					len++; talk.texts.back().len++;
+				}
 			}
 		}
+		len++;
 	}
 	return rst;
 }

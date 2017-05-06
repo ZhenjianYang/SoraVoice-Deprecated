@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 					ofs << talk.Type->Mark
 						<< setfill('0') << setw(4) << setiosflags(ios::right) << talk.ID << ","
 						<< setfill('0') << setw(2) << setiosflags(ios::right) << i << ","
-						<< talk.Texts[i]
+						<< talk.Texts[i].text
 						<< "\n\n";
 
 					out_cnt++;
