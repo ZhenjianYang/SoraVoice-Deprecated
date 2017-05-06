@@ -21,7 +21,7 @@ constexpr int TS_SAY = 2;
 constexpr int TS_TALK = 3;
 constexpr int TS_TEXT = 1;
 
-constexpr int MAX_TALKS_IN_SNT = 2000;
+constexpr int MAX_TALKS_IN_SNT = 20000;
 
 constexpr int MCODE_SAY = 1;
 constexpr int MCODE_TALK = 2;
