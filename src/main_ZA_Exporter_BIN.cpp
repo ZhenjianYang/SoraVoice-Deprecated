@@ -310,7 +310,7 @@ int main(int argc, char* argv[])
 
 					output(talk.Names());
 					output(talk.Texts());
-					ofs << Seperator << "\n\n";
+					ofs << Seperator << '\n' << Seperator << "\n\n";
 
 					idx += talk.Length();
 				}

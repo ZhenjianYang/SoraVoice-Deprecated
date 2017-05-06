@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 				if (bra_cnt <= 0) {
 					talk.clear();
 
-					ofs << Seperator << "\n\n";
+					ofs << Seperator << '\n' << Seperator << "\n\n";
 				}
 			} //if (talk) 
 			else {
