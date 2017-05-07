@@ -20,9 +20,9 @@
 using namespace std;
 
 static int cnt_err = 0;
-static ofstream ofs;
+static ofstream ofs_rp;
 static void Error(const char* foramt, ...) {
-	if (cnt_err == 0) ofs.open(REP_NAME);
+	if (cnt_err == 0) ofs_rp.open(REP_NAME);
 
 	cnt_err++;
 	static char buff[MAXCH_ONELINE];
@@ -31,7 +31,7 @@ static void Error(const char* foramt, ...) {
 	vsnprintf(buff, sizeof(buff), foramt, argptr);
 	va_end(argptr);
 
-	ofs << buff << endl;
+	ofs_rp << buff << endl;
 }
 
 struct LineInfo
@@ -215,7 +215,6 @@ int main(int argc, char* argv[])
 	vector<string> fn_snts;
 	Sora::SearchFiles(dir_snt + "*" ATTR_SNT, fn_snts);
 
-	ofstream ofs_rp(REP_NAME);
 	for (const auto &fn_snt : fn_snts) {
 		string name = fn_snt.substr(0, fn_snt.rfind(ATTR_SNT));
 		for_each(name.begin(), name.end(), [](char& c) { c = toupper(c); });

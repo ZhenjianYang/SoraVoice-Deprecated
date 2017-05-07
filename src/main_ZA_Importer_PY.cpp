@@ -30,9 +30,9 @@ const string TalkTypes[] = { AnonymousTalk, ChrTalk, NpcTalk };
 const string SPACE = "            ";
 
 static int cnt_err = 0;
-static ofstream ofs;
+static ofstream ofs_rp;
 static void Error(const char* foramt, ...) {
-	if (cnt_err == 0) ofs.open(REP_NAME);
+	if (cnt_err == 0) ofs_rp.open(REP_NAME);
 
 	cnt_err++;
 	static char buff[MAXCH_ONELINE];
@@ -41,7 +41,7 @@ static void Error(const char* foramt, ...) {
 	vsnprintf(buff, sizeof(buff), foramt, argptr);
 	va_end(argptr);
 
-	ofs << buff << endl;
+	ofs_rp << buff << endl;
 }
 
 struct LineInfo
@@ -167,7 +167,6 @@ int main(int argc, char* argv[])
 	vector<string> fn_pys;
 	Sora::SearchFiles(dir_py + "*" ATTR_PY, fn_pys);
 
-	ofstream ofs_rp(REP_NAME);
 	for (const auto &fn_py : fn_pys) {
 		string name = fn_py.substr(0, fn_py.rfind(ATTR_PY));
 		cout << "处理" << fn_py << "..." << endl;
