@@ -190,12 +190,23 @@ private:
 				if(it != scp_str_list.end()) {
 					if(len + it->second + 1 > max_len) return 0;
 
-					for(int i = 0; i < it->second + 1; i++) {
-						sprintf(numbuf, "\\x%02X", buf[len++]);
-
-						if(!tmp.second.empty() || isStr)
-							tmp.second += numbuf;
+					string tmp2;
+					if (buf[len] > 3) {
+						tmp2 = "[";
+						for (int i = 0; i < it->second + 1; i++) {
+							sprintf(numbuf, "%02X", buf[len++]);
+							if (i != 0) tmp2.push_back(' ');
+							tmp2 += numbuf;
+						}
+						tmp2.push_back(']');
 					}
+					else {
+						sprintf(numbuf, R"(\x%02X)", buf[len++]);
+						tmp2 = numbuf;
+					}
+
+					if (!tmp.second.empty() || isStr)
+						tmp.second += tmp2;
 					isStr = false;
 				}
 				else
@@ -297,9 +308,12 @@ int main(int argc, char* argv[])
 					int cnt = 0;
 
 					auto output = [&](const vector<pair<int, string>>& strs) {
+						bool op2 = false;
 						for(auto& str : strs) {
 							out_cnt++;
 							cnt++;
+							if (op2) ofs << '\n';
+							op2 = str.second.find(R"(\x02)") != string::npos;
 							ofs << talk.CodeCh
 								<< setfill('0') << setw(4) << setiosflags(ios::right) << dec << msg_cnt << ","
 								<< setfill('0') << setw(2) << setiosflags(ios::right) << dec << cnt << ","

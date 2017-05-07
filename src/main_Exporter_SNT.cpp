@@ -62,9 +62,12 @@ int main(int argc, char* argv[])
 			assert(item.Num() >= item.Type->TextStartLine + 3);
 			assert(item.Lines[item.Type->TextStartLine].content == TextBeg);
 			assert(item.Lines.back().content == TextEnd);
+			bool op2 = false;
 			for(auto j = item.Type->TextStartLine + 1; j < item.Lines.size() - 1; j++) {
 				out_cnt++;
 
+				if (op2) ofs << '\n';
+				op2 = item[j].content.find(R"(\2)") != string::npos;
 				ofs << item.Type->Mark
 					<< setfill('0') << setw(4) << setiosflags(ios::right) << talk_cnt << ","
 					<< setfill('0') << setw(2) << setiosflags(ios::right) << j << ","

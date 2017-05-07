@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
 		bool aut = false;
 		string auto_mark;
 
+		bool op2 = false;
 		for(int line_no = 1;
 			ifs.getline(buff, sizeof(buff));
 			line_no++) 
@@ -101,6 +102,7 @@ int main(int argc, char* argv[])
 					talk_type.clear();
 					if (aut) auto_mark = Str_MarkAuto;
 					aut = false;
+					op2 = false;
 				}
 
 				size_t k = 0;
@@ -117,6 +119,9 @@ int main(int argc, char* argv[])
 					s = s.substr(0, idx);
 					while (!s.empty() && s.back() == ' ') s.pop_back();
 				}
+
+				if (op2 && s.find('"') != string::npos) ofs << '\n';
+				op2 = s.find(R"(\x02)") != string::npos;
 			} //if (talk) 
 			else {
 				auto idx = s.find(Str_Sound);

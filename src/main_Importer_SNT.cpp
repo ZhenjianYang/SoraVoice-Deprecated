@@ -91,20 +91,23 @@ static auto GetMapTalkVid(const string& snt_out, const string& bin_out) {
 			}
 		}
 
-		string ex1;
-
+		string ex1("## ");
 		pos = 0;
 		while (buff_bin[pos])
 		{
 			while (buff_bin[pos] && buff_bin[pos] != '\\') pos++;
+			if (!buff_bin[pos]) break;
+
 			if (buff_bin[pos] == '\\' && buff_bin[pos + 1] >= '1' && buff_bin[pos + 1] <= '3') {
 				ex1.push_back(buff_bin[pos]);
 				ex1.push_back(buff_bin[pos + 1]);
+				pos += 2;
 			}
-			pos += 2;
+			else {
+				pos++;
+			}
 		}
-
-		if (!ex1.empty()) ex1.push_back(' ');
+		if (ex1.length() > 3) ex1.push_back(' ');
 		pos = 0;
 		while (buff_bin[pos])
 		{
@@ -114,16 +117,22 @@ static auto GetMapTalkVid(const string& snt_out, const string& bin_out) {
 				pos++;
 				while (buff_bin[pos] >= '0' && buff_bin[pos] <= '9') pos++;
 				if ((buff_bin[pos] == 'A' || buff_bin[pos] == 'W' || buff_bin[pos] == 'V') && pos - start > 1) {
-					ex1.append(buff_bin + start, pos - start + 1);
+					ex1.append(buff_bin + start, pos - start + 1);	
 					ex1.push_back(' ');
 				}
 			}
 		}
+		if (ex1.length() <= 3) ex1.clear();
 
 		string ex2;
+		for (pos = 0; buff_snt[pos + 1]; pos++) {
+			if (buff_snt[pos] == '#' && buff_snt[pos + 1] == '#') {
+				ex2.append(buff_snt + pos).append(" ");
+			}
+		}
 		for (pos = 0; buff_bin[pos + 1]; pos++) {
 			if (buff_bin[pos] == '#' && buff_bin[pos + 1] == '#') {
-				ex2 = buff_bin + pos + 2;
+				ex2.append(buff_bin + pos).append(" ");
 			}
 		}
 
@@ -254,9 +263,8 @@ int main(int argc, char* argv[])
 					}
 
 					if (!line.second.ex1.empty() || !line.second.ex2.empty()) {
-						item[line.first].content.append("##");
-						item[line.first].content.append(line.second.ex2).append(" ");
 						item[line.first].content.append(line.second.ex1);
+						item[line.first].content.append(line.second.ex2);
 					}
 				} //else
 			}//for (auto &line : it_talk->second)

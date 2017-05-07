@@ -27,8 +27,7 @@ constexpr char NpcTalk[] = "NpcTalk";
 
 const string TalkTypes[] = { AnonymousTalk, ChrTalk, NpcTalk };
 
-const string mark_ex = "##";
-const string SPACE = "    ";
+const string SPACE = "            ";
 
 static int cnt_err = 0;
 static ofstream ofs;
@@ -102,14 +101,7 @@ static auto GetMapTalkVid(const string& py_out, const string& bin_out) {
 			}
 		}
 
-		string ex1;
-		string s = buff_bin;
-		auto idx = s.find(mark_ex);
-		if (idx != string::npos) {
-			ex1 = s.substr(idx);
-		}
-
-		string ex2;
+		string ex1("## ");
 		pos = 0;
 		while (buff_bin[pos])
 		{
@@ -119,12 +111,26 @@ static auto GetMapTalkVid(const string& py_out, const string& bin_out) {
 				pos++;
 				while (buff_bin[pos] >= '0' && buff_bin[pos] <= '9') pos++;
 				if ((buff_bin[pos] == 'A' || buff_bin[pos] == 'W') && pos - start > 1) {
-					ex2.append(buff_bin + start, pos - start + 1);
+					ex1.append(buff_bin + start, pos - start + 1);
 				}
 			}
 		}
+		if (ex1.length() <= 3) ex1.clear();
 
-		if (!vid.empty() || !ex1.empty() || !ex2.empty()) {
+		string ex2;
+		for (pos = 0; buff_py[pos + 1]; pos++) {
+			if (buff_py[pos] == '#' && buff_py[pos + 1] == '#') {
+				ex2.append(buff_py + pos).append(" ");
+			}
+		}
+		for (pos = 0; buff_bin[pos + 1]; pos++) {
+			if (buff_bin[pos] == '#' && buff_bin[pos + 1] == '#') {
+				ex2.append(buff_bin + pos).append(" ");
+			}
+		}
+
+
+		if (!vid.empty() || !ex2.empty() || !ex1.empty()) {
 			auto &Talk = rst[talk_id];
 			auto inrst = Talk.insert({ line_id, { vid, line_no, ex1, ex2 } });
 
@@ -222,11 +228,10 @@ int main(int argc, char* argv[])
 							Error("%s, %04d,%02d,%05d: 该行无文本！", name.c_str(), line_no, talk_id_cnt, line_id_cnt);
 						}
 						else {
-							s = s.insert(idx + 1, it_line->second.vid);
-							if(!it_line->second.ex1.empty())
-								s = s.append(SPACE).append(it_line->second.ex1);
-							if (!it_line->second.ex2.empty())
-								s = s.append(SPACE).append(it_line->second.ex2);
+							s.insert(idx + 1, it_line->second.vid);
+							if (!it_line->second.ex1.empty() || !it_line->second.ex2.empty()) {
+								s.append(SPACE).append(it_line->second.ex1).append(it_line->second.ex2);
+							}
 						}
 					}
 				}

@@ -55,10 +55,14 @@ int main(int argc, char* argv[])
 			for (const auto& talk : mbinTalks) {
 				ofs << Seperator << "\n" << Seperator << "\n\n";
 
+				bool op2 = false;
 				for (size_t i = 0; i < talk.Texts.size(); i++) {
+					if (op2) ofs << '\n';
+					op2 = talk.Texts[i].text.find(R"(\2)") != string::npos;
+
 					ofs << talk.Type->Mark
 						<< setfill('0') << setw(4) << setiosflags(ios::right) << talk.ID << ","
-						<< setfill('0') << setw(2) << setiosflags(ios::right) << i << ","
+						<< setfill('0') << setw(2) << setiosflags(ios::right) << i + talk.Type->TextStartLine + 1 << ","
 						<< talk.Texts[i].text
 						<< "\n\n";
 

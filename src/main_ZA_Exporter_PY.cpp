@@ -19,6 +19,37 @@ using namespace std;
 
 const string Talks[] = { AnonymousTalk, ChrTalk, NpcTalk };
 
+string FormatSout(const string& s) {
+	string ns;
+
+	for (size_t i = 0; i < s.length() ; )
+	{
+		if (s[i] != '\\' || s[i+1] != 'x') ns.push_back(s[i++]);
+		else {
+			int code;
+			sscanf(s.c_str() + i + 2, "%02x", &code);
+			if (code <= 3) {
+				ns.append(s.c_str() + i, 4);
+				i += 4;
+			}
+			else {
+				ns.push_back('[');
+				int len = 1;
+				if (code == 7) len = 2;
+				else if (code == 0x1F) len = 3;
+				for (int j = 0; j < len; j++) {
+					if (j != 0) ns.push_back(' ');
+					ns.append(s.c_str() + i + 2, 2);
+					i += 4;
+				}
+				ns.push_back(']');
+			}
+		}
+	}
+
+	return ns;
+}
+
 int main(int argc, char* argv[])
 {
 	if (argc <= 1) {
@@ -57,6 +88,7 @@ int main(int argc, char* argv[])
 
 		int line_no = 0;
 
+		bool op2 = false;
 		while (ifs.getline(buff, sizeof(buff)))
 		{
 			line_no++;
@@ -74,12 +106,14 @@ int main(int argc, char* argv[])
 					}
 					idx = idx_next;
 				}
+				sout = FormatSout(sout);
 
 				if (!sout.empty()) {
 					if (out_cnt == 0) {
 						ofs.open(dir_out + name + ATTR_OUT);
 					}
-
+					if (op2) ofs << '\n';
+					op2 = sout.find(R"(\x02)") != string::npos;
 					out_cnt++;
 					ofs << talk[0]
 						<< setfill('0') << setw(4) << setiosflags(ios::right) << msg_cnt << ","
@@ -108,6 +142,7 @@ int main(int argc, char* argv[])
 						cnt = 0;
 						++msg_cnt;
 						talk = search;
+						op2 = false;
 					}
 				}
 			}

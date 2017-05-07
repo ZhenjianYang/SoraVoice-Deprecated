@@ -4,8 +4,11 @@
 #include <memory>
 #include <fstream>
 
+#define STR_3TBL "\t\t\t"
+#define STR_2TBL "\t\t"
 #define STR_4TBL "\t\t\t\t"
 #define STR_TBL "\t"
+#define TBL_TEXT STR_3TBL
 #define MAXCH_ONELINE 10000
 
 using namespace std;
@@ -51,21 +54,22 @@ void SNTItem::Output(std::ostream & ostr) const
 {
 	ostr << lines[0].content << '\n';
 
+	bool op2 = false;
 	for (size_t i = 1; i < lines.size(); i++) {
-		if (i == 1 && i < type->TextStartLine) {
-			ostr << lines[i].content << '\n';
+		if (i == 2 && i < type->TextStartLine) {
+			ostr << TBL_TEXT << lines[i].content << '\n';
 		}
-		else if (i == 2 && i < type->TextStartLine) {
-			ostr << STR_4TBL << lines[i].content << '\n';
-		}
-		else if (lines[i].content != "'" && lines[i].content != "\"") {
+		else if (i > type->TextStartLine && i < lines.size() - 1) {
+			if (op2) ostr << '\n';
+			op2 = lines[i].content.find(R"(\2)") != string::npos;
+
 			auto idx = lines[i].content.find(STR_CMT);
-			if(idx == string::npos)
-				ostr << STR_4TBL << lines[i].content << '\n';
+			if (idx == string::npos)
+				ostr << TBL_TEXT << lines[i].content;
 			else {
-				ostr << STR_4TBL;
+				ostr << TBL_TEXT;
 				for (size_t j = 0; j < idx; j++) ostr << lines[i].content[j];
-				
+
 				int cnt_tbl = cmt_start / len_tbl - idx / len_tbl;
 				if (cnt_tbl < 2) cnt_tbl = 2;
 				for (int j = 0; j < cnt_tbl; j++) ostr << STR_TBL;
