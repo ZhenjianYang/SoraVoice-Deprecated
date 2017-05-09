@@ -198,7 +198,6 @@ void SoraVoiceImpl::Play(const char* t)
 #endif // ZA
 	}
 
-	SoundPlayer::FileType type = SoundPlayer::FileType::Ogg;
 	std::string oggFileName = VOICEFILE_PREFIX + str_vid + VOICEFILE_ATTR;
 
 #ifdef ZA
@@ -211,7 +210,6 @@ void SoraVoiceImpl::Play(const char* t)
 			if (*p == 'V' && p - t == ORIVOICEID_LEN) {
 				if (config->OriginalVoice == Config::OriginalVoice_OriOnly) {
 					oggFileName = ORIVOICEFILE_PREFIX + str_vid.assign(t, ORIVOICEID_LEN) + ORIVOICEFILE_ATTR;
-					type = SoundPlayer::FileType::Wav;
 				}
 				*(unsigned*)t = 0x39393939;
 			}
@@ -226,7 +224,7 @@ void SoraVoiceImpl::Play(const char* t)
 		LockGuard lock(mt_playID);
 
 		status->playing = 1;
-		playID = player->Play(oggFileName.c_str(), type, status->mute ? 0 : config->Volume);
+		playID = player->Play(oggFileName.c_str(), status->mute ? 0 : config->Volume);
 	}
 
 	order->disableDududu = config->DisableDududu;
