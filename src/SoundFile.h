@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Type.h>
+#include "Type.h"
 #include <vorbis\vorbisfile.h>
 
 class SoundFile {
@@ -110,7 +110,7 @@ class Wav : public SoundFile {
 		u32 tag_data;
 		s32 size_data;
 	} head{};
-	int remain;
+	int remain = 0;
 
 public:
 	Wav() = default;

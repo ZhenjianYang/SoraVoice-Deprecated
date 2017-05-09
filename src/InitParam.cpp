@@ -2,10 +2,11 @@
 #include "InitParam.h"
 #include "Log.h"
 #include "Clock.h"
+#include "ApiPack.h"
 
 #include <string>
 #include <dsound.h>
-#include <ApiPack.h>
+
 using DSD = IDirectSound;
 
 #define BIND(var, ptr) { if (ptr) (var) = decltype(var)(*(ptr)); \
@@ -141,7 +142,7 @@ bool InitAddrs(InitParam* initParam)
 		if (dsd_dll) {
 			auto pDirectSoundCreate = (CallDSCreate)GetProcAddress(dsd_dll, STR_DirectSoundCreate);
 			if (pDirectSoundCreate) {
-				ApiPack::AddApi(STR_DirectSoundCreate, pDirectSoundCreate);
+				ApiPack::AddApi(STR_DirectSoundCreate, (void*)pDirectSoundCreate);
 				pDirectSoundCreate(NULL, &pDS, NULL);
 				if (pDS) {
 					if (DS_OK != pDS->SetCooperativeLevel(hWnd, DSSCL_PRIORITY)) {
