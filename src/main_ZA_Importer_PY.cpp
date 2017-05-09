@@ -20,6 +20,7 @@ using namespace std;
 
 const string mark_talk_id = "#talk#";
 const string mark_line_id = "#line#";
+const string mark_fake = "#fake";
 
 constexpr char AnonymousTalk[] = "AnonymousTalk";
 constexpr char ChrTalk[] = "ChrTalk";
@@ -236,6 +237,9 @@ int main(int argc, char* argv[])
 				}
 			} //if (talk) 
 			else {
+				if (s.find(mark_fake) != string::npos) {
+					++talk_id_cnt;
+				}
 				for (const auto& search : TalkTypes) {
 					if (s.find(search) != string::npos) {
 						bra_cnt = 1;
