@@ -14,6 +14,14 @@
 #include <mutex>
 #include <queue>
 
+decltype(::ov_open_callbacks)* Ogg::ov_open_callbacks = nullptr;
+decltype(::ov_info)* Ogg::ov_info = nullptr;
+decltype(::ov_read)* Ogg::ov_read = nullptr;
+decltype(::ov_clear)* Ogg::ov_clear = nullptr;
+
+constexpr char SoundPlayerImpl::OggAttr[];
+constexpr char SoundPlayerImpl::WavAttr[];
+
 SoundPlayer * SoundPlayer::CreatSoundPlayer(void * pDSD, StopCallBack stopCallBack)
 {
 	return new SoundPlayerImpl(pDSD, stopCallBack);
@@ -48,7 +56,7 @@ void SoundPlayerImpl::thread_Playing()
 			{
 				playID = playQueue.front().playID;
 				fileName = std::move(playQueue.front().fileNm);
-				soundFile = soundFiles[(int)playQueue.front().type];
+				soundFile = playQueue.front().soundFile;
 				playQueue.pop();
 			}
 		}
