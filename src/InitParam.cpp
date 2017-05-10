@@ -18,6 +18,7 @@ constexpr char STR_ov_open_callbacks[] = "ov_open_callbacks";
 constexpr char STR_ov_info[] = "ov_info";
 constexpr char STR_ov_read[] = "ov_read";
 constexpr char STR_ov_clear[] = "ov_clear";
+constexpr char STR_ov_time_total[] = "ov_time_total";
 constexpr const char* OvDllNames[] = { STR_vorbisfile_dll , STR_libvorbisfile_dll };
 constexpr const char* DllDirs[] = { ".\\dll\\", ".\\voice\\dll\\" };
 
@@ -40,6 +41,7 @@ static void* ov_open_callbacks;
 static void* ov_info;
 static void* ov_read;
 static void* ov_clear;
+static void* ov_time_total;
 static void* d3dd;
 static void* did;
 static HWND hWnd;
@@ -95,8 +97,10 @@ bool InitAddrs(InitParam* initParam)
 	LOG("Hwnd = 0x%08X", hWnd);
 	LOG("pDS = 0x%08X", pDS);
 
-	if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
-		LOG("null ogg api exists, now going to load vorbisfile.dll ...");
+	//if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) 
+	{
+		//LOG("null ogg api exists, now going to load vorbisfile.dll ...");
+		LOG("Now going to load vorbisfile.dll ...");
 
 		HMODULE ogg_dll = NULL;
 		for (auto dir : DllDirs) {
@@ -112,12 +116,14 @@ bool InitAddrs(InitParam* initParam)
 			ov_info = (void*)GetProcAddress(ogg_dll, STR_ov_info);
 			ov_read = (void*)GetProcAddress(ogg_dll, STR_ov_read);
 			ov_clear = (void*)GetProcAddress(ogg_dll, STR_ov_clear);
+			ov_time_total = (void*)GetProcAddress(ogg_dll, STR_ov_time_total);
 		}
 
 		LOG("Loaded ov_open_callbacks = 0x%08X", ov_open_callbacks);
 		LOG("Loaded ov_info = 0x%08X", ov_info);
 		LOG("Loaded ov_read = 0x%08X", ov_read);
 		LOG("Loaded ov_clear = 0x%08X", ov_clear);
+		LOG("Loaded ov_time_total = 0x%08X", ov_time_total);
 	}
 
 	if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
@@ -129,6 +135,7 @@ bool InitAddrs(InitParam* initParam)
 		ApiPack::AddApi(STR_ov_info, ov_info);
 		ApiPack::AddApi(STR_ov_read, ov_read);
 		ApiPack::AddApi(STR_ov_clear, ov_clear);
+		ApiPack::AddApi(STR_ov_time_total, ov_time_total);
 	}
 
 	if (!pDS) {

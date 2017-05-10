@@ -18,6 +18,7 @@ decltype(::ov_open_callbacks)* Ogg::ov_open_callbacks = nullptr;
 decltype(::ov_info)* Ogg::ov_info = nullptr;
 decltype(::ov_read)* Ogg::ov_read = nullptr;
 decltype(::ov_clear)* Ogg::ov_clear = nullptr;
+decltype(::ov_time_total)* Ogg::ov_time_total = nullptr;
 
 constexpr char SoundPlayerImpl::OggAttr[];
 constexpr char SoundPlayerImpl::WavAttr[];
@@ -114,12 +115,19 @@ void SoundPlayerImpl::thread_Playing()
 
 bool SoundPlayerImpl::openSoundFile(const std::string& fileName){
 	LOG("Open file %s ...", fileName.c_str());
-	LOG("%s File.", soundFile == soundFiles[(int)FileType::Ogg] ? "ogg" : "wav");
+	LOG("%s File.", soundFile == ogg ? "ogg" : "wav");
 	if (!soundFile->Open(fileName.c_str())) {
 		LOG("Open file as sound file failed!");
 		return false;
 	}
-	LOG("File opened");
+	LOG("File opened, information:\n"
+		"    Channels      : %d\n"
+		"    SamplesPerSec : %d\n"
+		"    Total Length  : %d ms",
+		soundFile->WaveFormat.nChannels, 
+		soundFile->WaveFormat.nSamplesPerSec,
+		soundFile->Length()
+	);
 
 	waveFormatEx.wFormatTag = soundFile->WaveFormat.wFormatTag;
 	waveFormatEx.nChannels = soundFile->WaveFormat.nChannels;

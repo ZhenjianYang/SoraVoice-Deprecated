@@ -21,6 +21,7 @@ constexpr char STR_ov_open_callbacks[] = "ov_open_callbacks";
 constexpr char STR_ov_info[] = "ov_info";
 constexpr char STR_ov_read[] = "ov_read";
 constexpr char STR_ov_clear[] = "ov_clear";
+constexpr char STR_ov_time_total[] = "ov_time_total";
 
 class Ogg : public SoundFile {
 public:
@@ -45,6 +46,13 @@ public:
 		waveFormat.wBitsPerSample = 16;
 		waveFormat.nBlockAlign = info->channels * 16 / 8;
 		waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
+
+		if (ov_time_total) {
+			double total_time = ov_time_total(&ovFile, -1);
+			if (total_time > 0) {
+				len = unsigned(total_time * Clock::TimeUnitsPerSecond);
+			}
+		}
 
 		return true;
 	}
@@ -75,17 +83,20 @@ private:
 
 public:
 	static void SetOggApis(void * ov_open_callbacks,
-		void * ov_info, void * ov_read, void * ov_clear) {
+		void * ov_info, void * ov_read, void * ov_clear, 
+		void * ov_time_total) {
 		Ogg::ov_open_callbacks = (decltype(Ogg::ov_open_callbacks))ov_open_callbacks;
 		Ogg::ov_info           = (decltype(Ogg::ov_info))          ov_info;
 		Ogg::ov_read           = (decltype(Ogg::ov_read))          ov_read;
 		Ogg::ov_clear          = (decltype(Ogg::ov_clear))         ov_clear;
+		Ogg::ov_time_total     = (decltype(Ogg::ov_time_total))    ov_time_total;
 	}
 private:
 	static decltype(::ov_open_callbacks)* ov_open_callbacks;
 	static decltype(::ov_info)* ov_info;
 	static decltype(::ov_read)* ov_read;
 	static decltype(::ov_clear)* ov_clear;
+	static decltype(::ov_time_total)* ov_time_total;
 };
 
 class Wav : public SoundFile {
@@ -130,6 +141,9 @@ public:
 		}
 
 		remain = head.size_data;
+		if (remain >= 0) {
+			len = unsigned(double(head.size_data) / waveFormat.nAvgBytesPerSec * Clock::TimeUnitsPerSecond);
+		}
 		return remain >= 0;
 	}
 	virtual int Read(void * buff, int size) override {
@@ -247,7 +261,9 @@ private:
 		Ogg::SetOggApis(ApiPack::GetApi(STR_ov_open_callbacks),
 						ApiPack::GetApi(STR_ov_info),
 						ApiPack::GetApi(STR_ov_read),
-						ApiPack::GetApi(STR_ov_clear));
+						ApiPack::GetApi(STR_ov_clear),
+						ApiPack::GetApi(STR_ov_time_total)
+						);
 	}
 	PlayID playID = InvalidPlayID;
 	std::string fileName;

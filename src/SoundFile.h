@@ -18,10 +18,12 @@ public:
 	virtual int Read(void * buff, int size) = 0;
 	virtual void Close() = 0;
 	const WAVEFORMAT& WaveFormat = waveFormat;
-
+	
+	unsigned Length() const { return len; }
 public:
 	virtual ~SoundFile() = default;
 
 protected:
-	WAVEFORMAT waveFormat;
+	WAVEFORMAT waveFormat{};
+	unsigned len = 0;
 };
