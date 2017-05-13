@@ -44,7 +44,7 @@ struct Config
 	DEFINE_CONFIG(FontColor, 0xFFFFFFFF);
 
 	DEFINE_CONFIG(EnableKeys, 1);
-	DEFINE_CONFIG(SaveChange, 0);
+	DEFINE_CONFIG(SaveChange, 1);
 
 	bool LoadConfig(const char* configFn);
 	bool SaveConfig(const char* configFn) const;
