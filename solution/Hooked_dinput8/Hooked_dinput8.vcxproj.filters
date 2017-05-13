@@ -55,4 +55,7 @@
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\src\rc_hk_dinput8\ao_rnd_vlst.txt" />
+  </ItemGroup>
 </Project>

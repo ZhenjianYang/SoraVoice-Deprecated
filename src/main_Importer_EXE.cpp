@@ -14,6 +14,11 @@
 using namespace std;
 using byte = unsigned char;
 
+constexpr int GAME_SORA = 0;
+constexpr int GAME_ZERO = 1;
+constexpr int GAME_AO = 2;
+constexpr int OFF_VLIST = 0xC00;
+
 const int Align = 0x1000;
 const int Base = 0x400000;
 
@@ -67,11 +72,6 @@ static unsigned GetUIntFromValue(const char* str) {
 }
 
 constexpr const char* addr_list[] = {
-	"p_ov_open_callbacks",
-	"p_ov_info",
-	"p_ov_read",
-	"p_ov_clear",
-
 	"p_d3dd",
 	"p_did",
 	"p_Hwnd",
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 {
 	if (argc <= 5) {
 		cout << "Usage:\n"
-			"\t" "Importer_EXE.exe EXE_new EXE_old SoraData.ini bin report\n"
+			"\t" "Importer_EXE.exe EXE_new EXE_old SoraData.ini bin report [random_voice_list]\n"
 			<< endl;
 		return 0;
 	}
@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
 	const string path_data = argv[3];
 	const string path_bin = argv[4];
 	const string path_report = argv[5];
+	const string path_rnd_vlst = argc > 6 ? argv[6] : "";
 
 	ifstream ifs(path_exe_old, ios::binary);
 	if (!ifs) {
@@ -291,7 +292,7 @@ int main(int argc, char* argv[])
 	for (int j = 0; j < num_addr; j++) {
 		addrs[j] = GetUIntFromValue(group->GetValue(addr_list[j]));
 	}
-	bool isZa = GetUIntFromValue(group->GetValue(str_Game.c_str()));
+	int game = GetUIntFromValue(group->GetValue(str_Game.c_str()));
 
 	const char* comment = group->GetValue(str_Comment.c_str());
 
@@ -327,7 +328,7 @@ int main(int argc, char* argv[])
 	InitParam* ip = (InitParam*)(buff_new + si_new.Off + roff_ip);
 	memset(ip, 0, sizeof(*ip));
 
-	memcpy(ip->scodes, isZa ? scode_za : scode_sora, sizeof(scode_za));
+	memcpy(ip->scodes, game ? scode_za : scode_sora, sizeof(scode_za));
 	memcpy(ip->jcs, jcs, sizeof(jcs));
 	memcpy(&ip->addrs, addrs, sizeof(addrs));
 	if (comment) {
@@ -380,7 +381,7 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < NumImport; i++) {
 		lookUp[i] = imp[i] = si_new.vAddr + ROFF_Names + (import_names[i] - import_names[0]);
 	}
-	if(isZa) PUT_ARRAY(dll_name_za, buff_new + si_new.Off + ROFF_DLLName);
+	if(game) PUT_ARRAY(dll_name_za, buff_new + si_new.Off + ROFF_DLLName);
 	else PUT_ARRAY(dll_name_sora, buff_new + si_new.Off + ROFF_DLLName);
 	PUT_ARRAY(import_names, buff_new + si_new.Off + ROFF_Names + 2);
 	PUT_ARRAY(lookUp, buff_new + si_new.Off + ROFF_Lookup);
@@ -394,6 +395,36 @@ int main(int argc, char* argv[])
 	PUT(NumSections_new, buff_new + off_NumSections);
 	PUT(SizeInitData_new, buff_new + off_SizeInitData);
 	PUT(SizeTotal_new, buff_new + off_SizeTotal);
+
+	if (game == GAME_AO && !path_rnd_vlst.empty()) {
+		ifstream ifs_vlst(path_rnd_vlst, ios::binary);
+		if (!ifs_vlst) {
+			cout << "Open file failed, skip " << path_rnd_vlst << endl;
+		}
+		else {
+			ifs_vlst.seekg(0, ios::end);
+			int len_vst = (int)ifs_vlst.tellg();
+			ifs_vlst.seekg(0, ios::beg);
+
+			unique_ptr<char[]> sbuff_vlst(new char[len_vst]);
+			ifs_vlst.read(sbuff_vlst.get(), len_vst);
+			ifs_vlst.close();
+
+			const char* const buff_vlst = sbuff_vlst.get();
+			char* pvlist = (char*)buff_new + si_new.Off + OFF_VLIST;
+
+			for (int i = 0, j = 0; i < len_vst && j < si_new.Size - OFF_VLIST - 1; i++) {
+				if (buff_vlst[i] != '\r' && buff_vlst[i] != '\n') {
+					pvlist[j++] = buff_vlst[i];
+				}
+				else if (j > 0 && pvlist[j - 1]) {
+					j++;
+				}
+			}
+
+			ip->p_rnd_vlst = (char*)si_new.vAddr + Base + OFF_VLIST;
+		}
+	}
 
 	if (!path_report.empty()) {
 		ofstream ofsr(path_report);

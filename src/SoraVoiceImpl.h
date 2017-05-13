@@ -81,6 +81,7 @@ private:
 	}
 
 private:
+	void playRandomVoice(const char* vlist);
 	bool isAutoPlaying() {
 		return aup->count_ch 
 			&& ((config->AutoPlay && (status->playing || aup->waitv))

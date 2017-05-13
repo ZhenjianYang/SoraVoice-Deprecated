@@ -8,32 +8,27 @@ struct InitParam
 	//0x00
 	struct {
 		//0x00
-		void** p_ov_open_callbacks;
-		//0x04
-		void** p_ov_info;
-		//0x08
-		void** p_ov_read;
-		//0x1C
-		void** p_ov_clear;
-
-		//0x10
 		void** p_d3dd;
-		//0x14
+		//0x04
 		void** p_did;
-		//0x18
+		//0x08
 		void** p_Hwnd;
-		//0x1C
+		//0x0C
 		void** p_pDS;
 
-		//0x20
+		//0x10
 		void*  p_mute;
-		//0x24
+		//0x14
 		const u8* p_keys;
-		//0x28
+		//0x18
 		void** p_global;
-		//0x2C
-		void** reserved;
+
+		//0x1C
+		void** reserved[4];
 	} addrs;
+
+	//0x2C
+	char *p_rnd_vlst;
 
 	//0x30
 	u32 exps[8];

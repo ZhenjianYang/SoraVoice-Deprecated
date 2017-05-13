@@ -24,6 +24,11 @@ FILE* _flog;
 #define LOG(...) _flog = fopen("ilog.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
 #endif // LOG_NOLOG
 
+constexpr int GAME_SORA = 0;
+constexpr int GAME_ZERO = 1;
+constexpr int GAME_AO = 2;
+constexpr int OFF_VLIST = 0xC00;
+
 constexpr char dll_name_sora[] = "ed_voice.dll";
 constexpr char dll_name_za[] = "za_voice.dll";
 constexpr char import_names[][16] = {
@@ -45,11 +50,6 @@ const string str_Comment = "Comment";
 const string str_Game = "Game";
 
 constexpr const char* addr_list[] = {
-	"p_ov_open_callbacks",
-	"p_ov_info",
-	"p_ov_read",
-	"p_ov_clear",
-
 	"p_d3dd",
 	"p_did",
 	"p_Hwnd",
@@ -190,7 +190,7 @@ void Init(void* hDll)
 	}
 	LOG("Data found, %d, %s", group->Num(), group->Name());
 
-	bool isZa = GetUIntFromValue(group->GetValue(str_Game.c_str()));
+	int game = GetUIntFromValue(group->GetValue(str_Game.c_str()));
 
 	unsigned * const addrs = (decltype(addrs))&tp->addrs;
 	for (int j = 0; j < num_addr; j++) {
@@ -205,9 +205,9 @@ void Init(void* hDll)
 		LOG("Data comment, %s", comment);
 	}
 
-	memcpy(tp->scodes, isZa ? scode_za : scode_sora, sizeof(scode_za));
+	memcpy(tp->scodes, game ? scode_za : scode_sora, sizeof(scode_za));
 
-	HRSRC rc_bin = FindResourceA(hd, MAKEINTRESOURCE(isZa ? IDR_ZA_BIN : IDR_SORA_BIN), SoraData);
+	HRSRC rc_bin = FindResourceA(hd, MAKEINTRESOURCE(game ? IDR_ZA_BIN : IDR_SORA_BIN), SoraData);
 	bool suc = false;
 	if (rc_bin) {
 		HGLOBAL h = LoadResource(hd, rc_bin);
@@ -227,7 +227,7 @@ void Init(void* hDll)
 	}
 	LOG("Read bin finished.");
 
-	HMODULE voice_dll = LoadLibraryA(isZa ? dll_name_za : dll_name_sora);
+	HMODULE voice_dll = LoadLibraryA(game ? dll_name_za : dll_name_sora);
 	if (voice_dll) {
 		for (int i = 0; i < NumImport; i++) {
 			tp->exps[i] = (unsigned)GetProcAddress(voice_dll, import_names[i]);
@@ -235,17 +235,42 @@ void Init(void* hDll)
 				LOG("Symbol not found : %s", import_names[i]);
 			}
 		}
-		LOG("%s loaded", isZa ? dll_name_za : dll_name_sora);
+		LOG("%s loaded", game ? dll_name_za : dll_name_sora);
 	}
 	else {
-		LOG("Load dll failed : %s", isZa ? dll_name_za : dll_name_sora);
+		LOG("Load dll failed : %s", game ? dll_name_za : dll_name_sora);
 		return;
+	}
+
+	if (game == GAME_AO) {
+		HRSRC rc_vlist = FindResourceA(hd, MAKEINTRESOURCE(IDR_AO_RND_VLST), SoraData);
+		if (rc_vlist) {
+			HGLOBAL h = LoadResource(hd, rc_vlist);
+			if (h) {
+				int size = SizeofResource(hd, rc_vlist);
+				char* pvlst_rst = (char*)LockResource(h);
+				char* pvlist = (char*)tp + OFF_VLIST;
+				if (pvlst_rst) {
+					for (int i = 0, j = 0; i < size && j < Size - OFF_VLIST - 1; i++) {
+						if (pvlst_rst[i] != '\r' && pvlst_rst[i] != '\n') {
+							pvlist[j++] = pvlst_rst[i];
+						}
+						else if (j > 0 && pvlist[j - 1]) {
+							j++;
+						}
+					}
+				}
+			}
+		}
 	}
 
 	ip = (InitParam*)VirtualAlloc(NULL, Size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
 	if (ip) {
 		memcpy(ip, tp, Size);
+		if (game == GAME_AO) {
+			ip->p_rnd_vlst = (char*)ip + OFF_VLIST;
+		}
 		LOG("Init finished, ip = 0x%08X", (unsigned)ip);
 	}
 	else {

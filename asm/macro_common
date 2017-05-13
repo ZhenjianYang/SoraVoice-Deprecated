@@ -18,8 +18,8 @@
 %define ptr_initparam	(base + 0)
 
 %define base_addr		(base + 0)
-%define addr_mute		(base_addr + 0x20)
-%define addr_keys		(base_addr + 0x24)
+%define addr_mute		(base_addr + 0x10)
+%define addr_keys		(base_addr + 0x14)
 
 %define base_exps		(base + 0x30)
 %define voice_init		(base_exps + 0x00)

@@ -99,6 +99,9 @@
     <None Include="..\..\src\rc_hk_dinput8\sora_all" />
     <None Include="..\..\src\rc_hk_dinput8\za_all" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\src\rc_hk_dinput8\ao_rnd_vlst.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

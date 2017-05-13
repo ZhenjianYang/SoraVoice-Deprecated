@@ -37,11 +37,6 @@ constexpr char STR_dsound_dll[] = "dsound.dll";
 constexpr char STR_DirectSoundCreate[] = "DirectSoundCreate";
 using CallDSCreate = decltype(DirectSoundCreate)*;
 
-static void* ov_open_callbacks;
-static void* ov_info;
-static void* ov_read;
-static void* ov_clear;
-static void* ov_time_total;
 static void* d3dd;
 static void* did;
 static HWND hWnd;
@@ -54,10 +49,6 @@ bool InitAddrs(InitParam* initParam)
 	InitParam* ip = (InitParam*)initParam;
 
 	LOG("p = 0x%08X", ip);
-	LOG("p->p_ov_open_callbacks = 0x%08X", ip->addrs.p_ov_open_callbacks);
-	LOG("p->p_ov_info = 0x%08X", ip->addrs.p_ov_info);
-	LOG("p->p_ov_read = 0x%08X", ip->addrs.p_ov_read);
-	LOG("p->p_ov_clear = 0x%08X", ip->addrs.p_ov_clear);
 	LOG("p->p_d3dd = 0x%08X", ip->addrs.p_d3dd);
 	LOG("p->p_did = 0x%08X", ip->addrs.p_did);
 	LOG("p->p_Hwnd = 0x%08X", ip->addrs.p_Hwnd);
@@ -65,6 +56,7 @@ bool InitAddrs(InitParam* initParam)
 	LOG("p->p_mute = 0x%08X", ip->addrs.p_mute);
 	LOG("p->p_keys = 0x%08X", ip->addrs.p_keys);
 	LOG("p->p_global = 0x%08X", ip->addrs.p_global);
+	LOG("p->p_rnd_vlst = 0x%08X", ip->p_rnd_vlst);
 
 #ifdef ZA
 	if (ip->addrs.p_global) {
@@ -77,21 +69,11 @@ bool InitAddrs(InitParam* initParam)
 		LOG("Adjuested p->p_Hwnd = 0x%08X", ip->addrs.p_Hwnd);
 	}
 #endif // ZA
-
-	BIND(ov_open_callbacks, ip->addrs.p_ov_open_callbacks);
-	BIND(ov_info, ip->addrs.p_ov_info);
-	BIND(ov_read, ip->addrs.p_ov_read);
-	BIND(ov_clear, ip->addrs.p_ov_clear);
-
 	BIND(d3dd, ip->addrs.p_d3dd);
 	BIND(did, ip->addrs.p_did);
 	BIND(hWnd, ip->addrs.p_Hwnd);
 	BIND(pDS, ip->addrs.p_pDS);
 
-	LOG("ov_open_callbacks = 0x%08X", ov_open_callbacks);
-	LOG("ov_info = 0x%08X", ov_info);
-	LOG("ov_read = 0x%08X", ov_read);
-	LOG("ov_clear = 0x%08X", ov_clear);
 	LOG("d3dd = 0x%08X", d3dd);
 	LOG("did = 0x%08X", did);
 	LOG("Hwnd = 0x%08X", hWnd);
@@ -101,6 +83,12 @@ bool InitAddrs(InitParam* initParam)
 	{
 		//LOG("null ogg api exists, now going to load vorbisfile.dll ...");
 		LOG("Now going to load vorbisfile.dll ...");
+
+		void* ov_open_callbacks = nullptr;
+		void* ov_info = nullptr;
+		void* ov_read = nullptr;
+		void* ov_clear = nullptr;
+		void* ov_time_total = nullptr;
 
 		HMODULE ogg_dll = NULL;
 		for (auto dir : DllDirs) {
@@ -124,18 +112,18 @@ bool InitAddrs(InitParam* initParam)
 		LOG("Loaded ov_read = 0x%08X", ov_read);
 		LOG("Loaded ov_clear = 0x%08X", ov_clear);
 		LOG("Loaded ov_time_total = 0x%08X", ov_time_total);
-	}
 
-	if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
-		LOG("Load ogg apis failed.");
-		return false;
-	}
-	else {
-		ApiPack::AddApi(STR_ov_open_callbacks, ov_open_callbacks);
-		ApiPack::AddApi(STR_ov_info, ov_info);
-		ApiPack::AddApi(STR_ov_read, ov_read);
-		ApiPack::AddApi(STR_ov_clear, ov_clear);
-		ApiPack::AddApi(STR_ov_time_total, ov_time_total);
+		if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear) {
+			LOG("Load ogg apis failed.");
+			return false;
+		}
+		else {
+			ApiPack::AddApi(STR_ov_open_callbacks, ov_open_callbacks);
+			ApiPack::AddApi(STR_ov_info, ov_info);
+			ApiPack::AddApi(STR_ov_read, ov_read);
+			ApiPack::AddApi(STR_ov_clear, ov_clear);
+			ApiPack::AddApi(STR_ov_time_total, ov_time_total);
+		}
 	}
 
 	if (!pDS) {

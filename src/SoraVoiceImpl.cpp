@@ -10,6 +10,9 @@
 #endif
 
 #include <string>
+#include <vector>
+#include <random>
+#include <ctime>
 
 #ifndef MAX_VOICEID_LEN
 #define MAX_VOICEID_LEN 10
@@ -154,6 +157,29 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::Title);
 		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::Version, Message::VersionNum);
 		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::GameTitle, Comment);
+	}
+
+	playRandomVoice(initParam->p_rnd_vlst);
+}
+
+void SoraVoiceImpl::playRandomVoice(const char * vlist)
+{
+	if (!vlist) return;
+
+	std::vector<const char*> vl;
+	while (*vlist) {
+		vl.push_back(vlist);
+		while (*vlist) vlist++;
+		vlist++;
+	}
+
+	LOG("Random voice num : %d", vl.size());
+	if (!vl.empty()) {
+		std::default_random_engine random((unsigned)std::time(nullptr));
+		std::uniform_int_distribution<int> dist(0, vl.size() - 1);
+
+		LOG("Play Random voice.");
+		player->Play(vl[dist(random)], config->Volume);
 	}
 }
 
