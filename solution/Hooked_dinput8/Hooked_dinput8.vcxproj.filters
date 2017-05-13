@@ -56,6 +56,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\src\rc_hk_dinput8\ao_rnd_vlst.txt" />
+    <Text Include="..\..\src\rc_hk_dinput8\ao_rnd_vlst.txt">
+      <Filter>资源文件</Filter>
+    </Text>
   </ItemGroup>
 </Project>
