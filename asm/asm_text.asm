@@ -38,6 +38,11 @@ loop:
 	jbe     short loop
 
 loopend:
+	cmp     byte [eadx], 'A'
+	jnz     checkV
+	mov     byte [ebx + status_scode], 0
+
+checkV:
 	cmp     byte [eadx], 'v'
 	pop     eadx
 	jnz     short text_return

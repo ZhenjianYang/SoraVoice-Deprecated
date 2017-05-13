@@ -57,8 +57,8 @@ const byte opjmp = 0xE9;
 const byte opcall = 0xE8;
 const byte opnop = 0x90;
 
-const byte scode_sora[] = { 0x54, 0x5B, 0x5C, 0x5D };
-const byte scode_za[]   = { 0x55, 0x5C, 0x5D, 0x5E };
+constexpr byte scode_sora[] = { 0x54, 0x5B, 0x5C, 0x5D, 0x5E };
+constexpr byte scode_za[] = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F };
 
 static unsigned GetUIntFromValue(const char* str) {
 	if (!str || !str[0]) return 0;

@@ -23,6 +23,8 @@ scode_start:
 	je      record_code
 	cmp     byte [ebx + scode_MENU], al
 	je      record_code
+	cmp     byte [ebx + scode_MENUEND], al
+	je      record_code
 
 ;	cmp     byte [ebx + scode_CLSW], al
 ;	jne     scode_return

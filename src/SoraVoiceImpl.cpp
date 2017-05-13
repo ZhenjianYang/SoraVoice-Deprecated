@@ -59,11 +59,13 @@ constexpr char SCODE_TEXT = 0x55;
 constexpr char SCODE_SAY = 0x5C;
 constexpr char SCODE_TALK = 0x5D;
 constexpr char SCODE_MENU = 0x5E;
+constexpr char SCODE_MENUEND = 0x5F;
 #else
 constexpr char SCODE_TEXT = 0x54;
 constexpr char SCODE_SAY = 0x5B;
 constexpr char SCODE_TALK = 0x5C;
 constexpr char SCODE_MENU = 0x5D;
+constexpr char SCODE_MENUEND = 0x5E;
 #endif // ZA
 
 constexpr unsigned INFO_TIME = 3000;
