@@ -59,7 +59,9 @@ int Ogg::Read(void * buff, int size) {
 }
 
 void Ogg::Close() {
-	OggApi::ov_clear((OggVorbis_File*)ovFile);
+	if (ovFile) {
+		OggApi::ov_clear((OggVorbis_File*)ovFile);
+	}
 }
 
 void Ogg::destory()

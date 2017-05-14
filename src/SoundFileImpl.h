@@ -26,14 +26,14 @@ private:
 public:
 	Ogg(Ogg && _Right) : SoundFile(_Right),
 		ovFile(_Right.ovFile) {
-		_Right.destory();
+		_Right.ovFile = nullptr;
 	}
 
 	Ogg& operator=(Ogg && _Right) {
 		destory();
 		SoundFile::operator=(_Right);
 		ovFile = _Right.ovFile;
-		_Right.destory();
+		_Right.ovFile = nullptr;
 	}
 };
 
@@ -68,7 +68,7 @@ private:
 public:
 	Wav(Wav && _Right) : SoundFile(_Right),
 		head(_Right.head), remain(_Right.remain), file(_Right.file) {
-		_Right.destory();
+		_Right.file = nullptr;
 	}
 
 	Wav& operator=(Wav && _Right) {
@@ -77,7 +77,7 @@ public:
 		head = _Right.head;
 		remain = _Right.remain;
 		file = _Right.file;
-		_Right.destory();
+		_Right.file = nullptr;
 	}
 };
 
