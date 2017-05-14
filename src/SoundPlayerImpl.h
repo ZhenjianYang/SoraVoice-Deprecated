@@ -1,11 +1,7 @@
-#undef CINTERFACE
+#pragma once
 
 #include "SoundPlayer.h"
 #include "SoundFile.h"
-
-#include "Log.h"
-#include "Clock.h"
-#include "ApiPack.h"
 
 #include <dsound.h>
 
@@ -15,156 +11,6 @@
 #include <mutex>
 #include <queue>
 
-#include <vorbis\vorbisfile.h>
-
-constexpr char STR_ov_open_callbacks[] = "ov_open_callbacks";
-constexpr char STR_ov_info[] = "ov_info";
-constexpr char STR_ov_read[] = "ov_read";
-constexpr char STR_ov_clear[] = "ov_clear";
-constexpr char STR_ov_time_total[] = "ov_time_total";
-
-class Ogg : public SoundFile {
-public:
-	Ogg() = default;
-	~Ogg() { Close(); }
-	virtual bool Open(const char* fileName) override {
-		FILE* f = fopen(fileName, "rb");
-		if (f == NULL) {
-			return false;
-		}
-
-		if (ov_open_callbacks(f, &ovFile, nullptr, 0, OV_CALLBACKS_DEFAULT) != 0) {
-			fclose(f);
-			return false;
-		}
-
-		vorbis_info* info = ov_info(&ovFile, -1);
-
-		waveFormat.wFormatTag = 1;
-		waveFormat.nChannels = info->channels;
-		waveFormat.nSamplesPerSec = info->rate;
-		waveFormat.wBitsPerSample = 16;
-		waveFormat.nBlockAlign = info->channels * 16 / 8;
-		waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
-
-		if (ov_time_total) {
-			double total_time = ov_time_total(&ovFile, -1);
-			if (total_time > 0) {
-				len = unsigned(total_time * Clock::TimeUnitsPerSecond);
-			}
-		}
-
-		return true;
-	}
-	virtual int Read(void * buff, int size) override {
-		if (!buff || !size) return 0;
-
-		int bitstream = 0;
-		int total = 0;
-		constexpr int block = 4096;
-		while (total < size)
-		{
-			int request = size - total < block ? size - total : block;
-			int read = ov_read(&ovFile, (char*)buff + total, request, 0, 2, 1, &bitstream);
-			if (read <= 0) break;
-			else total += read;
-		}
-		for (char* p = (char*)buff + total; p < (char*)buff + size; p++) *p = 0;
-		return total;
-	}
-	virtual void Close() override {
-		ov_clear(&ovFile);
-	}
-
-private:
-	OggVorbis_File ovFile{};
-	Ogg(const Ogg&) = delete;
-	Ogg& operator=(const Ogg&) = delete;
-
-public:
-	static void SetOggApis(void * ov_open_callbacks,
-		void * ov_info, void * ov_read, void * ov_clear, 
-		void * ov_time_total) {
-		Ogg::ov_open_callbacks = (decltype(Ogg::ov_open_callbacks))ov_open_callbacks;
-		Ogg::ov_info           = (decltype(Ogg::ov_info))          ov_info;
-		Ogg::ov_read           = (decltype(Ogg::ov_read))          ov_read;
-		Ogg::ov_clear          = (decltype(Ogg::ov_clear))         ov_clear;
-		Ogg::ov_time_total     = (decltype(Ogg::ov_time_total))    ov_time_total;
-	}
-private:
-	static decltype(::ov_open_callbacks)* ov_open_callbacks;
-	static decltype(::ov_info)* ov_info;
-	static decltype(::ov_read)* ov_read;
-	static decltype(::ov_clear)* ov_clear;
-	static decltype(::ov_time_total)* ov_time_total;
-};
-
-class Wav : public SoundFile {
-	static constexpr u32 tag_RIFF = 0x46464952;
-	static constexpr u32 tag_WAVE = 0x45564157;
-	static constexpr u32 tag_fmt  = 0x20746D66;
-	static constexpr u32 tag_data = 0x61746164;
-
-	struct WAVHead
-	{
-		u32 tag_RIFF;
-		u32 size;
-		u32 tag_WAVE;
-		u32 tag_fmt;
-		u32 size_WAVEFORMAT;
-		WAVEFORMAT waveFormat;
-		u32 tag_data;
-		s32 size_data;
-	} head{};
-	int remain = 0;
-
-public:
-	Wav() = default;
-	~Wav() { Close(); }
-	virtual bool Open(const char* fileName) override {
-		f = fopen(fileName, "rb");
-		if (f == NULL) {
-			return false;
-		}
-		if (fread(&head, 1, sizeof(head), f) != sizeof(head)) {
-			fclose(f); f = NULL; return false;
-		}
-
-		if (head.tag_RIFF != tag_RIFF || head.tag_WAVE != tag_WAVE || head.tag_fmt != tag_fmt || head.tag_data != tag_data
-			|| head.size_WAVEFORMAT != sizeof(WAVEFORMAT)) {
-			fclose(f); f = NULL; return false;
-		}
-		waveFormat = head.waveFormat;
-		if ((waveFormat.wBitsPerSample + 7) / 8 != waveFormat.nBlockAlign
-			|| waveFormat.nAvgBytesPerSec != waveFormat.nBlockAlign * waveFormat.nSamplesPerSec) {
-			fclose(f); f = NULL; return false;
-		}
-
-		remain = head.size_data;
-		if (remain >= 0) {
-			len = unsigned(double(head.size_data) / waveFormat.nAvgBytesPerSec * Clock::TimeUnitsPerSecond);
-		}
-		return remain >= 0;
-	}
-	virtual int Read(void * buff, int size) override {
-		int request = size < remain ? size : remain;
-		int read = fread(buff, 1, request, f);
-		remain -= read;
-		for (char* p = (char*)buff + read; p < (char*)buff + size; p++) *p = 0;
-		return read;
-	}
-	virtual void Close() override {
-		if (f) {
-			fclose(f);
-			f = NULL;
-		}
-	}
-
-private:
-	FILE* f = NULL;
-	Wav(const Wav&) = delete;
-	Wav& operator=(const Wav&) = delete;
-};
 
 class SoundPlayerImpl : private SoundPlayer
 {
@@ -239,32 +85,20 @@ private:
 	virtual ~SoundPlayerImpl() override {
 		ended = true;
 		Stop();
-		delete ogg;
-		delete wav;
 		{
 			LockGuard lock(mt_playQueue);
 			while (!playQueue.empty()) playQueue.pop();
 		}
 		SetEvent(hEvent_Playing);
-		WaitForSingleObject(hEvent_End, DELTA_TIME * 3);
+		auto rst = WaitForSingleObject(hEvent_End, DELTA_TIME * 3);
+		if (rst == WAIT_OBJECT_0) {
+			delete ogg;
+			delete wav;
+		}
 	}
 
-	SoundPlayerImpl(void * pDSD, StopCallBack stopCallBack)
-		:
-		pDSD((decltype(this->pDSD))pDSD),
-		stopCallBack(stopCallBack),
-		hEvent_Playing(CreateEvent(NULL, FALSE, FALSE, NULL)),
-		hEvent_End(CreateEvent(NULL, FALSE, FALSE, NULL)),
-		th_playing(&SoundPlayerImpl::thread_Playing, this)
-	{
-		th_playing.detach();
-		Ogg::SetOggApis(ApiPack::GetApi(STR_ov_open_callbacks),
-						ApiPack::GetApi(STR_ov_info),
-						ApiPack::GetApi(STR_ov_read),
-						ApiPack::GetApi(STR_ov_clear),
-						ApiPack::GetApi(STR_ov_time_total)
-						);
-	}
+	SoundPlayerImpl(void * pDSD, StopCallBack stopCallBack);
+
 	PlayID playID = InvalidPlayID;
 	std::string fileName;
 	SoundFile* soundFile = nullptr;
@@ -272,10 +106,8 @@ private:
 	bool stop = false;
 	bool ended = false;
 
-	static constexpr char OggAttr[] = ".ogg";
-	static constexpr char WavAttr[] = ".wav";
-	SoundFile* const ogg = new Ogg;
-	SoundFile* const wav = new Wav;
+	SoundFile* const ogg;
+	SoundFile* const wav;
 
 	IDirectSound* const pDSD;
 
@@ -333,4 +165,7 @@ private:
 		static PlayID last = InvalidPlayID;
 		return ++last == InvalidPlayID ? ++last : last;
 	}
+
+	static constexpr char OggAttr[] = ".ogg";
+	static constexpr char WavAttr[] = ".wav";
 };

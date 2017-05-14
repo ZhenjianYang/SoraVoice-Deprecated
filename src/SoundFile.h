@@ -26,4 +26,14 @@ public:
 protected:
 	WAVEFORMAT waveFormat{};
 	unsigned len = 0;
+
+	SoundFile() { }
+	SoundFile(const SoundFile& _Other) : waveFormat(_Other.waveFormat), len(_Other.len) { }
+	SoundFile& operator=(const SoundFile& _Other) {
+		waveFormat = _Other.waveFormat;
+		len = _Other.len;
+	}
+
+public:
+	static constexpr int TimeUnitsPerSecond = 1000;
 };

@@ -1,24 +1,15 @@
-#undef CINTERFACE
-
 #include "SoundPlayerImpl.h"
+#include "SoundFileImpl.h"
+#include "ApiPack.h"
 
 #include "Log.h"
-#include "Clock.h"
+#include <chrono>
 
-#include <vorbis\vorbisfile.h>
-#include <dsound.h>
-
-#include <cmath>
-#include <string>
-#include <thread>
-#include <mutex>
-#include <queue>
-
-decltype(::ov_open_callbacks)* Ogg::ov_open_callbacks = nullptr;
-decltype(::ov_info)* Ogg::ov_info = nullptr;
-decltype(::ov_read)* Ogg::ov_read = nullptr;
-decltype(::ov_clear)* Ogg::ov_clear = nullptr;
-decltype(::ov_time_total)* Ogg::ov_time_total = nullptr;
+static constexpr char STR_ov_open_callbacks[] = "ov_open_callbacks";
+static constexpr char STR_ov_info[] = "ov_info";
+static constexpr char STR_ov_read[] = "ov_read";
+static constexpr char STR_ov_clear[] = "ov_clear";
+static constexpr char STR_ov_time_total[] = "ov_time_total";
 
 constexpr char SoundPlayerImpl::OggAttr[];
 constexpr char SoundPlayerImpl::WavAttr[];
@@ -26,6 +17,23 @@ constexpr char SoundPlayerImpl::WavAttr[];
 SoundPlayer * SoundPlayer::CreatSoundPlayer(void * pDSD, StopCallBack stopCallBack)
 {
 	return new SoundPlayerImpl(pDSD, stopCallBack);
+}
+
+SoundPlayerImpl::SoundPlayerImpl(void * pDSD, StopCallBack stopCallBack)
+	:ogg(new Ogg), wav(new Wav),
+	pDSD((decltype(this->pDSD))pDSD),
+	stopCallBack(stopCallBack),
+	hEvent_Playing(CreateEvent(NULL, FALSE, FALSE, NULL)),
+	hEvent_End(CreateEvent(NULL, FALSE, FALSE, NULL)),
+	th_playing(&SoundPlayerImpl::thread_Playing, this)
+{
+	th_playing.detach();
+	Ogg::SetOggApis(ApiPack::GetApi(STR_ov_open_callbacks),
+					ApiPack::GetApi(STR_ov_info),
+					ApiPack::GetApi(STR_ov_read),
+					ApiPack::GetApi(STR_ov_clear),
+					ApiPack::GetApi(STR_ov_time_total)
+	);
 }
 
 void SoundPlayer::DestorySoundPlayer(SoundPlayer * player)
@@ -80,9 +88,10 @@ void SoundPlayerImpl::thread_Playing()
 			if (rst) {
 				int remain = 0;
 				while (!stop && playQueue.empty() && (remain = playing())) {
-					int delta = remain * Clock::TimeUnitsPerSecond / waveFormatEx.nAvgBytesPerSec + 1;
+					int delta = remain * SoundFile::TimeUnitsPerSecond / waveFormatEx.nAvgBytesPerSec + 1;
 					if (delta > DELTA_TIME) delta = DELTA_TIME;
-					Clock::Sleep(delta);
+					using TimeUnit = std::chrono::duration<int, std::ratio<1, SoundFile::TimeUnitsPerSecond>>;
+					std::this_thread::sleep_for(TimeUnit(delta));
 				}
 			}
 
@@ -144,7 +153,7 @@ bool SoundPlayerImpl::initDSBuff(){
 	memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
 	dSBufferDesc.dwSize = sizeof(dSBufferDesc);
 	dSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME;
-	dSBufferDesc.dwBufferBytes = waveFormatEx.nAvgBytesPerSec * TIME_BUF * NUM_BUF / Clock::TimeUnitsPerSecond;
+	dSBufferDesc.dwBufferBytes = waveFormatEx.nAvgBytesPerSec * TIME_BUF * NUM_BUF / SoundFile::TimeUnitsPerSecond;
 	dSBufferDesc.dwReserved = 0;
 	dSBufferDesc.lpwfxFormat = &waveFormatEx;
 	dSBufferDesc.guid3DAlgorithm = { 0 };

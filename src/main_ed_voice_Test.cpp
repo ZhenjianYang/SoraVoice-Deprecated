@@ -46,6 +46,8 @@ extern "C" {
 
 int main(int argc, char* argv[])
 {
+	_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
+
 	INI ini("SoraData.ini");
 	ofstream ofs("NewSoraData.ini");
 	for (int i = 0; i < ini.Num(); i++) {

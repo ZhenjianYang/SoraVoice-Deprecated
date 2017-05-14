@@ -95,6 +95,7 @@
     <ClInclude Include="..\..\src\rc\resource.h" />
     <ClInclude Include="..\..\src\SoraVoiceImpl.h" />
     <ClInclude Include="..\..\src\SoundFile.h" />
+    <ClInclude Include="..\..\src\SoundFileImpl.h" />
     <ClInclude Include="..\..\src\SoundPlayer.h" />
     <ClInclude Include="..\..\src\SoundPlayerImpl.h" />
     <ClInclude Include="..\..\src\Type.h" />
@@ -109,6 +110,7 @@
     <ClCompile Include="..\..\src\InitParam.cpp" />
     <ClCompile Include="..\..\src\Log.cpp" />
     <ClCompile Include="..\..\src\SoraVoiceImpl.cpp" />
+    <ClCompile Include="..\..\src\SoundFileImpl.cpp" />
     <ClCompile Include="..\..\src\SoundPlayerImpl.cpp" />
   </ItemGroup>
   <ItemGroup>

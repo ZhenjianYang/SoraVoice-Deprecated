@@ -1,7 +1,6 @@
 #include "Clock.h"
 
 #include <chrono>
-#include <thread>
 
 using StdClock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
@@ -26,6 +25,3 @@ void Clock::UpdateTime() {
 const unsigned& Clock::Now() { return *now; };
 const unsigned& Clock::Recent() { return *recent; };
 
-void Clock::Sleep(unsigned sleepTime){
-	std::this_thread::sleep_for(TimeUnit(sleepTime));
-}

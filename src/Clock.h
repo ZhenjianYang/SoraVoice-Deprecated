@@ -10,7 +10,6 @@ public:
 	static void UpdateTime();
 	static const unsigned& Now();
 	static const unsigned& Recent();
-	static void Sleep(unsigned sleepTime);
 
 private:
 	virtual ~Clock() = 0;
