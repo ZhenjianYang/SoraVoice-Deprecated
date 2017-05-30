@@ -30,6 +30,9 @@ long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * r
 			char buff[MAX_PATH_LEN + 1];
 			ExpandEnvironmentStringsA(SYS_DINPUT8_DLL, buff, sizeof(buff));
 			dll = LoadLibraryA(buff);
+		}
+
+		if (dll) {
 			ori_DirectInput8Create = (Call_Create)GetProcAddress(dll, STR_DirectInput8Create);
 		}
 	}

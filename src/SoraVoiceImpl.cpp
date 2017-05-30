@@ -147,12 +147,15 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 		LOG("Hook Present failed.");
 	}
 
-	void* pGetDeviceState = Hook_DI_GetDeviceState(*initParam->addrs.p_did);
-	if (pGetDeviceState) {
-		LOG("GetDeviceState hooked, old GetDeviceState = 0x%08X", pGetDeviceState);
-	}
-	else {
-		LOG("Hook GetDeviceState failed.");
+	if (config->EnableKeys) {
+		LOG("Now going to hook GetDeviceState...");
+		void* pGetDeviceState = Hook_DI_GetDeviceState(*initParam->addrs.p_did);
+		if (pGetDeviceState) {
+			LOG("GetDeviceState hooked, old GetDeviceState = 0x%08X", pGetDeviceState);
+		}
+		else {
+			LOG("Hook GetDeviceState failed.");
+		}
 	}
 
 	if (config->ShowInfo) {
