@@ -44,6 +44,10 @@ constexpr int KEY_VOLUME_DOWN = DIK_MINUS;
 constexpr int KEY_VOLUME_BIGSTEP1 = DIK_LSHIFT;
 constexpr int KEY_VOLUME_BIGSTEP2 = DIK_RSHIFT;
 
+constexpr int ORIVOLPCT_STEP = 10;
+constexpr int KEY_ORIVOLPCT_UP = DIK_RBRACKET;
+constexpr int KEY_ORIVOLPCT_DOWN = DIK_LBRACKET;
+
 constexpr int KEY_ORIVOICE = DIK_BACKSPACE;
 constexpr int KEY_AUTOPLAY = DIK_0;
 constexpr int KEY_SKIPVOICE = DIK_9;
@@ -230,8 +234,9 @@ void SoraVoiceImpl::Play(const char* t)
 	}
 
 	std::string oggFileName = VOICEFILE_PREFIX + str_vid + VOICEFILE_ATTR;
-
+	int volume = config->Volume;
 #ifdef ZA
+	status->playingOri = 0;
 	if (config->OriginalVoice) {
 		++t;
 		while (*t == '#') {
@@ -241,6 +246,9 @@ void SoraVoiceImpl::Play(const char* t)
 			if (*p == 'V' && p - t == ORIVOICEID_LEN) {
 				if (config->OriginalVoice == Config::OriginalVoice_OriOnly) {
 					oggFileName = ORIVOICEFILE_PREFIX + str_vid.assign(t, ORIVOICEID_LEN) + ORIVOICEFILE_ATTR;
+					status->playingOri = 1;
+					volume = config->Volume * config->OriVolumePercent / 100;
+					if (volume > config->MAX_Volume) volume = config->MAX_Volume;
 				}
 				*(unsigned*)t = 0x39393939;
 			}
@@ -255,7 +263,7 @@ void SoraVoiceImpl::Play(const char* t)
 		LockGuard lock(mt_playID);
 
 		status->playing = 1;
-		playID = player->Play(oggFileName.c_str(), status->mute ? 0 : config->Volume);
+		playID = player->Play(oggFileName.c_str(), status->mute ? 0 : volume);
 	}
 
 	order->disableDududu = config->DisableDududu;
@@ -304,6 +312,7 @@ void SoraVoiceImpl::Input()
 		if (!last[KEY_ALLINFO]) {
 			draw->RemoveInfo(InfoType::Volume);
 #ifdef ZA
+			draw->RemoveInfo(InfoType::OriVolumePercent);
 			draw->RemoveInfo(InfoType::OriginalVoice);
 #endif // ZA
 			draw->RemoveInfo(InfoType::AutoPlay);
@@ -315,6 +324,7 @@ void SoraVoiceImpl::Input()
 			if(status->mute) draw->AddInfo(InfoType::Volume, INFINITY_TIME, config->FontColor, Message::Mute);
 			else draw->AddInfo(InfoType::Volume, INFINITY_TIME, config->FontColor, Message::Volume, config->Volume);
 #ifdef ZA
+			draw->AddInfo(InfoType::OriVolumePercent, INFINITY_TIME, config->FontColor, Message::OriVolumePercent, config->OriVolumePercent);
 			draw->AddInfo(InfoType::OriginalVoice, INFINITY_TIME, config->FontColor, Message::OriginalVoice, Message::OriginalVoiceSwitch[config->OriginalVoice]);
 #endif // ZA
 			draw->AddInfo(InfoType::AutoPlay, INFINITY_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
@@ -327,6 +337,7 @@ void SoraVoiceImpl::Input()
 	else if (last[KEY_ALLINFO]) {
 		draw->RemoveInfo(InfoType::Volume);
 #ifdef ZA
+		draw->RemoveInfo(InfoType::OriVolumePercent);
 		draw->RemoveInfo(InfoType::OriginalVoice);
 #endif // ZA
 		draw->RemoveInfo(InfoType::AutoPlay);
@@ -360,6 +371,7 @@ void SoraVoiceImpl::Input()
 			//draw->AddText(InfoType::ConfigReset, INFO_TIME, config->FontColor, Message::Reset);
 			draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Volume, config->Volume);
 #ifdef ZA
+			draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message::OriVolumePercent, config->OriVolumePercent);
 			draw->AddInfo(InfoType::OriginalVoice, info_time, config->FontColor, Message::OriginalVoice, Message::OriginalVoiceSwitch[config->OriginalVoice]);
 #endif // ZA
 			draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
@@ -427,6 +439,33 @@ void SoraVoiceImpl::Input()
 		}//keys[KEY_VOLUME_UP] && keys[KEY_VOLUME_DOWN]
 
 #ifdef ZA
+		if (keys[KEY_ORIVOLPCT_UP] && !last[KEY_ORIVOLPCT_UP] && !keys[KEY_ORIVOLPCT_DOWN]) {
+			needsetvolume = config->OriVolumePercent != ORIVOLPCT_STEP;
+			needsave = needsetvolume;
+
+			config->OriVolumePercent += ORIVOLPCT_STEP;
+			if (config->OriVolumePercent > config->MAX_OriVolumePercent) config->OriVolumePercent = config->MAX_OriVolumePercent;
+
+			if (show_info) {
+				draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message::OriVolumePercent, config->OriVolumePercent);
+			}
+
+			LOG("Set OriVolumePercent : %d", config->OriVolumePercent);
+		} //keys[KEY_ORIVOLPCT_UP]
+		else if (keys[KEY_ORIVOLPCT_DOWN] && !last[KEY_ORIVOLPCT_DOWN] && !keys[KEY_ORIVOLPCT_UP]) {
+			needsetvolume = config->OriVolumePercent != 0;
+			needsave = needsetvolume;
+
+			config->OriVolumePercent -= ORIVOLPCT_STEP;
+			if (config->OriVolumePercent < 0) config->OriVolumePercent = 0;
+
+			if (show_info) {
+				draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message::OriVolumePercent, config->OriVolumePercent);
+			}
+
+			LOG("Set OriVolumePercent : %d", config->OriVolumePercent);
+		}
+
 		if (keys[KEY_ORIVOICE] && !last[KEY_ORIVOICE]) {
 			(config->OriginalVoice += 1) %= (Config::MAX_OriginalVoice + 1);
 			needsave = true;
@@ -540,7 +579,13 @@ void SoraVoiceImpl::Input()
 
 	if (needsetvolume) {
 		if (status->playing) {
-			if (!status->mute) player->SetVolume(config->Volume);
+			if (!status->mute) {
+				int volume = status->playingOri ?
+							config->Volume * config->OriVolumePercent / 100 :
+							config->Volume;
+				if (volume > config->MAX_Volume) volume = config->MAX_Volume;
+				player->SetVolume(volume);
+			}
 			else player->SetVolume(0);
 		}
 	}

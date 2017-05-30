@@ -93,6 +93,7 @@ bool Config::LoadConfig(const char * configFn)
 
 	GET_VALUE_MAXFIX(Volume, kv);
 	GET_VALUE_MAXFIX(OriginalVoice, kv);
+	GET_VALUE_MAXFIX(OriVolumePercent, kv);
 
 	GET_VALUE_MAXFIX(AutoPlay, kv);
 	GET_VALUE(WaitTimePerChar, kv);
@@ -126,6 +127,7 @@ bool Config::SaveConfig(const char * configFn) const
 
 #ifdef ZA
 	OUTPUT_VALUE(OriginalVoice, ofs);
+	OUTPUT_VALUE(OriVolumePercent, ofs);
 	ofs << '\n';
 #endif // ZA
 
@@ -156,6 +158,7 @@ void Config::load_default(bool all)
 {
 	SET_DEFAULT(Volume);
 	SET_DEFAULT(OriginalVoice);
+	SET_DEFAULT(OriVolumePercent);
 
 	SET_DEFAULT(AutoPlay);
 	SET_DEFAULT(WaitTimePerChar);

@@ -12,6 +12,8 @@ public:
 
 		Volume,
 		OriginalVoice,
+		OriVolumePercent,
+
 		AutoPlay,
 		SkipVoice,
 		DisableDialogSE,

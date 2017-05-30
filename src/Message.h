@@ -27,6 +27,8 @@ namespace Message {
 	constexpr const char* OriginalVoiceSwitch[]		=	{ OriEvoVoiceBoth, EvoVoicOnly, OriVoiceOnly };
 	constexpr const char OriginalVoice[]			= u8"存在原有剧情语音时：%s";
 
+	constexpr const char OriVolumePercent[]			= u8"原始语音音量：%d%%";
+
 	constexpr const char Reset[]					= u8"重置设置";
 
 	constexpr const char AutoPlay[]					= u8"自动播放：%s";
@@ -54,7 +56,13 @@ namespace Message {
 														";    2    仅播放原版语音(不播放进化版语音)\n"
 														"#默认为1\n"
 														"###注意：此项配置为2时，原版语音的播放是由本补丁进行的;        ###\n"
-														"###      这意味着对于该条语音，游戏原本的音量配置将不会起作用。###"
+														"###      其音量由接下来的OriVolumePercent来控制。###"
+													;
+
+		constexpr const char OriVolumePercent[]		= u8"#当OriginalVoice设置为2时，原始语音的音量百分比。\n"
+														";即此时播放原始语音的音量为：Volume x OriVolumePercent % \n"
+														";本选项的范围为0~200，默认为100。\n"
+														"###注意：当计算得到的音量值大于100时，以音量值100进行播放###"
 													;
 
 		constexpr const char AutoPlay[]				= u8"#自动播放。模式罗列如下：\n"
@@ -100,12 +108,14 @@ namespace Message {
 													;
 
 		constexpr const char EnableKeys[]			= u8"#启用按键控制，按键配置如下：\n"
-#ifdef ZA
-														";   退格  切换OriginalVoice的值\n"
-#endif
 														";    +    Volume加1(若同时按住SHIFT则加5)\n"
 														";    -    Volume减1(若同时按住SHIFT则减5)\n"
 														";  -+同时 设置静音 (若在静音状态调整了Volume，静音状态会被取消)\n"
+#ifdef ZA
+														";   退格  切换OriginalVoice的值\n"
+														";    ]    OriVolumePercent加10\n"
+														";    [    OriVolumePercent减10\n"
+#endif
 														";    0    切换AutoPlay的值\n"
 														";    9    切换SkipVoice的值\n"
 														";    8    切换DisableDialogSE的值\n"

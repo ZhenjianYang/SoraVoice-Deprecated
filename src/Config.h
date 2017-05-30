@@ -30,6 +30,8 @@ struct Config
 	DEFINE_CONFIG_WMAX(Volume, 100, 100);
 	DEFINE_CONFIG_WMAX(OriginalVoice, OriginalVoice_EvoOnly, 2);
 
+	DEFINE_CONFIG_WMAX(OriVolumePercent, 100, 200);
+
 	DEFINE_CONFIG_WMAX(AutoPlay, AutoPlay_ALL, 2);
 	DEFINE_CONFIG(WaitTimePerChar, 60);
 	DEFINE_CONFIG(WaitTimeDialog, 800);

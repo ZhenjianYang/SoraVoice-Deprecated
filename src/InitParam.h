@@ -69,9 +69,9 @@ struct InitParam
 		u8 wait;
 		u8 waitv;
 		u8 scode;
-
-	//0xAB
-		u8 reserved[5];
+		u8 playingOri;
+	//0xAC
+		u8 reserved[4];
 	} status;
 
 	//0xB0
