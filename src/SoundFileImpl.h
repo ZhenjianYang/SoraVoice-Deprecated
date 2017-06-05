@@ -34,6 +34,7 @@ public:
 		SoundFile::operator=(_Right);
 		ovFile = _Right.ovFile;
 		_Right.ovFile = nullptr;
+		return *this;
 	}
 };
 

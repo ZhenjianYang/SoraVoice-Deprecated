@@ -32,6 +32,7 @@ protected:
 	SoundFile& operator=(const SoundFile& _Other) {
 		waveFormat = _Other.waveFormat;
 		len = _Other.len;
+		return *this;
 	}
 
 public:
