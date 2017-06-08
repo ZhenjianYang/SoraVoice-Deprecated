@@ -153,6 +153,7 @@ public:
 	MbinTalk& operator=(const MbinTalk& _Other) {
 		id = _Other.id; offset = _Other.offset; len = _Other.len; 
 		type = _Other.type;  name = _Other.name; texts = _Other.texts;
+		return *this;
 	}
 
 	MbinTalk(MbinTalk&& _Right)
@@ -161,6 +162,7 @@ public:
 	MbinTalk& operator=(MbinTalk&& _Right) {
 		id = _Right.id; offset = _Right.offset; len = _Right.len; 
 		type = _Right.type; name = std::move(_Right.name); texts = std::move(_Right.texts);
+		return *this;
 	}
 
 	static MbinTalkList GetMbinTalks(const std::string & mbin, bool utf8 = false);
