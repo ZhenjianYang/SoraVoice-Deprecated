@@ -74,14 +74,14 @@ static auto GetMapTalkVid(const string& py_out, const string& bin_out) {
 		bool empty_bin = buff_bin[0] == '#' || buff_bin[0] == '\0' || buff_bin[0] == '\t';
 
 		if (empty_py != empty_bin) {
-			Error("%s, %d: 空行不匹配！", py_out.c_str(), line_no);
+			Error("%s, %d: Empty line not matched！", py_out.c_str(), line_no);
 		}
 		if (empty_py || empty_bin) continue;
 
 		int talk_id = -1, line_id = -1, ori_line_no = -1;
 		char type = 0;
 		if (sscanf(buff_py, "%c%04d,%02d,%05d,", &type, &talk_id, &line_id, &ori_line_no) < 4) {
-			Error("%s, %d: 错误的行！", py_out.c_str(), line_no);
+			Error("%s, %d: Wrong line！", py_out.c_str(), line_no);
 			continue;
 		}
 
@@ -136,7 +136,7 @@ static auto GetMapTalkVid(const string& py_out, const string& bin_out) {
 			auto inrst = Talk.insert({ line_id, { vid, line_no, ex1, ex2 } });
 
 			if (!inrst.second) {
-				Error("%s, %d: %04d,%02d,%05d, 重复的键值！", py_out.c_str(), line_no, talk_id, line_id, ori_line_no);
+				Error("%s, %d: %04d,%02d,%05d, Duplicate keys！", py_out.c_str(), line_no, talk_id, line_id, ori_line_no);
 			}
 		}
 	}
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
 
 	for (const auto &fn_py : fn_pys) {
 		string name = fn_py.substr(0, fn_py.rfind(ATTR_PY));
-		cout << "处理" << fn_py << "..." << endl;
+		cout << "Current: " << fn_py << "..." << endl;
 
 		const auto talks = GetMapTalkVid(dir_py_out + name + ATTR_OUT, dir_bin_out + name + ATTR_OUT);
 
@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
 					if (index != string::npos) {
 						if (0 == sscanf(s.c_str() + index + mark_line_id.length(), "%d", &line_id)) {
 							line_id = -1;
-							Error("%s, %04d: 无效的line_id！", name.c_str(), line_no);
+							Error("%s, %04d: Invalid line_id！", name.c_str(), line_no);
 						}
 					}
 					else {
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
 					if (it_line != it_talk->second.end()) {
 						auto idx = s.find('"');
 						if (idx == string::npos) {
-							Error("%s, %04d,%02d,%05d: 该行无文本！", name.c_str(), line_no, talk_id_cnt, line_id_cnt);
+							Error("%s, %04d,%02d,%05d: No text in this line！", name.c_str(), line_no, talk_id_cnt, line_id_cnt);
 						}
 						else {
 							s.insert(idx + 1, it_line->second.vid);
@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
 						if (index != string::npos) {
 							if (0 == sscanf(s.c_str() + index + mark_talk_id.length(), "%d", &talk_id)) {
 								talk_id = -1;
-								Error("%s, %04d: 无效的talk_id！", name.c_str(), line_no);
+								Error("%s, %04d: Invalid talk_id！", name.c_str(), line_no);
 							}
 						}
 						else {
@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
 
 	if (cnt_err > 0) {
 		ofs_rp.close();
-		cout << "存在错误，参阅报告：" << REP_NAME << endl;
+		cout << "Error exists, see the report：" << REP_NAME << endl;
 		getchar();
 	}
 
