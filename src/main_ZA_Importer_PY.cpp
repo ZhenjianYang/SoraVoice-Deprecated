@@ -31,9 +31,10 @@ const string TalkTypes[] = { AnonymousTalk, ChrTalk, NpcTalk };
 const string SPACE = "            ";
 
 static int cnt_err = 0;
+static string path_report = REP_NAME;
 static ofstream ofs_rp;
 static void Error(const char* foramt, ...) {
-	if (cnt_err == 0) ofs_rp.open(REP_NAME);
+	if (cnt_err == 0) ofs_rp.open(path_report);
 
 	cnt_err++;
 	static char buff[MAXCH_ONELINE];
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
 
 	if (argc <= 4) {
 		cout << "Usage:\n"
-			"\t" "ZA_Importer_PY dir_py_new dir_py_old dir_py_out dir_bin_out\n"
+			"\t" "ZA_Importer_PY dir_py_new dir_py_old dir_py_out dir_bin_out [path_report]\n"
 			<< endl;
 		return 0;
 	}
@@ -158,6 +159,7 @@ int main(int argc, char* argv[])
 	string dir_py = argv[2];
 	string dir_py_out = argv[3];
 	string dir_bin_out = argv[4];
+	if(argc > 5) path_report = argv[5];
 
 	Sora::MakeDirectory(dir_py_new);
 	if (dir_py_new.length() > 0 && dir_py_new.back() != '\\') dir_py_new.push_back('\\');
@@ -272,7 +274,7 @@ int main(int argc, char* argv[])
 
 	if (cnt_err > 0) {
 		ofs_rp.close();
-		cout << "Error exists, see the report：" << REP_NAME << endl;
+		cout << "Error exists, see the report：" << path_report << endl;
 		getchar();
 	}
 
