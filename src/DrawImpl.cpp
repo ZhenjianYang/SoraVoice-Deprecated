@@ -6,7 +6,7 @@
 #include "EncodeHelper.h"
 
 #ifdef ZA
-#include <d3dx9.h>
+#include <d3d9/d3dx9.h>
 #else
 #include <d3d8/d3dx8.h>
 #endif

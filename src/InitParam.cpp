@@ -29,7 +29,7 @@ constexpr const char* STR_D3DX9_APIS[][2] = {
 	{"D3DXCreateSprite", "D3DXCreateSprite" }
 };
 #else
-#include <d3d8\d3dx8.h>
+#include <d3d8/d3dx8.h>
 constexpr char STR_D3DXCreateFontIndirect[] = "D3DXCreateFontIndirect";
 #endif
 
