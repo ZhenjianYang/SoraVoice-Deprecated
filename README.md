@@ -105,10 +105,9 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 **注意**: 由于《空之轨迹》系列的语音脚本尚未完成，其语音补丁尚不可用。
 
 ## 本项目使用的外部库   
--   [libVorbis & libOgg](https://www.xiph.org/), 基于
-    [BSD-like license](https://www.xiph.org/licenses/bsd/)。  
--   DirectX8 SDK. 来自微软。    
--   DirectX9 SDK. 只用到头文件, 这个工程里的文件是从[minidx9](https://github.com/hrydgard/minidx9)复制过来的。
+-   [libVorbis & libOgg](https://www.xiph.org/), 基于[BSD-like license](https://www.xiph.org/licenses/bsd/)。  
+-   DirectX8 SDK。 来自微软。    
+-   DirectX9 SDK。 只用到头文件, 这个工程里的文件是从[minidx9](https://github.com/hrydgard/minidx9)复制过来的。
 
 
 
