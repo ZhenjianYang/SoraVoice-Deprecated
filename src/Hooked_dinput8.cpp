@@ -14,9 +14,7 @@
 
 #define MAX_PATH_LEN 1024
 
-const GUID guid_keyboard = { 0x6F1D2B61, 0xD5A0, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00 };
-
-static HMODULE dll = 0;
+static HMODULE dll = NULL;
 static HINSTANCE hinstDLL;
 
 using Call_Create = decltype(Hooked_DirectInput8Create)*;
