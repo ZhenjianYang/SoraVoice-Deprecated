@@ -20,6 +20,8 @@ static HINSTANCE hinstDLL;
 using Call_Create = decltype(Hooked_DirectInput8Create)*;
 static Call_Create ori_DirectInput8Create = nullptr;
 
+static bool init = false;
+
 long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * riidltf, void ** ppvOut, void * punkOuter)
 {
 	if (!dll) {
@@ -35,9 +37,8 @@ long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * r
 		}
 	}
 
-	if (!ip) {
-		Init(hinstDLL);
-		if (ip) Go();
+	if (!init) {
+		init = Init(hinstDLL);
 	}
 
 	if (ori_DirectInput8Create) {
@@ -50,7 +51,9 @@ long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * r
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
-	::hinstDLL = hinstDLL;
+	if (DLL_PROCESS_ATTACH == fdwReason) {
+		::hinstDLL = hinstDLL;
+	}
 	return TRUE;
 }
 

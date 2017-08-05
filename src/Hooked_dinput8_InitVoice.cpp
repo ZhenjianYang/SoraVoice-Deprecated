@@ -1,6 +1,10 @@
 #include "Hooked_dinput8_InitVoice.h"
+
 #include "INI.h"
-#include "rc_hk_dinput8\resource.h"
+#include "InitParam.h"
+#include "RC.h"
+#include "RC_hk_dinput8.h"
+
 #include <Windows.h>
 #include <dsound.h>
 #include <string>
@@ -14,8 +18,6 @@ using namespace std;
 
 #define PUT(var, ptr) memcpy(ptr, &var, sizeof(var))
 #define PUT_ARRAY(arr, ptr) memcpy(ptr, arr, sizeof(arr))
-
-#define SoraData "SORADATA"
 
 #ifdef LOG_NOLOG
 #define LOG(...)
@@ -31,6 +33,13 @@ constexpr int OFF_VLIST = 0xC00;
 
 constexpr char dll_name_sora[] = "ed_voice.dll";
 constexpr char dll_name_za[] = "za_voice.dll";
+
+constexpr char rc_SoraData[] = "voice/SoraData.ini";
+constexpr char rc_SoraDataEx[] = "voice/SoraDataEx.ini";
+constexpr char rc_sora_all[] = "voice/sora_all";
+constexpr char rc_za_all[] = "voice/za_all";
+constexpr char rc_ao_vlist[] = "voice/ao_rnd_vlst.txt";
+
 constexpr char import_names[][16] = {
 	"Init",
 	"End",
@@ -89,8 +98,15 @@ constexpr byte scode_za[] = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F };
 
 constexpr int Size = 0x1000;
 
-InitParam *ip = nullptr;
-static HINSTANCE hd;
+static bool DoInit(const char* data_name);
+
+bool Init(void* hDll) {
+	RC::SetHS(hDll);
+	RC::RcItem rcTable[] = RC_TABLE;
+	RC::SetRcTable(rcTable);
+
+	return DoInit(rc_SoraDataEx) || DoInit(rc_SoraData);
+}
 
 static unsigned GetUIntFromValue(const char* str) {
 	if (!str || !str[0]) return 0;
@@ -103,33 +119,30 @@ static unsigned GetUIntFromValue(const char* str) {
 	return std::strtoul(str, &p, rad);
 }
 
-void Init(void* hDll)
+bool DoInit(const char* data_name)
 {
-	hd = (HINSTANCE)hDll;
-	unique_ptr<byte[]> sp(new byte[Size]);
-	memset(sp.get(), 0, Size);
-	InitParam* tp = (InitParam*)sp.get();
-
-	INI ini;
-	HRSRC rc_ini = FindResourceA(hd, MAKEINTRESOURCE(IDR_SORADATA), SoraData);
-	if (rc_ini) {
-		HGLOBAL h = LoadResource(hd, rc_ini);
-		if (h) {
-			int size = SizeofResource(hd, rc_ini);
-			char* first = (char*)LockResource(h);
-			if (first) {
-				stringstream ss(string(first, size));
-				ini.Open(ss);
-			}
+	INI ini; {
+		LOG("Open resource: %s", data_name);
+		unique_ptr<RC> rc(RC::Get(data_name));
+		if (!rc || !rc->First()) {
+			LOG("Failed.");
+			return false;
 		}
+		LOG("Resource openned, first = 0x%08X, size = 0x%04X", (unsigned)rc->First(), rc->Size());
+		stringstream ss(string(rc->First(), rc->Size()));
+		ini.Open(ss);
 	}
 
 	if (ini.Num() <= 1) {
 		LOG("Bad ini file. %d", ini.Num());
-		return;
+		return false;
 	}
 	LOG("ini file opened. %d", ini.Num());
 	
+	unique_ptr<byte[]> sp = make_unique<byte[]>(Size);
+	memset(sp.get(), 0, Size);
+	InitParam* tp = (InitParam*)sp.get();
+
 	const INI::Group *group = nullptr;
 	auto jcs = tp->jcs;
 	for (int i = 1; i < ini.Num(); i++) {
@@ -186,7 +199,7 @@ void Init(void* hDll)
 
 	if (!group) {
 		LOG("No mathed data found in ini");
-		return;
+		return false;
 	}
 	LOG("Data found, %d, %s", group->Num(), group->Name());
 
@@ -207,23 +220,17 @@ void Init(void* hDll)
 
 	memcpy(tp->scodes, game ? scode_za : scode_sora, sizeof(scode_za));
 
-	HRSRC rc_bin = FindResourceA(hd, MAKEINTRESOURCE(game ? IDR_ZA_BIN : IDR_SORA_BIN), SoraData);
-	bool suc = false;
-	if (rc_bin) {
-		HGLOBAL h = LoadResource(hd, rc_bin);
-		if (h) {
-			int size = SizeofResource(hd, rc_bin);
-			void* first = LockResource(h);
-			if (first && size < Size - addr_code) {
-				memcpy((char*)tp + addr_code, first, size);
-				suc = true;
-			}
+	bool suc = false; {
+		unique_ptr<RC> rc_bin(RC::Get(game ? rc_za_all : rc_sora_all));
+		if (rc_bin && rc_bin->First() && rc_bin->Size() < Size - addr_code) {
+			memcpy((char*)tp + addr_code, rc_bin->First(), rc_bin->Size());
+			suc = true;
 		}
 	}
 
 	if (!suc) {
 		LOG("Read bin failed.");
-		return;
+		return false;
 	}
 	LOG("Read bin finished.");
 
@@ -239,32 +246,28 @@ void Init(void* hDll)
 	}
 	else {
 		LOG("Load dll failed : %s", game ? dll_name_za : dll_name_sora);
-		return;
+		return false;
 	}
 
 	if (game == GAME_AO) {
-		HRSRC rc_vlist = FindResourceA(hd, MAKEINTRESOURCE(IDR_AO_RND_VLST), SoraData);
-		if (rc_vlist) {
-			HGLOBAL h = LoadResource(hd, rc_vlist);
-			if (h) {
-				int size = SizeofResource(hd, rc_vlist);
-				char* pvlst_rst = (char*)LockResource(h);
-				char* pvlist = (char*)tp + OFF_VLIST;
-				if (pvlst_rst) {
-					for (int i = 0, j = 0; i < size && j < Size - OFF_VLIST - 1; i++) {
-						if (pvlst_rst[i] != '\r' && pvlst_rst[i] != '\n') {
-							pvlist[j++] = pvlst_rst[i];
-						}
-						else if (j > 0 && pvlist[j - 1]) {
-							j++;
-						}
-					}
+		unique_ptr<RC> rc_vlist(RC::Get(rc_ao_vlist));
+		if (rc_vlist && rc_vlist->First()) {
+			int size = (int)rc_vlist->Size();
+			const char* pvlst_rst = rc_vlist->First();
+			char* pvlist = (char*)tp + OFF_VLIST;
+
+			for (int i = 0, j = 0; i < size && j < Size - OFF_VLIST - 1; i++) {
+				if (pvlst_rst[i] != '\r' && pvlst_rst[i] != '\n') {
+					pvlist[j++] = pvlst_rst[i];
+				}
+				else if (j > 0 && pvlist[j - 1]) {
+					j++;
 				}
 			}
 		}
 	}
 
-	ip = (InitParam*)VirtualAlloc(NULL, Size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	InitParam *ip = (InitParam*)VirtualAlloc(NULL, Size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
 	if (ip) {
 		memcpy(ip, tp, Size);
@@ -276,11 +279,7 @@ void Init(void* hDll)
 	else {
 		LOG("Alloc new memory failed.");
 	}
-}
 
-void Go()
-{
-	if (!ip) return;
 	LOG("Last step.");
 
 	for (int j = 0; j < num_name; j++) {
@@ -291,7 +290,7 @@ void Go()
 
 		byte* vs_to = (byte*)ip + rvalist[j];
 		int jc_len = vs_to - from - 5;
-		
+
 		char buff[6];
 		memset(buff, opnop, sizeof(buff));
 
@@ -309,4 +308,6 @@ void Go()
 		}
 	}
 	LOG("All done");
+
+	return true;
 }

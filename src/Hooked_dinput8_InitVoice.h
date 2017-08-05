@@ -1,8 +1,4 @@
 #pragma once
 
-#include "InitParam.h"
+bool Init(void* hDll);
 
-extern InitParam* ip;
-
-void Init(void* hDll);
-void Go();
