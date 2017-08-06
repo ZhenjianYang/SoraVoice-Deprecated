@@ -1,14 +1,16 @@
 #pragma once
 
-using u64 = unsigned long long;
-using u32 = unsigned;
-using u16 = unsigned short;
-using u8 = unsigned char;
+#include <cstdint>
 
-using s64 = long long;
-using s32 = int;
-using s16 = short;
-using s8 = char;
+using u64 = std::uint64_t;
+using u32 = std::uint32_t;
+using u16 = std::uint16_t;
+using u8 = std::uint8_t;
+
+using s64 = std::int64_t;
+using s32 = std::int32_t;
+using s16 = std::int16_t;
+using s8 = std::int8_t;
 
 static_assert(sizeof(u64) == 8, "size of u64 is not 8!");
 static_assert(sizeof(u32) == 4, "size of u32 is not 4!");
