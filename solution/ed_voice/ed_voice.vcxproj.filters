@@ -133,11 +133,6 @@
     <ResourceCompile Include="..\..\src\rc_ed_voice\ed_voice.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\src\rc_ed_voice\ed_voice.bin">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\..\src\rc_ed_voice\Message_en.ini">
       <Filter>Resource Files</Filter>
     </None>
