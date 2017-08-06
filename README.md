@@ -38,14 +38,20 @@ to `voice/dll/`.
 #### About Voice Scripts for *Sora no Kiseki* series:   
 Sorry, they are not done. So voice patches for *Sora no Kiseki* series are not available now.
 
-## By now, this project will work for:   
-Game Title|Language|Version
-----------|--------|-------
-*Zero no Kiseki*|Chinese Simplified|1.1, JOYO
-*Ao no Kiseki*|Chinese Simplified|1.0, JOYO
-*Sora no Kiseki FC*|Chinese Simplified|YLT
-*Sora no Kiseki SC*|Chinese Simplified|YLT
-*Sora no Kiseki the 3RD*|Chinese Simplified|YLT
+## About the configuration file   
+The voice patch's configuration file is **ed_voice.ini**(Sora) or **za_voice.ini**(Zero/Ao),
+it will be created after the game launched. And some configurations can be changed
+by hotkeys during game playing. Check the configuration file with a text editor for
+more details.
+
+## By now, this project can work for:   
+Game Title                    |Language                |Version
+------------------------------|------------------------|---------
+*Zero no Kiseki*              |Chinese Simplified      |1.1, JOYO
+*Ao no Kiseki*                |Chinese Simplified      |1.0, JOYO
+*Sora no Kiseki FC*           |Chinese Simplified      |YLT
+*Sora no Kiseki SC*           |Chinese Simplified      |YLT
+*Sora no Kiseki the 3RD*      |Chinese Simplified      |YLT
 
 **NOTE**: Voice patches for *Sora no Kiseki* series are not available because their voice scripts are not done.
 
@@ -93,14 +99,19 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 #### 关于《空之轨迹》系列的语音脚本：   
 很抱歉，《空之轨迹》系列的语音脚本尚未完成，所以目前《空之轨迹》系列的语音补丁尚不可用。
 
+## 关于配置文件   
+语音补丁的配置文件为**ed_voice.ini**(空)或**za_voice.ini**(零/碧)。
+配置文件会在游戏启动的时候自动创建。并且，部分配置项可以在游戏进行的过程中通过快捷键来进行修改。
+具体请参考配置文件内的说明(用文本编辑器打开即可)。
+
 ## 目前，本工程可用于:   
-游戏标题|语言|版本
--------|----|----
-零之轨迹|简体中文|1.1, JOYO
-碧之轨迹|简体中文|1.0, JOYO
-空之轨迹 FC|简体中文|YLT
-空之轨迹 SC|简体中文|YLT
-空之轨迹 the 3RD|简体中文|YLT
+游戏标题            |语言        |版本
+-------------------|------------|---------
+零之轨迹            |简体中文    |1.1, JOYO
+碧之轨迹            |简体中文    |1.0, JOYO
+空之轨迹 FC         |简体中文    |YLT
+空之轨迹 SC         |简体中文    |YLT
+空之轨迹 the 3RD    |简体中文    |YLT
 
 **注意**: 由于《空之轨迹》系列的语音脚本尚未完成，其语音补丁尚不可用。
 
