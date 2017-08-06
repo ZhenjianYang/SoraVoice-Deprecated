@@ -112,7 +112,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\rc_ed_voice\ed_voice.bin" />
-    <None Include="..\..\src\rc_ed_voice\Message_cn.ini" />
     <None Include="..\..\src\rc_ed_voice\Message_en.ini" />
     <None Include="..\..\src\rc_ed_voice\Message_zh.ini" />
   </ItemGroup>

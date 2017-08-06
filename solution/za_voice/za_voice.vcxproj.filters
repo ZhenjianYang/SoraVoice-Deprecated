@@ -130,10 +130,10 @@
     <ResourceCompile Include="..\..\src\rc_ed_voice\ed_voice.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-    <None Include="..\..\src\rc_ed_voice\Message_zh.ini">
+    <None Include="..\..\src\rc_ed_voice\Message_en.ini">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\src\rc_ed_voice\Message_cn.ini">
+    <None Include="..\..\src\rc_ed_voice\Message_zh.ini">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
