@@ -34,7 +34,7 @@ static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
 #include <set>
 #include <memory>
 
-constexpr int MAX_TEXT_LEN = 63;
+constexpr int MAX_TEXT_LEN = 95;
 
 constexpr int MIN_FONT_SIZE = 20;
 constexpr int TEXT_NUM_SCRH = 25;
@@ -57,7 +57,7 @@ class DrawImpl : private Draw
 
 	virtual void DrawInfos() override;
 
-	virtual void AddInfo(InfoType type, unsigned color, unsigned time, const char* text, ...) override;
+	virtual void AddInfoText(InfoType type, unsigned time, unsigned color, const char* text) override;
 
 	virtual void RemoveInfo(InfoType type) override {
 		switch (type)
@@ -278,7 +278,7 @@ void DrawImpl::DrawInfos() {
 
 constexpr const unsigned DrawImpl::DftFormatList[];
 
-void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char* text, ...) {
+void DrawImpl::AddInfoText(InfoType type, unsigned time, unsigned color, const char* text) {
 	unsigned dead = time == ShowTimeInfinity ? TIME_MAX : Clock::Now() + time;
 	constexpr int NumValidType = std::extent<decltype(DftFormatList)>::value;
 	const unsigned format = (int)type < NumValidType ? DftFormatList[(int)type] : DftFormatList[(int)InfoType::All];
@@ -311,16 +311,10 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 	(*it)->deadTime = dead;
 	(*it)->format = format;
 
-	constexpr int buffSize = MAX_TEXT_LEN * 3;
-	char buff[buffSize];
-	va_list argptr;
-	va_start(argptr, text);
-	vsnprintf(buff, sizeof(buff), text, argptr);
-	va_end(argptr);
-	auto conRst = ConvertUtf8toUtf16((*it)->text, buff);
+	auto conRst = ConvertUtf8toUtf16((*it)->text, text);
 
-	int text_width = (int)((conRst.cnt1 + conRst.cnt2 * 2 + conRst.cnt4 * 2) * h * 0.6);
-	LOG("Text is %s", buff);
+	int text_width = (int)((conRst.cnt1 * 0.8 + conRst.cnt2 * 1.2 + conRst.cnt4 * 1.2) * h);
+	LOG("Text is %s", text);
 	LOG("Text width is %d", text_width);
 
 	auto& rect = (*it)->rect;
@@ -368,4 +362,3 @@ void DrawImpl::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 
 	showing = infos.size() > 0;
 }
-

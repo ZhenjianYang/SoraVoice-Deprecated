@@ -42,7 +42,7 @@ struct Config
 	DEFINE_CONFIG(DisableDududu, 1);
 	DEFINE_CONFIG_WMAX(ShowInfo, ShowInfo_On, 2);
 
-	DEFINE_STRCONFIG(FontName, u8"黑体", 63);
+	DEFINE_STRCONFIG(FontName, "", 63);
 	DEFINE_CONFIG(FontColor, 0xFFFFFFFF);
 
 	DEFINE_CONFIG(EnableKeys, 1);

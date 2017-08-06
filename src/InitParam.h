@@ -92,4 +92,4 @@ struct InitParam
 static_assert(sizeof(void*) == 4, "32 bits only!");
 static_assert(sizeof(InitParam) <= 0xE0, "Size of InitParam too big!");
 
-bool InitAddrs(InitParam* initParam);
+bool InitAddrs(InitParam* initParam, void* hDll);

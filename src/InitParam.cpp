@@ -4,6 +4,10 @@
 #include "Clock.h"
 #include "ApiPack.h"
 
+#include "RC.h"
+#include "RC_ed_voice.h"
+#include "Message.h"
+
 #include <string>
 #include <dsound.h>
 
@@ -44,8 +48,13 @@ static DSD* pDS;
 
 static unsigned fake_mute = 1;
 
-bool InitAddrs(InitParam* initParam)
+bool InitAddrs(InitParam* initParam, void* hDll)
 {
+	RC::SetHS(hDll);
+	RC::RcItem rcTable[] = RC_TABLE;
+	RC::SetRcTable(rcTable);
+	Message.LoadMessage();
+
 	InitParam* ip = (InitParam*)initParam;
 
 	LOG("p = 0x%08X", ip);

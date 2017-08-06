@@ -14,6 +14,8 @@
 #include <random>
 #include <ctime>
 
+#define ED_VOICE_VERSION __DATE__ " " __TIME__
+
 #ifndef MAX_VOICEID_LEN
 #define MAX_VOICEID_LEN 10
 #endif // !MAX_VOICEID_LEN
@@ -128,17 +130,23 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 
 	InitHook_SetInitParam(initParam);
 
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::Mute);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::Volume, 1234567890);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::OriginalVoice, Message::Switch[0]);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::AutoPlay, Message::Switch[1]);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::SkipVoice, Message::ShowInfoSwitch[2]);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::DisableDialogSE, Message::AutoPlaySwitch[1]);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::DisableDududu, Message::AutoPlaySwitch[2]);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::ShowInfo, Message::OriginalVoiceSwitch[0]);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::OriginalVoiceSwitch[1]);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::OriginalVoiceSwitch[2]);
-	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message::AutoPlayMark);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Mute);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Volume);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.OriginalVoice);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.AutoPlay);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.SkipVoice);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.DisableDialogSE);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.DisableDududu);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.ShowInfo);
+	for(unsigned i = 0; i < std::extent_v<decltype(Message.Switch)>; i++)
+		draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Switch[i]);
+	for (unsigned i = 0; i < std::extent_v<decltype(Message.AutoPlaySwitch)>; i++)
+		draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.AutoPlaySwitch[i]);
+	for (unsigned i = 0; i < std::extent_v<decltype(Message.OriginalVoiceSwitch)>; i++)
+		draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.OriginalVoiceSwitch[i]);
+	for (unsigned i = 0; i < std::extent_v<decltype(Message.ShowInfoSwitch)>; i++)
+		draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.ShowInfoSwitch[i]);
+	draw->AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.AutoPlayMark);
 	draw->DrawInfos();
 	draw->RemoveInfo(InfoType::All);
 
@@ -163,9 +171,9 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	}
 
 	if (config->ShowInfo) {
-		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::Title);
-		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::Version, Message::VersionNum);
-		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message::GameTitle, Comment);
+		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message.Title);
+		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message.Version, ED_VOICE_VERSION);
+		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message.CurrentTitle, Comment);
 	}
 
 	playRandomVoice(initParam->p_rnd_vlst);
@@ -277,7 +285,7 @@ void SoraVoiceImpl::Stop()
 	LOG("Stop is called.");
 
 	if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-		draw->AddInfo(InfoType::AutoPlayMark, REMAIN_TIME, config->FontColor, Message::AutoPlayMark);
+		draw->AddInfo(InfoType::AutoPlayMark, REMAIN_TIME, config->FontColor, Message.AutoPlayMark);
 	}
 
 	if (config->SkipVoice) {
@@ -321,17 +329,17 @@ void SoraVoiceImpl::Input()
 			draw->RemoveInfo(InfoType::DisableDududu);
 			draw->RemoveInfo(InfoType::InfoOnoff);
 
-			if(status->mute) draw->AddInfo(InfoType::Volume, INFINITY_TIME, config->FontColor, Message::Mute);
-			else draw->AddInfo(InfoType::Volume, INFINITY_TIME, config->FontColor, Message::Volume, config->Volume);
+			if(status->mute) draw->AddInfo(InfoType::Volume, INFINITY_TIME, config->FontColor, Message.Mute);
+			else draw->AddInfo(InfoType::Volume, INFINITY_TIME, config->FontColor, Message.Volume, config->Volume);
 #ifdef ZA
-			draw->AddInfo(InfoType::OriVolumePercent, INFINITY_TIME, config->FontColor, Message::OriVolumePercent, config->OriVolumePercent);
-			draw->AddInfo(InfoType::OriginalVoice, INFINITY_TIME, config->FontColor, Message::OriginalVoice, Message::OriginalVoiceSwitch[config->OriginalVoice]);
+			draw->AddInfo(InfoType::OriVolumePercent, INFINITY_TIME, config->FontColor, Message.OriVolumePercent, config->OriVolumePercent, "%");
+			draw->AddInfo(InfoType::OriginalVoice, INFINITY_TIME, config->FontColor, Message.OriginalVoice, Message.OriginalVoiceSwitch[config->OriginalVoice]);
 #endif // ZA
-			draw->AddInfo(InfoType::AutoPlay, INFINITY_TIME, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
-			draw->AddInfo(InfoType::SkipVoice, INFINITY_TIME, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
-			draw->AddInfo(InfoType::DisableDialogSE, INFINITY_TIME, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
-			draw->AddInfo(InfoType::DisableDududu, INFINITY_TIME, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
-			draw->AddInfo(InfoType::InfoOnoff, INFINITY_TIME, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+			draw->AddInfo(InfoType::AutoPlay, INFINITY_TIME, config->FontColor, Message.AutoPlay, Message.AutoPlaySwitch[config->AutoPlay]);
+			draw->AddInfo(InfoType::SkipVoice, INFINITY_TIME, config->FontColor, Message.SkipVoice, Message.Switch[config->SkipVoice]);
+			draw->AddInfo(InfoType::DisableDialogSE, INFINITY_TIME, config->FontColor, Message.DisableDialogSE, Message.Switch[config->DisableDialogSE]);
+			draw->AddInfo(InfoType::DisableDududu, INFINITY_TIME, config->FontColor, Message.DisableDududu, Message.Switch[config->DisableDududu]);
+			draw->AddInfo(InfoType::InfoOnoff, INFINITY_TIME, config->FontColor, Message.ShowInfo, Message.ShowInfoSwitch[config->ShowInfo]);
 		}
 	}
 	else if (last[KEY_ALLINFO]) {
@@ -368,20 +376,20 @@ void SoraVoiceImpl::Input()
 		LOG("Reset config");
 
 		if (config->ShowInfo || info_time == INFINITY_TIME) {
-			//draw->AddText(InfoType::ConfigReset, INFO_TIME, config->FontColor, Message::Reset);
-			draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Volume, config->Volume);
+			//draw->AddText(InfoType::ConfigReset, INFO_TIME, config->FontColor, Message.Reset);
+			draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message.Volume, config->Volume);
 #ifdef ZA
-			draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message::OriVolumePercent, config->OriVolumePercent);
-			draw->AddInfo(InfoType::OriginalVoice, info_time, config->FontColor, Message::OriginalVoice, Message::OriginalVoiceSwitch[config->OriginalVoice]);
+			draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message.OriVolumePercent, config->OriVolumePercent, "%");
+			draw->AddInfo(InfoType::OriginalVoice, info_time, config->FontColor, Message.OriginalVoice, Message.OriginalVoiceSwitch[config->OriginalVoice]);
 #endif // ZA
-			draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
-			draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
-			draw->AddInfo(InfoType::DisableDialogSE, info_time, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
-			draw->AddInfo(InfoType::DisableDududu, info_time, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
-			draw->AddInfo(InfoType::InfoOnoff, info_time, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+			draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message.AutoPlay, Message.AutoPlaySwitch[config->AutoPlay]);
+			draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message.SkipVoice, Message.Switch[config->SkipVoice]);
+			draw->AddInfo(InfoType::DisableDialogSE, info_time, config->FontColor, Message.DisableDialogSE, Message.Switch[config->DisableDialogSE]);
+			draw->AddInfo(InfoType::DisableDududu, info_time, config->FontColor, Message.DisableDududu, Message.Switch[config->DisableDududu]);
+			draw->AddInfo(InfoType::InfoOnoff, info_time, config->FontColor, Message.ShowInfo, Message.ShowInfoSwitch[config->ShowInfo]);
 
 			if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-				draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
+				draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message.AutoPlayMark);
 			}
 			else {
 				draw->RemoveInfo(InfoType::AutoPlayMark);
@@ -407,7 +415,7 @@ void SoraVoiceImpl::Input()
 			needsave = needsetvolume;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Volume, config->Volume);
+				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message.Volume, config->Volume);
 			}
 
 			LOG("Set Volume : %d", config->Volume);
@@ -422,7 +430,7 @@ void SoraVoiceImpl::Input()
 			needsave = needsetvolume;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Volume, config->Volume);
+				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message.Volume, config->Volume);
 			}
 
 			LOG("Set Volume : %d", config->Volume);
@@ -432,7 +440,7 @@ void SoraVoiceImpl::Input()
 			needsetvolume = true;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message::Mute);
+				draw->AddInfo(InfoType::Volume, info_time, config->FontColor, Message.Mute);
 			}
 
 			LOG("Set mute : %d", status->mute);
@@ -447,7 +455,7 @@ void SoraVoiceImpl::Input()
 			if (config->OriVolumePercent > config->MAX_OriVolumePercent) config->OriVolumePercent = config->MAX_OriVolumePercent;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message::OriVolumePercent, config->OriVolumePercent);
+				draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message.OriVolumePercent, config->OriVolumePercent, "%");
 			}
 
 			LOG("Set OriVolumePercent : %d", config->OriVolumePercent);
@@ -460,7 +468,7 @@ void SoraVoiceImpl::Input()
 			if (config->OriVolumePercent < 0) config->OriVolumePercent = 0;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message::OriVolumePercent, config->OriVolumePercent);
+				draw->AddInfo(InfoType::OriVolumePercent, info_time, config->FontColor, Message.OriVolumePercent, config->OriVolumePercent, "%");
 			}
 
 			LOG("Set OriVolumePercent : %d", config->OriVolumePercent);
@@ -471,8 +479,8 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::OriginalVoice, info_time, config->FontColor, Message::OriginalVoice,
-					Message::OriginalVoiceSwitch[config->OriginalVoice]);
+				draw->AddInfo(InfoType::OriginalVoice, info_time, config->FontColor, Message.OriginalVoice,
+					Message.OriginalVoiceSwitch[config->OriginalVoice]);
 			}
 
 			LOG("Set OriginalVoice : %d", config->OriginalVoice);
@@ -484,9 +492,9 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+				draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message.AutoPlay, Message.AutoPlaySwitch[config->AutoPlay]);
 				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
+					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message.AutoPlayMark);
 				}
 				else {
 					draw->RemoveInfo(InfoType::AutoPlayMark);
@@ -498,7 +506,7 @@ void SoraVoiceImpl::Input()
 				config->SkipVoice = 1;
 
 				if (show_info) {
-					draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+					draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message.SkipVoice, Message.Switch[config->SkipVoice]);
 				}
 				LOG("Set SkipVoice : %d", config->SkipVoice);
 			}
@@ -509,7 +517,7 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message::SkipVoice, Message::Switch[config->SkipVoice]);
+				draw->AddInfo(InfoType::SkipVoice, info_time, config->FontColor, Message.SkipVoice, Message.Switch[config->SkipVoice]);
 			}
 
 			LOG("Set SkipVoice : %d", config->SkipVoice);
@@ -517,7 +525,7 @@ void SoraVoiceImpl::Input()
 			if (!config->SkipVoice && config->AutoPlay) {
 				config->AutoPlay = 0;
 				if (show_info) {
-					draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message::AutoPlay, Message::AutoPlaySwitch[config->AutoPlay]);
+					draw->AddInfo(InfoType::AutoPlay, info_time, config->FontColor, Message.AutoPlay, Message.AutoPlaySwitch[config->AutoPlay]);
 				}
 				draw->RemoveInfo(InfoType::AutoPlayMark);
 				LOG("Set AutoPlay : %d", config->AutoPlay);
@@ -532,7 +540,7 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::DisableDialogSE, info_time, config->FontColor, Message::DisableDialogSE, Message::Switch[config->DisableDialogSE]);
+				draw->AddInfo(InfoType::DisableDialogSE, info_time, config->FontColor, Message.DisableDialogSE, Message.Switch[config->DisableDialogSE]);
 			}
 
 			LOG("Set DisableDialogSE : %d", config->DisableDialogSE);
@@ -546,7 +554,7 @@ void SoraVoiceImpl::Input()
 			needsave = true;
 
 			if (show_info) {
-				draw->AddInfo(InfoType::DisableDududu, info_time, config->FontColor, Message::DisableDududu, Message::Switch[config->DisableDududu]);
+				draw->AddInfo(InfoType::DisableDududu, info_time, config->FontColor, Message.DisableDududu, Message.Switch[config->DisableDududu]);
 			}
 
 			LOG("Set DisableDududu : %d", config->DisableDududu);
@@ -558,7 +566,7 @@ void SoraVoiceImpl::Input()
 
 			if (config->ShowInfo) {
 				if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message::AutoPlayMark);
+					draw->AddInfo(InfoType::AutoPlayMark, INFINITY_TIME, config->FontColor, Message.AutoPlayMark);
 				}
 				else {
 					draw->RemoveInfo(InfoType::AutoPlayMark);
@@ -571,7 +579,7 @@ void SoraVoiceImpl::Input()
 			else { 
 				draw->RemoveInfo(InfoType::All);
 			}
-			draw->AddInfo(InfoType::InfoOnoff, info_time, config->FontColor, Message::ShowInfo, Message::ShowInfoSwitch[config->ShowInfo]);
+			draw->AddInfo(InfoType::InfoOnoff, info_time, config->FontColor, Message.ShowInfo, Message.ShowInfoSwitch[config->ShowInfo]);
 
 			LOG("Set ShowInfo : %d", config->ShowInfo);
 		}//if(KEY_INFO)
@@ -610,7 +618,7 @@ void SoraVoiceImpl::Show()
 	if (aup->count_ch == 1) {
 		aup->count_ch++;
 		if (config->ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
-			draw->AddInfo(InfoType::AutoPlayMark, Draw::ShowTimeInfinity, config->FontColor ,Message::AutoPlayMark);
+			draw->AddInfo(InfoType::AutoPlayMark, Draw::ShowTimeInfinity, config->FontColor ,Message.AutoPlayMark);
 		}
 	}
 
@@ -653,7 +661,7 @@ void SoraVoiceImpl::Show()
 				SetThreadExecutionState(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 
 				if (config->ShowInfo == Config::ShowInfo_WithMark) {
-					draw->AddInfo(InfoType::AutoPlayMark, REMAIN_TIME, config->FontColor, Message::AutoPlayMark);
+					draw->AddInfo(InfoType::AutoPlayMark, REMAIN_TIME, config->FontColor, Message.AutoPlayMark);
 				}
 			}
 

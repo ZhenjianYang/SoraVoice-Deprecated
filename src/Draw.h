@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Type.h"
+#include <string>
 
 class Draw {
 public:
@@ -32,7 +33,12 @@ public:
 
 	virtual void DrawInfos() = 0;
 
-	virtual void AddInfo(InfoType type, unsigned time, unsigned color, const char* text, ...) = 0;
+	virtual void AddInfoText(InfoType type, unsigned time, unsigned color, const char* text) = 0;
+
+	template<typename... Texts>
+	void AddInfo(InfoType type, unsigned time, unsigned color, Texts... texts) {
+		return AddInfoText(type, time, color, GetStr(texts...).c_str());
+	}
 
 	virtual void RemoveInfo(InfoType type) = 0;
 
@@ -42,5 +48,18 @@ protected:
 	Draw(u8& showing) : showing(showing) { }
 	u8 &showing;
 	virtual ~Draw() { };
-};
 
+	inline static std::string GetStr(const char* first) {
+		return first;
+	}
+
+	template<typename First, typename = std::enable_if_t<std::is_integral_v<First>>>
+	inline static std::string GetStr(First first) {
+		return std::to_string(first);
+	}
+
+	template<typename First, typename... Remain>
+	inline static std::string GetStr(First first, Remain... remains) {
+		return GetStr(first) + GetStr(remains...);
+	}
+};
