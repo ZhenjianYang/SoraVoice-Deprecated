@@ -106,7 +106,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 
 ## 目前，本工程可用于:   
 游戏标题            |语言        |版本
--------------------|------------|---------
+--------------------|------------|---------
 零之轨迹            |简体中文    |1.1, JOYO
 碧之轨迹            |简体中文    |1.0, JOYO
 空之轨迹 FC         |简体中文    |YLT
@@ -119,7 +119,3 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 -   [libVorbis & libOgg](https://www.xiph.org/), 基于[BSD-like license](https://www.xiph.org/licenses/bsd/)。  
 -   DirectX8 SDK。 来自微软。    
 -   DirectX9 SDK。 只用到头文件, 这个工程里的文件是从[minidx9](https://github.com/hrydgard/minidx9)复制过来的。
-
-
-
-
