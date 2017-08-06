@@ -102,7 +102,7 @@ void SoraVoiceImpl::stopCallBack(PlayID playID, StopType stopType)
 
 SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 	:
-	_config(CONFIG_FILE),
+	_config(CONFIG_FILE, true),
 	_keys(initParam->addrs.p_keys, *initParam->addrs.p_did),
 	_aup(initParam->rcd.now, initParam->rcd.count_ch, initParam->status.wait, initParam->rcd.time_textbeg, initParam->status.waitv),
 	Comment(initParam->Comment),

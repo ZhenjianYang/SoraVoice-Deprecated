@@ -53,7 +53,10 @@ struct Config
 
 	void Reset(bool all = false) { load_default(all); }
 	Config() { load_default(); }
-	Config(const char* configFn) { LoadConfig(configFn); }
+	Config(const char* configFn, bool create = false) { 
+		if (!LoadConfig(configFn) && create)
+			SaveConfig(configFn);
+	}
 private:
 	void load_default(bool all = true);
 };
