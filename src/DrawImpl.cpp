@@ -90,7 +90,7 @@ class DrawImpl : private Draw
 		WideCharToMultiByte(CP_OEMCP, 0, buff, -1, desca.FaceName, sizeof(desca.FaceName), 0, 0);
 #endif // DIRECT3D_VERSION == 0x900
 		desca.Height = -MIN_FONT_SIZE;
-		desca.Weight = FW_NORMAL;
+		desca.Weight = FW_MEDIUM;
 		desca.CharSet = DEFAULT_CHARSET;
 		desca.OutputPrecision = OUT_OUTLINE_PRECIS;
 		desca.Quality = CLEARTYPE_QUALITY;
