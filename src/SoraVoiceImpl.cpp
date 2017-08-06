@@ -14,7 +14,9 @@
 #include <random>
 #include <ctime>
 
-#define ED_VOICE_VERSION __DATE__ " " __TIME__
+#include "build_date.h"
+
+static const char DateVersion[] = BUILD_DATE;
 
 #ifndef MAX_VOICEID_LEN
 #define MAX_VOICEID_LEN 10
@@ -172,7 +174,7 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 
 	if (config->ShowInfo) {
 		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message.Title);
-		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message.Version, ED_VOICE_VERSION);
+		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message.Version, DateVersion);
 		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message.CurrentTitle, Comment);
 	}
 

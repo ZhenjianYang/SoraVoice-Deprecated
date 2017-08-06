@@ -68,6 +68,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\ApiPack.h" />
+    <ClInclude Include="..\..\src\build_date.h" />
     <ClInclude Include="..\..\src\EncodeHelper.h" />
     <ClInclude Include="..\..\src\INI.h" />
     <ClInclude Include="..\..\src\Mapping.h" />

@@ -154,6 +154,10 @@ bool INI::Open(std::istream & is)
 			while (*p) value.push_back(*p++);
 			while (!value.empty() && (value.back() == ' ' || value.back() == '\t' || value.back() == '\r' || value.back() == '\n')) value.pop_back();
 
+			if (value.length() >= 2 && value.front() == '"' && value.back() == '"') {
+				value = value.substr(1, value.length() - 2);
+			}
+
 			auto it = group->map_name_idx.find(key);
 			if (it == group->map_name_idx.end()) {
 				group->map_name_idx[key] = group->values.size();

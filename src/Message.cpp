@@ -55,7 +55,7 @@ void CMessage::LoadMessage()
 
 	if (LoadMessage(RCNAME_DFT)) return;
 
-	auto lcid = GetUserDefaultLCID();
+	auto lcid = GetSystemDefaultLCID();
 	if (lcid == 0x0804) {
 		if (LoadMessage(RCNAME_CN)) return;
 	}

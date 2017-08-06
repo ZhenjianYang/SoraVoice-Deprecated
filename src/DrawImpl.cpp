@@ -34,7 +34,7 @@ static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
 #include <set>
 #include <memory>
 
-constexpr int MAX_TEXT_LEN = 95;
+constexpr int MAX_TEXT_LEN = 63;
 
 constexpr int MIN_FONT_SIZE = 20;
 constexpr int TEXT_NUM_SCRH = 25;
@@ -44,7 +44,7 @@ constexpr double HBOUND_RATE = 0.5;
 constexpr double LINE_SPACE_RATE = 0.15;
 constexpr double TEXT_SHADOW_POS_RATE = 0.08;
 
-constexpr unsigned SHADOW_COLOR = 0x40404040;
+constexpr unsigned SHADOW_COLOR = 0x20202020;
 
 constexpr unsigned TIME_MAX = 0xFFFFFFFF;
 
@@ -260,7 +260,7 @@ void DrawImpl::DrawInfos() {
 			if (info->format & DT_BOTTOM) rect_shadow.bottom += shadow;
 			else rect_shadow.top += shadow;
 
-			unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (((info->color >> 24) * 3 / 4) << 24);
+			unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (0xFF << 24);
 
 			pFont->DrawTextW(SPRITE info->text, -1, &rect_shadow, info->format, color_shadow);
 		}

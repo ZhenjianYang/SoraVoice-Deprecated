@@ -59,6 +59,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\ApiPack.h" />
+    <ClInclude Include="..\..\src\build_date.h" />
     <ClInclude Include="..\..\src\Clock.h" />
     <ClInclude Include="..\..\src\Config.h" />
     <ClInclude Include="..\..\src\Draw.h" />
