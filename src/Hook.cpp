@@ -1,7 +1,7 @@
 
 #define CINTERFACE 1
 
-#ifdef ZA
+#ifdef DX9
 #include <d3d9/d3d9.h>
 #define D3D IDirect3D9
 #define D3DD IDirect3DDevice9

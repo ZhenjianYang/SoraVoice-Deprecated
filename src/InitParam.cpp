@@ -26,8 +26,12 @@ constexpr char STR_ov_time_total[] = "ov_time_total";
 constexpr const char* OvDllNames[] = { STR_vorbisfile_dll , STR_libvorbisfile_dll };
 constexpr const char* DllDirs[] = { ".\\dll\\", ".\\voice\\dll\\" };
 
+#ifdef DX9
 #ifdef ZA
 constexpr char STR_d3dx_dll[] = "d3dx9_42.dll";
+#else
+constexpr char STR_d3dx_dll[] = "d3dx9_43.dll";
+#endif // ZA
 constexpr const char* STR_D3DX9_APIS[][2] = {
 	{"D3DXCreateFontIndirect", "D3DXCreateFontIndirectW"},
 	{"D3DXCreateSprite", "D3DXCreateSprite" }
@@ -168,7 +172,7 @@ bool InitAddrs(InitParam* initParam, void* hDll)
 	}
 
 	LOG("Now going to get d3dx Apis");
-#ifdef ZA
+#ifdef DX9
 		HMODULE d3dx_dll = NULL;
 		d3dx_dll = LoadLibrary(STR_d3dx_dll);
 		if (d3dx_dll) {

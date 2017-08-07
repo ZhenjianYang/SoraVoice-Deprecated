@@ -5,7 +5,7 @@
 #include "ApiPack.h"
 #include "EncodeHelper.h"
 
-#ifdef ZA
+#ifdef DX9
 #include <d3d9/d3dx9.h>
 #else
 #include <d3d8/d3dx8.h>
