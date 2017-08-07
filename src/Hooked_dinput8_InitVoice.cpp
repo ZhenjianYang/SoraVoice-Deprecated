@@ -29,9 +29,11 @@ FILE* _flog;
 constexpr int GAME_SORA = 0;
 constexpr int GAME_ZERO = 1;
 constexpr int GAME_AO = 2;
+constexpr int GAME_SORA_DX9 = 10;
 constexpr int OFF_VLIST = 0xC00;
 
 constexpr char dll_name_sora[] = "ed_voice.dll";
+constexpr char dll_name_sora_dx9[] = "ed_voice_dx9.dll";
 constexpr char dll_name_za[] = "za_voice.dll";
 
 constexpr char rc_SoraData[] = "voice/SoraData.ini";
@@ -204,6 +206,8 @@ bool DoInit(const char* data_name)
 	LOG("Data found, %d, %s", group->Num(), group->Name());
 
 	int game = GetUIntFromValue(group->GetValue(str_Game.c_str()));
+	const bool isSora = game == GAME_SORA || game == GAME_SORA_DX9;
+	const bool isZa = !isSora;
 
 	unsigned * const addrs = (decltype(addrs))&tp->addrs;
 	for (int j = 0; j < num_addr; j++) {
@@ -218,10 +222,10 @@ bool DoInit(const char* data_name)
 		LOG("Data comment, %s", comment);
 	}
 
-	memcpy(tp->scodes, game ? scode_za : scode_sora, sizeof(scode_za));
+	memcpy(tp->scodes, isZa ? scode_za : scode_sora, sizeof(scode_za));
 
 	bool suc = false; {
-		unique_ptr<RC> rc_bin(RC::Get(game ? rc_za_all : rc_sora_all));
+		unique_ptr<RC> rc_bin(RC::Get(isZa ? rc_za_all : rc_sora_all));
 		if (rc_bin && rc_bin->First() && rc_bin->Size() < Size - addr_code) {
 			memcpy((char*)tp + addr_code, rc_bin->First(), rc_bin->Size());
 			suc = true;
@@ -234,7 +238,20 @@ bool DoInit(const char* data_name)
 	}
 	LOG("Read bin finished.");
 
-	HMODULE voice_dll = LoadLibraryA(game ? dll_name_za : dll_name_sora);
+	const char* dll_name;
+	switch (game)
+	{
+	case GAME_SORA: 
+		dll_name = dll_name_sora; 
+		break;
+	case GAME_SORA_DX9: 
+		dll_name = dll_name_sora_dx9; 
+		break;
+	default:
+		dll_name = dll_name_za; 
+		break;
+	}
+	HMODULE voice_dll = LoadLibraryA(dll_name);
 	if (voice_dll) {
 		for (int i = 0; i < NumImport; i++) {
 			tp->exps[i] = (unsigned)GetProcAddress(voice_dll, import_names[i]);
@@ -242,10 +259,10 @@ bool DoInit(const char* data_name)
 				LOG("Symbol not found : %s", import_names[i]);
 			}
 		}
-		LOG("%s loaded", game ? dll_name_za : dll_name_sora);
+		LOG("%s loaded", dll_name);
 	}
 	else {
-		LOG("Load dll failed : %s", game ? dll_name_za : dll_name_sora);
+		LOG("Load dll failed : %s", dll_name);
 		return false;
 	}
 
