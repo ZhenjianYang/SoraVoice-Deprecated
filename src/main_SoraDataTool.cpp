@@ -95,8 +95,8 @@ bool GetDInput() {
 	IDirectInputDevice8* pDID;
 	ERROR_EXIT(DI_OK != pDI->lpVtbl->CreateDevice(pDI, guid_SysKeyboard, &pDID, NULL));
 
-	printf("IDirectInput8::CreateDevice : dinput.dll+%08X\n", (unsigned)pDI->lpVtbl->CreateDevice - (unsigned)md_dinput);
-	printf("IDirectInputDevice8::GetDeviceState : dinput.dll+%08X\n", (unsigned)pDID->lpVtbl->GetDeviceState - (unsigned)md_dinput);
+	printf("IDirectInput8::CreateDevice : dinput8.dll+%08X\n", (unsigned)pDI->lpVtbl->CreateDevice - (unsigned)md_dinput);
+	printf("IDirectInputDevice8::GetDeviceState : dinput8.dll+%08X\n", (unsigned)pDID->lpVtbl->GetDeviceState - (unsigned)md_dinput);
 	printf("\n");
 
 	pDID->lpVtbl->Release(pDID);
