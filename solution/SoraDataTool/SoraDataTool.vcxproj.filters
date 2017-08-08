@@ -18,5 +18,8 @@
     <ClCompile Include="..\..\src\main_SoraDataTool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\main_SoraDataTool_dx8.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

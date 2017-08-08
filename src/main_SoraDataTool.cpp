@@ -26,24 +26,20 @@ static HWND GetHwnd(void)
 bool GetDSound();
 bool GetDInput();
 bool GetDX9();
+extern bool GetDX8();
 
 int main(int argc, char* argv[])
 {
 	GetDSound();
 	GetDInput();
 	GetDX9();
-
-	/////////////////////////////////////////////////////////////////////////
-
-
-
-
+	GetDX8();
 
 	return 0;
 }
 
 bool GetDSound() {
-	HMODULE md_dsound = LoadLibraryA("dsound.dll");
+	HMODULE md_dsound = LoadLibraryA("C:\\Windows\\System32\\dsound.dll");
 	auto pDirectSoundCreate = (decltype(DirectSoundCreate)*)GetProcAddress(md_dsound, "DirectSoundCreate");
 
 	ERROR_EXIT(!pDirectSoundCreate);
@@ -81,7 +77,7 @@ bool GetDSound() {
 
 
 bool GetDInput() {
-	HMODULE md_dinput = LoadLibraryA("dinput8.dll");
+	HMODULE md_dinput = LoadLibraryA("C:\\Windows\\System32\\dinput8.dll");
 	auto pDirectInput8Create = (decltype(DirectInput8Create)*)GetProcAddress(md_dinput, "DirectInput8Create");
 	ERROR_EXIT(!pDirectInput8Create);
 
@@ -106,5 +102,18 @@ bool GetDInput() {
 }
 
 bool GetDX9() {
+	HMODULE md_d3d9 = LoadLibraryA("C:\\Windows\\System32\\d3d9.dll");
+	auto pDirect3DCreate9 = (decltype(Direct3DCreate9)*)GetProcAddress(md_d3d9, "Direct3DCreate9");
+	ERROR_EXIT(!pDirect3DCreate9);
+
+	IDirect3D9* pD3D = pDirect3DCreate9(D3D_SDK_VERSION);
+	ERROR_EXIT(!pD3D);
+
+	printf("Direct3DCreate9 : d3d9.dll+%08X\n", (unsigned)pDirect3DCreate9 - (unsigned)md_d3d9);
+	printf("IDirect3D9::CreateDevice : d3d9.dll+%08X\n", (unsigned)pD3D->lpVtbl->CreateDevice - (unsigned)md_d3d9);
+	printf("\n");
+
+	pD3D->lpVtbl->Release(pD3D);
+
 	return true;
 }
