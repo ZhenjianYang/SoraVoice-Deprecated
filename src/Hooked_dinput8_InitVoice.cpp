@@ -27,9 +27,10 @@ FILE* _flog;
 #endif // LOG_NOLOG
 
 constexpr int GAME_SORA = 0;
-constexpr int GAME_ZERO = 1;
-constexpr int GAME_AO = 2;
-constexpr int GAME_SORA_DX9 = 10;
+constexpr int GAME_TITS_DX8 = 1;
+constexpr int GAME_TITS_DX9 = 2;
+constexpr int GAME_ZERO = 10;
+constexpr int GAME_AO = 1;
 constexpr int OFF_VLIST = 0xC00;
 
 constexpr char dll_name_sora[] = "ed_voice.dll";
@@ -40,7 +41,12 @@ constexpr char rc_SoraData[] = "voice/SoraData.ini";
 constexpr char rc_SoraDataEx[] = "voice/SoraDataEx.ini";
 constexpr char rc_sora_all[] = "voice/sora_all";
 constexpr char rc_za_all[] = "voice/za_all";
+constexpr char rc_tits_all[] = "voice/tits_all";
 constexpr char rc_ao_vlist[] = "voice/ao_rnd_vlst.txt";
+
+constexpr int min_legal_to = 0x10000;
+
+constexpr int mark_mute2 = 0x1A09;
 
 constexpr char import_names[][16] = {
 	"Init",
@@ -100,14 +106,16 @@ constexpr byte scode_za[] = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F };
 
 constexpr int Size = 0x1000;
 
-static bool DoInit(const char* data_name);
+static bool DoInit(EDVoice* sv, const char* data_name);
 
-bool Init(void* hDll) {
+bool InitEDVoice(void* hDll, EDVoice* sv) {
+	if (!sv) return false;
+
 	RC::SetHS(hDll);
 	RC::RcItem rcTable[] = RC_TABLE;
 	RC::SetRcTable(rcTable);
 
-	return DoInit(rc_SoraDataEx) || DoInit(rc_SoraData);
+	return DoInit(sv, rc_SoraDataEx) || DoInit(sv, rc_SoraData);
 }
 
 static unsigned GetUIntFromValue(const char* str) {
@@ -121,7 +129,7 @@ static unsigned GetUIntFromValue(const char* str) {
 	return std::strtoul(str, &p, rad);
 }
 
-bool DoInit(const char* data_name)
+bool DoInit(EDVoice* sv, const char* data_name)
 {
 	INI ini; {
 		LOG("Open resource: %s", data_name);
@@ -164,7 +172,7 @@ bool DoInit(const char* data_name)
 			LOG("from 0x%08X", jcs[j].next);
 			LOG("to 0x%08X", jcs[j].to);
 			if (!jcs[j].next) { ok = false; break; }
-			if (jcs[j].to == 0) continue;
+			if (jcs[j].to < min_legal_to) continue;
 
 			byte* p = (byte*)jcs[j].next;
 			constexpr int size = 6;
@@ -206,8 +214,11 @@ bool DoInit(const char* data_name)
 	LOG("Data found, %d, %s", group->Num(), group->Name());
 
 	int game = GetUIntFromValue(group->GetValue(str_Game.c_str()));
-	const bool isSora = game == GAME_SORA || game == GAME_SORA_DX9;
-	const bool isZa = !isSora;
+	const bool isTiTS = game == GAME_TITS_DX8 || game == GAME_TITS_DX9;
+	const bool isSora = game == GAME_SORA || isTiTS;
+	const bool isDX8 = game == GAME_SORA || game == GAME_TITS_DX8;
+	const bool isDX9 = !isDX8;
+	const bool isZa = game == GAME_ZERO || game == GAME_AO;
 
 	unsigned * const addrs = (decltype(addrs))&tp->addrs;
 	for (int j = 0; j < num_addr; j++) {
@@ -225,7 +236,8 @@ bool DoInit(const char* data_name)
 	memcpy(tp->scodes, isZa ? scode_za : scode_sora, sizeof(scode_za));
 
 	bool suc = false; {
-		unique_ptr<RC> rc_bin(RC::Get(isZa ? rc_za_all : rc_sora_all));
+		const char *bin_name = isTiTS ? rc_tits_all : isZa ? rc_za_all : rc_sora_all;
+		unique_ptr<RC> rc_bin(RC::Get(bin_name));
 		if (rc_bin && rc_bin->First() && rc_bin->Size() < Size - addr_code) {
 			memcpy((char*)tp + addr_code, rc_bin->First(), rc_bin->Size());
 			suc = true;
@@ -238,19 +250,7 @@ bool DoInit(const char* data_name)
 	}
 	LOG("Read bin finished.");
 
-	const char* dll_name;
-	switch (game)
-	{
-	case GAME_SORA: 
-		dll_name = dll_name_sora; 
-		break;
-	case GAME_SORA_DX9: 
-		dll_name = dll_name_sora_dx9; 
-		break;
-	default:
-		dll_name = dll_name_za; 
-		break;
-	}
+	const char* dll_name = isSora && isDX8 ? dll_name_sora : isZa ? dll_name_za : dll_name_sora_dx9;
 	HMODULE voice_dll = LoadLibraryA(dll_name);
 	if (voice_dll) {
 		for (int i = 0; i < NumImport; i++) {
@@ -302,13 +302,25 @@ bool DoInit(const char* data_name)
 	for (int j = 0; j < num_name; j++) {
 		byte* from = (byte*)ip->jcs[j].next;
 
-		int len_op = from[0] == opjmp || from[0] == opcall || !ip->jcs[j].to ? 5 : 6;
+		bool isMute2 = mark_mute2 == ip->jcs[j].to;
+		int len_op;
+		if (ip->jcs[j].to < min_legal_to) {
+			len_op = ip->jcs[j].to & 0xFF;
+			int to_add = (int8_t)((ip->jcs[j].to >> 8) & 0xFF);
+
+			if (to_add) {
+				ip->jcs[j].to = ip->jcs[j].next + to_add;
+			}
+		}
+		else {
+			len_op = from[0] == opjmp || from[0] == opcall ? 5 : 6;
+		}
 		ip->jcs[j].next += len_op;
 
 		byte* vs_to = (byte*)ip + rvalist[j];
 		int jc_len = vs_to - from - 5;
 
-		char buff[6];
+		char buff[256];
 		memset(buff, opnop, sizeof(buff));
 
 		PUT(opjmp, buff);
@@ -317,6 +329,9 @@ bool DoInit(const char* data_name)
 		LOG("change code at : 0x%08X", (unsigned)from);
 		DWORD dwProtect, dwProtect2;
 		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &dwProtect)) {
+			if (!ip->addrs.p_mute && isMute2) {
+				ip->addrs.p_mute = *(void**)(from + 2);
+			}
 			memcpy(from, buff, len_op);
 			VirtualProtect(from, len_op, dwProtect, &dwProtect2);
 		}
@@ -326,5 +341,13 @@ bool DoInit(const char* data_name)
 	}
 	LOG("All done");
 
+	sv->ip = ip;
+	sv->start = isSora;
+	for (int i = 0; i < NumImport; i++) {
+		if (!strcmp(import_names[i], "Init"))
+			sv->Init = (decltype(sv->Init))ip->exps[i];
+		else if (!strcmp(import_names[i], "End"))
+			sv->End = (decltype(sv->Init))ip->exps[i];
+	}
 	return true;
 }

@@ -161,6 +161,7 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 		LOG("Hook Present failed.");
 	}
 
+#ifdef ZA
 	if (config->EnableKeys) {
 		LOG("Now going to hook GetDeviceState...");
 		void* pGetDeviceState = Hook_DI_GetDeviceState(*initParam->addrs.p_did);
@@ -170,7 +171,8 @@ SoraVoiceImpl::SoraVoiceImpl(InitParam* initParam)
 		else {
 			LOG("Hook GetDeviceState failed.");
 		}
-	}
+}
+#endif // ZA
 
 	if (config->ShowInfo) {
 		draw->AddInfo(InfoType::Hello, HELLO_TIME, config->FontColor, Message.Title);
@@ -611,6 +613,10 @@ void SoraVoiceImpl::Input()
 void SoraVoiceImpl::Show()
 {
 	Clock::UpdateTime();
+
+#ifndef ZA
+	this->Input();
+#endif // !ZA
 
 	if (status->showing) {
 		draw->DrawInfos();

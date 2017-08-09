@@ -17,10 +17,12 @@
 static HMODULE dll = NULL;
 static HINSTANCE hinstDLL;
 
+#include "ed_voice.h"
+
 using Call_Create = decltype(Hooked_DirectInput8Create)*;
 static Call_Create ori_DirectInput8Create = nullptr;
 
-static bool init = false;
+EDVoice sv;
 
 long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * riidltf, void ** ppvOut, void * punkOuter)
 {
@@ -37,8 +39,15 @@ long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * r
 		}
 	}
 
-	if (!init) {
-		init = Init(hinstDLL);
+#if _DEBUG
+	MessageBox(0, "Stop", "Stop", 0);
+#endif // _DEBUG
+	
+	if (!sv.ip) {
+		InitEDVoice(hinstDLL, &sv);
+		if (sv.ip && sv.Init) {
+			sv.Init(sv.ip);
+		}
 	}
 
 	if (ori_DirectInput8Create) {
