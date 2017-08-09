@@ -15,6 +15,7 @@ aup_start:
 	mov     dword [ebx + tmp], eax
 	pop     eax
 
+%ifdef za
 	cmp     byte [ebx + status_ended], 0
 	jne     short auto_play
 
@@ -29,9 +30,10 @@ aup_start:
 	pop     edx
 	pop     ecx
 	pop     eax
+%endif
 
 auto_play:
-%ifdef za
+%ifndef sora
 	call    dword [ebx + to(jcs_aup)]
 %endif
 
@@ -39,15 +41,15 @@ auto_play:
 	je      short aup_return
 	mov     byte [ebx + order_aup], 0
 
-%ifdef za
-	mov     eax, 1
+%ifndef sora
+	or      al, 0x20
 %else
 	mov     eax, [ebx + addr_keys]
 	mov     byte [eax + dik_space], dik_press
 %endif
 
 aup_return:
-%ifdef za
+%ifndef sora
 	push    dword [ebx + next(jcs_aup)]
 %else
 	push    dword [ebx + to(jcs_aup)]
