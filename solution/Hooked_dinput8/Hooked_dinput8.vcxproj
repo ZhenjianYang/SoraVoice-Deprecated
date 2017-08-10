@@ -79,6 +79,7 @@
     <None Include="..\..\src\rc_hk_dinput8\SoraData.ini" />
     <None Include="..\..\src\rc_hk_dinput8\sora_all" />
     <None Include="..\..\src\rc_hk_dinput8\za_all" />
+    <None Include="..\..\src\rc_hk_dinput8\tits_all" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\src\rc_hk_dinput8\ao_rnd_vlst.txt" />

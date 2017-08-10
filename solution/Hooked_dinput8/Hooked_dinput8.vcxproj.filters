@@ -54,13 +54,16 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\rc_hk_dinput8\sora_all">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\..\src\rc_hk_dinput8\SoraData.ini">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\src\rc_hk_dinput8\sora_all">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="..\..\src\rc_hk_dinput8\za_all">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\src\rc_hk_dinput8\tits_all">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
