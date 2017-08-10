@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include "Common.h"
 
-#define ATTR_PY ".bin.py"
+#define ATTR_PY ".py"
 
 #define MAXCH_ONELINE 100000
 

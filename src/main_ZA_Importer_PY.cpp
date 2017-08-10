@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define ATTR_PY ".bin.py"
+#define ATTR_PY ".py"
 #define ATTR_OUT ".txt"
 #define REP_NAME "import_py_report.txt"
 

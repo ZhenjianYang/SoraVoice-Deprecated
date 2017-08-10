@@ -3,7 +3,7 @@
 #include <iomanip>
 #include "Common.h"
 
-#define ATTR_PY ".bin.py"
+#define ATTR_PY ".py"
 #define ATTR_OUT ".txt"
 #define REP_NAME "py_report.txt"
 
