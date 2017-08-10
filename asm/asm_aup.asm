@@ -33,27 +33,16 @@ aup_start:
 %endif
 
 auto_play:
-%ifndef sora
 	call    dword [ebx + to(jcs_aup)]
-%endif
 
 	cmp     byte [ebx + order_aup], 0
 	je      short aup_return
 	mov     byte [ebx + order_aup], 0
 
-%ifndef sora
 	or      al, 0x20
-%else
-	mov     eax, [ebx + addr_keys]
-	mov     byte [eax + dik_space], dik_press
-%endif
 
 aup_return:
-%ifndef sora
 	push    dword [ebx + next(jcs_aup)]
-%else
-	push    dword [ebx + to(jcs_aup)]
-%endif
 	mov     ebx, dword [ebx + tmp]
 	ret
 

@@ -45,7 +45,7 @@ long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * r
 	
 	if (!sv.ip) {
 		InitEDVoice(hinstDLL, &sv);
-		if (sv.ip && sv.Init) {
+		if (sv.ip && sv.Init && sv.start) {
 			sv.Init(sv.ip);
 		}
 	}

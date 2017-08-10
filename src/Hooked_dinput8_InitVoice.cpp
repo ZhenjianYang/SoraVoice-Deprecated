@@ -30,7 +30,7 @@ constexpr int GAME_SORA = 0;
 constexpr int GAME_TITS_DX8 = 1;
 constexpr int GAME_TITS_DX9 = 2;
 constexpr int GAME_ZERO = 10;
-constexpr int GAME_AO = 1;
+constexpr int GAME_AO = 11;
 constexpr int OFF_VLIST = 0xC00;
 
 constexpr char dll_name_sora[] = "ed_voice.dll";
@@ -44,9 +44,7 @@ constexpr char rc_za_all[] = "voice/za_all";
 constexpr char rc_tits_all[] = "voice/tits_all";
 constexpr char rc_ao_vlist[] = "voice/ao_rnd_vlst.txt";
 
-constexpr int min_legal_to = 0x10000;
-
-constexpr int mark_mute2 = 0x1A09;
+constexpr int min_legal_to = 0x100000;
 
 constexpr char import_names[][16] = {
 	"Init",
@@ -85,15 +83,15 @@ constexpr const char* name_list[] = {
 	"aup",
 	"scode",
 };
-constexpr unsigned rvalist[] = {
-	0x100,
-	0x200,
-	0x300,
-	0x400,
-	0x500
-};
 constexpr int num_name = sizeof(name_list) / sizeof(*name_list);
-constexpr int addr_code = 0x100;
+constexpr int addr_code = 0x200;
+constexpr unsigned rvalist[] = {
+	addr_code + 0x000,
+	addr_code + 0x100,
+	addr_code + 0x200,
+	addr_code + 0x300,
+	addr_code + 0x400,
+};
 
 using byte = unsigned char;
 
@@ -238,7 +236,7 @@ bool DoInit(EDVoice* sv, const char* data_name)
 	bool suc = false; {
 		const char *bin_name = isTiTS ? rc_tits_all : isZa ? rc_za_all : rc_sora_all;
 		unique_ptr<RC> rc_bin(RC::Get(bin_name));
-		if (rc_bin && rc_bin->First() && rc_bin->Size() < Size - addr_code) {
+		if (rc_bin && rc_bin->First() && rc_bin->Size() < OFF_VLIST - addr_code) {
 			memcpy((char*)tp + addr_code, rc_bin->First(), rc_bin->Size());
 			suc = true;
 		}
@@ -302,15 +300,21 @@ bool DoInit(EDVoice* sv, const char* data_name)
 	for (int j = 0; j < num_name; j++) {
 		byte* from = (byte*)ip->jcs[j].next;
 
-		bool isMute2 = mark_mute2 == ip->jcs[j].to;
 		int len_op;
+		int add_pmute = 0;
 		if (ip->jcs[j].to < min_legal_to) {
 			len_op = ip->jcs[j].to & 0xFF;
+			add_pmute = (ip->jcs[j].to >> 16) & 0xF;
 			int to_add = (int8_t)((ip->jcs[j].to >> 8) & 0xFF);
 
 			if (to_add) {
 				ip->jcs[j].to = ip->jcs[j].next + to_add;
 			}
+			else {
+				ip->jcs[j].to = 0;
+			}
+
+			if (len_op < 5) len_op = 5;
 		}
 		else {
 			len_op = from[0] == opjmp || from[0] == opcall ? 5 : 6;
@@ -329,8 +333,8 @@ bool DoInit(EDVoice* sv, const char* data_name)
 		LOG("change code at : 0x%08X", (unsigned)from);
 		DWORD dwProtect, dwProtect2;
 		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &dwProtect)) {
-			if (!ip->addrs.p_mute && isMute2) {
-				ip->addrs.p_mute = *(void**)(from + 2);
+			if (!ip->addrs.p_mute && add_pmute) {
+				ip->addrs.p_mute = *(void**)(from + add_pmute);
 			}
 			memcpy(from, buff, len_op);
 			VirtualProtect(from, len_op, dwProtect, &dwProtect2);

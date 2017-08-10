@@ -85,11 +85,11 @@ struct InitParam
 	} order;
 
 	//0xB8
-	char Comment[40];
+	char Comment[128];
 };
 #pragma pack(pop)
 
 static_assert(sizeof(void*) == 4, "32 bits only!");
-static_assert(sizeof(InitParam) <= 0xE0, "Size of InitParam too big!");
+static_assert(sizeof(InitParam) <= 0x1C0, "Size of InitParam too big!");
 
 bool InitAddrs(InitParam* initParam, void* hDll);

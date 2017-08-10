@@ -66,17 +66,14 @@
 %define order_dlgse		(base_order + 0x01)
 %define order_aup		(base_order + 0x02)
 
-%define base_tmp		(base + 0xE0)
+%define base_tmp		(base + 0x1C0)
 %define _tmp(i)			(base_tmp + 4 * (i))
 
-%define addr_codebase	(base + 0x100)
+%define addr_codebase	(base + 0x200)
 %define vs_text			(addr_codebase + 0x000)
 %define vs_dududu		(addr_codebase + 0x100)
 %define vs_dlgse		(addr_codebase + 0x200)
 %define vs_aup			(addr_codebase + 0x300)
 %define vs_scode		(addr_codebase + 0x400)
-
-%define dik_space		0x39
-%define dik_press		0x80
 
 %endif
