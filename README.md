@@ -12,7 +12,7 @@ for details.
 ## Build
 
 You can get built files in [Release](https://github.com/ZhenjianYang/SoraVoice/releases),
-or build them with VS2017 (Desktop development with c++, with Windows XP support).   
+or build them with VS2017 (Desktop development with c++).   
 
 ## How to use
 
@@ -79,7 +79,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 
 ## 编译
 
-可以从[Release](https://github.com/ZhenjianYang/SoraVoice/releases)获取已编译好的文件，或者用VS2017(使用c++的桌面开发, 含对C++的Windows XP支持)来进行编译。
+可以从[Release](https://github.com/ZhenjianYang/SoraVoice/releases)获取已编译好的文件，或者用VS2017(使用c++的桌面开发)来进行编译。
 
 ## 使用方法
 
