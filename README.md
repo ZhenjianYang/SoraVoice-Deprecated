@@ -7,7 +7,7 @@ Voice patches for the PC games *Sora/Zero/Ao no Kiseki*.
 distribute and/or modify any code or binaries from this projcet under
 this license. See
 [LICENSE](https://github.com/ZhenjianYang/SoraVoice/blob/master/LICENSE)
-for details
+for details.
 
 ## Build
 
@@ -29,7 +29,7 @@ to `voice/dll/`.
 *Zero no Kiseki* & *Ao no Kiseki*.
 
 ### For ***Sora no Kiseki*** series:   
-1. Copy **ed_voice.dll**, **dinput.dll** to the game's root folder.   
+1. Copy **ed_voice.dll**(or **ed_voice_dx9.dll** for DX9 mode), **dinput.dll** to the game's root folder.   
 2. Copy **ED6_DT01.dat/.dir** (FC) or **ED6_DT21.dat/.dir** (SC & 3RD) with **Voice Scripts** to the game's root folder.   
 3. Extract voice files(.at9) from the Vita edition game, convert them to ogg, then copy them to `voice/ogg/`.   
    (**ch0123456789.at9** should be converted to **ch0123456789.ogg**)     
@@ -45,15 +45,19 @@ by hotkeys during game playing. Check the configuration file with a text editor 
 more details.
 
 ## By now, this project can work for:   
-Game Title                    |Language                |Version
-------------------------------|------------------------|---------
-*Zero no Kiseki*              |Chinese Simplified      |1.1, JOYO
-*Ao no Kiseki*                |Chinese Simplified      |1.0, JOYO
-*Sora no Kiseki FC*           |Chinese Simplified      |YLT
-*Sora no Kiseki SC*           |Chinese Simplified      |YLT
-*Sora no Kiseki the 3RD*      |Chinese Simplified      |YLT
+|Game Title                    |Publisher |Version       | Language 
+|------------------------------|----------|--------------|-------------------
+|*Zero no Kiseki*              |Joyoland  |1.1           |Chinese Simplified
+|                              |          |JOYO Platform |Chinese Simplified
+|*Ao no Kiseki*                |Joyoland  |1.0           |Chinese Simplified
+|                              |          |JOYO Platform |Chinese Simplified
+|*Sora no Kiseki FC*           |YLT       |Final         |Chinese Simplified
+|*Sora no Kiseki SC*           |YLT       |Final         |Chinese Simplified
+|*Sora no Kiseki the 3RD*      |YLT       |Final         |Chinese Simplified
 
-**NOTE**: Voice patches for *Sora no Kiseki* series are not available because their voice scripts are not done.
+- **NOTE**: *Trails in the Sky* series published by Xseed could be supported by [SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx).   
+             Copy **SoraDataEx.ini** to `<Game Root Folder>/voice/`.   
+- **NOTE**: Voice patches for *Sora no Kiseki* series are not available because their voice scripts are not done.
 
 ## External libraries used in this project   
 -   [libVorbis & libOgg](https://www.xiph.org/), licensed under the
@@ -90,7 +94,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 [ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts)是一个关于《零之轨迹》和《碧之轨迹》的语音脚本的项目。
 
 ### 《空之轨迹》系列:   
-1. 复制**ed_voice.dll**, **dinput.dll**到游戏根目录。  
+1. 复制**ed_voice.dll**(DX9模式为**ed_voice_dx9.dll**), **dinput.dll**到游戏根目录。  
 2. 复制带**语音脚本**的**ED6_DT01.dat/.dir**(FC)或**ED6_DT21.dat/.dir**(SC及3RD)到游戏根目录。   
 3. 导出Vita版的语音文件(.at9), 转换为ogg格式后, 复制到`voice/ogg/`。  
    (**ch0123456789.at9**需转换为**ch0123456789.ogg**)     
@@ -105,17 +109,21 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 具体请参考配置文件内的说明(用文本编辑器打开即可)。
 
 ## 目前，本工程可用于:   
-游戏标题            |语言        |版本
---------------------|------------|---------
-零之轨迹            |简体中文    |1.1, JOYO
-碧之轨迹            |简体中文    |1.0, JOYO
-空之轨迹 FC         |简体中文    |YLT
-空之轨迹 SC         |简体中文    |YLT
-空之轨迹 the 3RD    |简体中文    |YLT
+|游戏标题          |发行商    |版本       | 语言 
+|------------------|----------|---------- |---------
+|零之轨迹          |欢乐百世  |1.1        |简体中文
+|                  |          |JOYO平台版 |简体中文
+|碧之轨迹          |欢乐百世  |1.0        |简体中文
+|                  |          |JOYO平台版 |简体中文
+|空之轨迹 FC       |娱乐通    |最终版      |简体中文
+|空之轨迹 SC       |娱乐通    |最终版      |简体中文
+|空之轨迹 the 3RD  |娱乐通    |最终版      |简体中文
 
-**注意**: 由于《空之轨迹》系列的语音脚本尚未完成，其语音补丁尚不可用。
+- **注意**: 由Xseed发行的《空之轨迹》系列可通过[SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx)来获得支持。   
+            将**SoraDataEx.ini**复制到`<Game Root Folder>/voice/`即可。   
+- **注意**: 由于《空之轨迹》系列的语音脚本尚未完成，其语音补丁尚不可用。
 
 ## 本项目使用的外部库   
 -   [libVorbis & libOgg](https://www.xiph.org/), 基于[BSD-like license](https://www.xiph.org/licenses/bsd/)。  
--   DirectX8 SDK。 来自微软。    
--   DirectX9 SDK。 只用到头文件, 这个工程里的文件是从[minidx9](https://github.com/hrydgard/minidx9)复制过来的。
+-   DirectX8 SDK。来自微软。    
+-   DirectX9 SDK。只用到头文件, 这个工程里的文件是从[minidx9](https://github.com/hrydgard/minidx9)复制过来的。
