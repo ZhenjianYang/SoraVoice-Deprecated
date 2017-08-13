@@ -45,7 +45,7 @@ static bool _getValue(ArrayType &var, const KeyValue& kv, const char* name) {
 
 	constexpr int len_array = std::extent<ArrayType>::value;
 
-	for (int i = 0; i < (int)it->second.length() && i < len_array; i++) {
+	for (int i = 0; i <= (int)it->second.length() && i < len_array; i++) {
 		var[i] = it->second[i];
 	}
 	var[len_array - 1] = 0;

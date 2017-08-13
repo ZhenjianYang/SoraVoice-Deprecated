@@ -90,7 +90,7 @@ class DrawImpl : private Draw
 		WideCharToMultiByte(CP_OEMCP, 0, buff, -1, desca.FaceName, sizeof(desca.FaceName), 0, 0);
 #endif // DIRECT3D_VERSION == 0x900
 		desca.Height = -MIN_FONT_SIZE;
-		desca.Weight = FW_MEDIUM;
+		desca.Weight = FW_NORMAL;
 		desca.CharSet = DEFAULT_CHARSET;
 		desca.OutputPrecision = OUT_OUTLINE_PRECIS;
 		desca.Quality = CLEARTYPE_QUALITY;
@@ -284,7 +284,7 @@ void DrawImpl::AddInfoText(InfoType type, unsigned time, unsigned color, const c
 	const unsigned format = (int)type < NumValidType ? DftFormatList[(int)type] : DftFormatList[(int)InfoType::All];
 
 	LOG("Add text, type = %d", type);
-	const int h = desca.Height < 0 ? -desca.Height : desca.Height;
+	const int h = int((desca.Height < 0 ? -desca.Height : desca.Height) * 1.2);
 
 	auto it = infos.end();
 
@@ -329,7 +329,7 @@ void DrawImpl::AddInfoText(InfoType type, unsigned time, unsigned color, const c
 		}
 
 		if ((*it)->format & DT_BOTTOM) {
-			for (int bottom = height - vbound - vfix; ; bottom -= h + vbound) {
+			for (int bottom = height - vbound - vfix; ; bottom -= h + linespace) {
 				if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
 					rect.bottom = bottom;
 					break;
