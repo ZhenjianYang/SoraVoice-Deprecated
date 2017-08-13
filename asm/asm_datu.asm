@@ -1,3 +1,5 @@
+;Reference: https://github.com/Ouroboros/JuusanKoubou/tree/master/Source/Falcom/ED6FC%20Steam
+
 %include "macro_common"
 
 %define tmp _tmp(6)

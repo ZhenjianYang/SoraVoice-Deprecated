@@ -16,6 +16,8 @@ struct RAW_FILE {
 	char data[MAX_BUFF_SIZE - 12];
 };
 
+
+//Reference: https://github.com/Ouroboros/JuusanKoubou/tree/master/Source/Falcom/ED6FC%20Steam
 unsigned SVCALL LoadDat(const char* name, void* buff) {
 	RAW_FILE* rf = (RAW_FILE*)buff;
 
