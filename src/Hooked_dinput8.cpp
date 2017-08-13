@@ -1,10 +1,9 @@
 
 #define CINTERFACE 1
 #include <Windows.h>
-#include <dinput.h>
 
 #include "Hooked_dinput8.h"
-#include "Hooked_dinput8_InitVoice.h"
+#include "Hooked_InitVoice.h"
 
 #define DINPUT8_DLL "dinput8.dll"
 #define OLD_DINPUT8_DLL ".\\dinput8_old.dll"
@@ -16,16 +15,17 @@
 
 static HMODULE dll = NULL;
 static HINSTANCE hinstDLL;
-
-#include "ed_voice.h"
+static bool init = false;
 
 using Call_Create = decltype(Hooked_DirectInput8Create)*;
 static Call_Create ori_DirectInput8Create = nullptr;
 
-EDVoice sv;
-
 long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * riidltf, void ** ppvOut, void * punkOuter)
 {
+#if _DEBUG
+	MessageBox(0, "Stop", "Stop", 0);
+#endif // _DEBUG
+
 	if (!dll) {
 		dll = LoadLibraryA(OLD_DINPUT8_DLL);
 		if (!dll) {
@@ -38,16 +38,9 @@ long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * r
 			ori_DirectInput8Create = (Call_Create)GetProcAddress(dll, STR_DirectInput8Create);
 		}
 	}
-
-#if _DEBUG
-	MessageBox(0, "Stop", "Stop", 0);
-#endif // _DEBUG
 	
-	if (!sv.ip) {
-		InitEDVoice(hinstDLL, &sv);
-		if (sv.ip && sv.Init && sv.start) {
-			sv.Init(sv.ip);
-		}
+	if (!init) {
+		init = InitEDVoice(hinstDLL);
 	}
 
 	if (ori_DirectInput8Create) {
@@ -60,8 +53,13 @@ long SVCALL Hooked_DirectInput8Create(void * hinst, unsigned dwVersion, void * r
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
-	if (DLL_PROCESS_ATTACH == fdwReason) {
+	switch (fdwReason)
+	{
+	case DLL_PROCESS_ATTACH:
 		::hinstDLL = hinstDLL;
+		break;
+	default:
+		break;
 	}
 	return TRUE;
 }

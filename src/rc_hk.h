@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rc_hk_dinput8\resource.h"
+#include "rc_hk\resource.h"
 
 #define RC_DataType "SORADATA"
 

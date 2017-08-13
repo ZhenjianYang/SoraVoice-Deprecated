@@ -21,16 +21,16 @@
     <ClInclude Include="..\..\src\INI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\rc_hk_dinput8\resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Hooked_dinput8_InitVoice.h">
+    <ClInclude Include="..\..\src\rc_hk\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\RC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\RC_hk_dinput8.h">
+    <ClInclude Include="..\..\src\rc_hk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hooked_InitVoice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -41,34 +41,34 @@
     <ClCompile Include="..\..\src\INI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Hooked_dinput8_InitVoice.cpp">
+    <ClCompile Include="..\..\src\RC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\RC.cpp">
+    <ClCompile Include="..\..\src\Hooked_InitVoice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\src\rc_hk_dinput8\Hooked_dinput8.rc">
+    <ResourceCompile Include="..\..\src\rc_hk\Hooked.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\rc_hk_dinput8\SoraData.ini">
+    <None Include="..\..\src\rc_hk\SoraData.ini">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\src\rc_hk_dinput8\sora_all">
+    <None Include="..\..\src\rc_hk\sora_all">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\src\rc_hk_dinput8\za_all">
+    <None Include="..\..\src\rc_hk\za_all">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\..\src\rc_hk_dinput8\tits_all">
+    <None Include="..\..\src\rc_hk\tits_all">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\src\rc_hk_dinput8\ao_rnd_vlst.txt">
+    <Text Include="..\..\src\rc_hk\ao_rnd_vlst.txt">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>

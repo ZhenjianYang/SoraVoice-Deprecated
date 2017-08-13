@@ -1,9 +1,11 @@
-#include "Hooked_dinput8_InitVoice.h"
+#include "Hooked_InitVoice.h"
 
+
+#include "ed_voice.h"
 #include "INI.h"
 #include "InitParam.h"
 #include "RC.h"
-#include "RC_hk_dinput8.h"
+#include "RC_hk.h"
 
 #include <Windows.h>
 #include <dsound.h>
@@ -23,7 +25,7 @@ using namespace std;
 #define LOG(...)
 #else
 FILE* _flog;
-#define LOG(...) _flog = fopen("ilog.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
+#define LOG(...) _flog = fopen("dinput8_log.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
 #endif // LOG_NOLOG
 
 constexpr int GAME_SORA = 0;
@@ -104,16 +106,22 @@ constexpr byte scode_za[] = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F };
 
 constexpr int Size = 0x1000;
 
-static bool DoInit(EDVoice* sv, const char* data_name);
+using EDVoice = struct EDVoice {
+	HMODULE dll;
+	void* ip;
+	decltype(::Init)* Init;
+	decltype(::End)* End;
+};
+static EDVoice edvoice;
 
-bool InitEDVoice(void* hDll, EDVoice* sv) {
-	if (!sv) return false;
+static bool DoInit(const char* data_name);
 
+bool InitEDVoice(void* hDll) {
 	RC::SetHS(hDll);
 	RC::RcItem rcTable[] = RC_TABLE;
 	RC::SetRcTable(rcTable);
 
-	return DoInit(sv, rc_SoraDataEx) || DoInit(sv, rc_SoraData);
+	return DoInit(rc_SoraDataEx) || DoInit(rc_SoraData);
 }
 
 static unsigned GetUIntFromValue(const char* str) {
@@ -127,7 +135,7 @@ static unsigned GetUIntFromValue(const char* str) {
 	return std::strtoul(str, &p, rad);
 }
 
-bool DoInit(EDVoice* sv, const char* data_name)
+bool DoInit(const char* data_name)
 {
 	INI ini; {
 		LOG("Open resource: %s", data_name);
@@ -345,13 +353,18 @@ bool DoInit(EDVoice* sv, const char* data_name)
 	}
 	LOG("All done");
 
-	sv->ip = ip;
-	sv->start = isSora;
+	edvoice.dll = voice_dll;
+	edvoice.ip = ip;
 	for (int i = 0; i < NumImport; i++) {
 		if (!strcmp(import_names[i], "Init"))
-			sv->Init = (decltype(sv->Init))ip->exps[i];
+			edvoice.Init = (decltype(edvoice.Init))ip->exps[i];
 		else if (!strcmp(import_names[i], "End"))
-			sv->End = (decltype(sv->Init))ip->exps[i];
+			edvoice.End = (decltype(edvoice.End))ip->exps[i];
 	}
+
+	if (isSora) {
+		edvoice.Init(edvoice.ip);
+	}
+
 	return true;
 }
