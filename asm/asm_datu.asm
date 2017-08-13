@@ -39,7 +39,10 @@ datu_start:
 	jmp     datu_return
 
 datu_call_ori:
-	call    dword [ebx + to(jcs_datu)]
+	push    dword [ebx + next(jcs_datu)]
+	push    dword [ebx + to(jcs_datu)]
+	mov     ebx, dword [ebx + tmp]
+	ret
 
 datu_return:
 	push    dword [ebx + next(jcs_datu)]
