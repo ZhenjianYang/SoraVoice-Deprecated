@@ -39,16 +39,13 @@ long SVCALL Hooked_DirectSoundCreate(void* pcGuidDevice, void **ppDS, void* pUnk
 		}
 	}
 	
+	auto rst = ori_DirectSoundCreate ? ori_DirectSoundCreate(pcGuidDevice, ppDS, pUnkOuter) : 0x88780032;
+
 	if (!init) {
 		init = InitEDVoice(hinstDLL);
 	}
 
-	if (ori_DirectSoundCreate) {
-		return ori_DirectSoundCreate(pcGuidDevice, ppDS, pUnkOuter);
-	}
-	else {
-		return 0x88780032;
-	}
+	return rst;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)

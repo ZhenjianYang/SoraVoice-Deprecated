@@ -26,6 +26,7 @@
 %define voice_end		(base_exps + 0x04)
 %define voice_play		(base_exps + 0x08)
 %define voice_stop		(base_exps + 0x0C)
+%define voice_dat		(base_exps + 0x10)
 
 %define next(jc)		(jc)
 %define to(jc)			(jc + 4)
@@ -35,6 +36,8 @@
 %define jcs_dlgse		(base_jcs + 0x10)
 %define jcs_aup			(base_jcs + 0x18)
 %define jcs_scode		(base_jcs + 0x20)
+%define jcs_dat			(base_jcs + 0x28)
+%define jcs_datu		(base_jcs + 0x30)
 
 %define base_scode		(base + 0x88)
 %define scode_TEXT		(base_scode + 0x00)
@@ -75,5 +78,9 @@
 %define vs_dlgse		(addr_codebase + 0x200)
 %define vs_aup			(addr_codebase + 0x300)
 %define vs_scode		(addr_codebase + 0x400)
+%define vs_dat			(addr_codebase + 0x500)
+%define vs_datu			(addr_codebase + 0x600)
+
+%define RAW_FILE_MAGIC 0x43464445
 
 %endif

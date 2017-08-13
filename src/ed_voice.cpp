@@ -7,7 +7,7 @@
 
 static void* hDll = nullptr;
 
-SVDECL void SVCALL Init(void *p)
+void SVCALL Init(void *p)
 {
 	LOG_OPEN;
 	InitParam* ip = (InitParam*)p;
@@ -18,7 +18,7 @@ SVDECL void SVCALL Init(void *p)
 	}
 }
 
-SVDECL void SVCALL End(void *p)
+void SVCALL End(void *p)
 {
 	InitParam* ip = (InitParam*)p;
 	if (!ip || !ip->sv) return;
@@ -28,7 +28,7 @@ SVDECL void SVCALL End(void *p)
 	LOG_CLOSE;
 }
 
-SVDECL void SVCALL Play(void *v, void *p)
+void SVCALL Play(void *v, void *p)
 {
 	InitParam* ip = (InitParam*)p;
 	if (!v || !p || !ip->sv) return;
@@ -36,7 +36,7 @@ SVDECL void SVCALL Play(void *v, void *p)
 	((SoraVoice*)ip->sv)->Play((const char*)v);
 }
 
-SVDECL void SVCALL Stop(void *p)
+void SVCALL Stop(void *p)
 {
 	InitParam* ip = (InitParam*)p;
 	if (!ip || !ip->sv) return;

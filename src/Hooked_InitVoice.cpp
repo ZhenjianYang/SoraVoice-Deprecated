@@ -25,7 +25,7 @@ using namespace std;
 #define LOG(...)
 #else
 FILE* _flog;
-#define LOG(...) _flog = fopen("dinput8_log.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
+#define LOG(...) _flog = fopen("hk_log.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
 #endif // LOG_NOLOG
 
 constexpr int GAME_SORA = 0;
@@ -53,6 +53,7 @@ constexpr char import_names[][16] = {
 	"End",
 	"Play",
 	"Stop",
+	"LoadDat",
 };
 constexpr int NumImport = sizeof(import_names) / sizeof(*import_names);
 
@@ -78,22 +79,22 @@ constexpr const char* addr_list[] = {
 };
 constexpr int num_addr = sizeof(addr_list) / sizeof(*addr_list);
 
-constexpr const char* name_list[] = {
-	"text",
-	"dududu",
-	"dlgse",
-	"aup",
-	"scode",
-};
-constexpr int num_name = sizeof(name_list) / sizeof(*name_list);
 constexpr int addr_code = 0x200;
-constexpr unsigned rvalist[] = {
-	addr_code + 0x000,
-	addr_code + 0x100,
-	addr_code + 0x200,
-	addr_code + 0x300,
-	addr_code + 0x400,
+struct AsmCode {
+	const char* name;
+	unsigned addr;
+	bool force;
 };
+const AsmCode asm_codes[] = {
+	{ "text",addr_code + 0x000, true },
+	{ "dududu",addr_code + 0x100, true },
+	{ "dlgse",addr_code + 0x200, true },
+	{ "aup",addr_code + 0x300, true },
+	{ "scode",addr_code + 0x400, true },
+	{ "dat",addr_code + 0x500, false },
+	{ "datu",addr_code + 0x600, false },
+};
+constexpr int num_asm_codes = sizeof(asm_codes) / sizeof(*asm_codes);
 
 using byte = unsigned char;
 
@@ -166,30 +167,35 @@ bool DoInit(const char* data_name)
 		LOG("Check data: %s", tmp_group.Name());
 
 		bool ok = true;
-		for (int j = 0; j < num_name; j++) {
-			string from = str_jcs + name_list[j] + str_from;
-			string to = str_jcs + name_list[j] + str_to;
+		for (int j = 0; j < num_asm_codes; j++) {
+			string from = str_jcs + asm_codes[j].name + str_from;
+			string to = str_jcs + asm_codes[j].name + str_to;
 
-			LOG("name : %s", name_list[j]);
+			LOG("name : %s", asm_codes[j].name);
 
 			jcs[j].next = GetUIntFromValue(tmp_group.GetValue(from.c_str()));
 			jcs[j].to = GetUIntFromValue(tmp_group.GetValue(to.c_str()));
 
 			LOG("from 0x%08X", jcs[j].next);
 			LOG("to 0x%08X", jcs[j].to);
-			if (!jcs[j].next) { ok = false; break; }
-			if (jcs[j].to < min_legal_to) continue;
 
-			byte* p = (byte*)jcs[j].next;
-			constexpr int size = 6;
-			if (IsBadReadPtr(p, size)) { ok = false; break; };
+			if (jcs[j].next) {
+				if (jcs[j].to >= min_legal_to) {
+					byte* p = (byte*)jcs[j].next;
+					constexpr int size = 6;
+					if (IsBadReadPtr(p, size)) { ok = false; break; };
 
-			int len_op = p[0] == opjmp || p[0] == opcall ? 5 : 6;
-			int jc_len = GET_INT(p + len_op - 4);
+					int len_op = p[0] == opjmp || p[0] == opcall ? 5 : 6;
+					int jc_len = GET_INT(p + len_op - 4);
 
-			unsigned va_to = jcs[j].next + jc_len + len_op;
-			LOG("va_to 0x%08X", va_to);
-			if (va_to != jcs[j].to) { ok = false; break; }
+					unsigned va_to = jcs[j].next + jc_len + len_op;
+					LOG("va_to 0x%08X", va_to);
+					if (va_to != jcs[j].to) { ok = false; break; }
+				}
+			}
+			else if(asm_codes[j].force) {
+				ok = false; break;
+			}
 		}
 
 		if (ok) {
@@ -305,8 +311,10 @@ bool DoInit(const char* data_name)
 
 	LOG("Last step.");
 
-	for (int j = 0; j < num_name; j++) {
+	for (int j = 0; j < num_asm_codes; j++) {
 		byte* from = (byte*)ip->jcs[j].next;
+
+		if (!from) continue;
 
 		int len_op;
 		int add_pmute = 0;
@@ -329,7 +337,7 @@ bool DoInit(const char* data_name)
 		}
 		ip->jcs[j].next += len_op;
 
-		byte* vs_to = (byte*)ip + rvalist[j];
+		byte* vs_to = (byte*)ip + asm_codes[j].addr;
 		int jc_len = vs_to - from - 5;
 
 		char buff[256];

@@ -100,6 +100,7 @@
     <ClCompile Include="..\..\src\Hook.cpp" />
     <ClCompile Include="..\..\src\INI.cpp" />
     <ClCompile Include="..\..\src\InitParam.cpp" />
+    <ClCompile Include="..\..\src\LoadDat.cpp" />
     <ClCompile Include="..\..\src\Log.cpp" />
     <ClCompile Include="..\..\src\Message.cpp" />
     <ClCompile Include="..\..\src\RC.cpp" />

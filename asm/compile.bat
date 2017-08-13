@@ -1,7 +1,7 @@
 set nasm=nasm\nasm.exe
 set dir_asm=.
 set dir_bin=bin
-set dir_rc=..\src\rc_hk_dinput8
+set dir_rc=..\src\rc_hk
 
 set input=asm_all
 
