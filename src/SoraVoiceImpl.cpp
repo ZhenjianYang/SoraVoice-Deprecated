@@ -31,10 +31,10 @@ constexpr int ORIVOICEID_LEN = 4;
 #ifdef ZA
 constexpr char ORIVOICEFILE_PREFIX[] = "data\\se\\ed7v";
 constexpr char ORIVOICEFILE_ATTR[] = ".wav";
-constexpr char CONFIG_FILE[] = "za_voice.ini";
+constexpr char CONFIG_FILE[] = "voice\\za_voice.ini";
 constexpr char VOICEFILE_PREFIX[] = "voice\\ogg\\v";
 #else
-constexpr char CONFIG_FILE[] = "ed_voice.ini";
+constexpr char CONFIG_FILE[] = "voice\\ed_voice.ini";
 constexpr char VOICEFILE_PREFIX[] = "voice\\ogg\\ch";
 #endif
 constexpr char VOICEFILE_ATTR[] = ".ogg";

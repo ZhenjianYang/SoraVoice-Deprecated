@@ -17,30 +17,31 @@ or build them with VS2017 (Desktop development with c++).
 ## How to use
 
 ### For ***Zero/Ao no Kiseki***:   
-1. Copy **za_voice.dll**, **dinput.dll** to the game's root folder.   
-2. Copy **Voice Scripts**(.bin) to `data/scena/`.   
-3. Extract voice files(.at9) from the Vita edition game, convert them to ogg, then copy them to `voice/ogg/`.   
+1. Copy **dinput.dll** to `<Game Root>/`.   
+2. Copy **za_voice.dll** to `<Game Root>/voice/`.   
+3. Copy **Voice Scripts**(.bin) to `<Game Root>/data/scena/`.   
+4. Extract voice files(.at9) from the Vita edition game, convert them to ogg, then copy them to `<Game Root>/voice/ogg/`.   
    (**v1234567.at9** should be converted to **v1234567.ogg**)   
-4. Copy **ogg.dll**, **vorbis.dll** and **vorbisfile.dll** (or libogg.dll, libvorbis.dll and libvorbisfile.dll)
-to `voice/dll/`.   
-5. Launch your game.   
+5. Copy **ogg.dll**, **vorbis.dll** and **vorbisfile.dll** (or libogg.dll, libvorbis.dll and libvorbisfile.dll) to `<Game Root>/voice/dll/`.   
+6. Launch your game.   
 
 [ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts) is a project about **Voice Scripts** of
 *Zero no Kiseki* & *Ao no Kiseki*.
 
 ### For ***Sora no Kiseki*** series:   
-1. Copy **ed_voice.dll**(or **ed_voice_dx9.dll** for DX9 mode), **dinput.dll** to the game's root folder.   
-2. Copy **ED6_DT01.dat/.dir** (FC) or **ED6_DT21.dat/.dir** (SC & 3RD) with **Voice Scripts** to the game's root folder.   
-3. Extract voice files(.at9) from the Vita edition game, convert them to ogg, then copy them to `voice/ogg/`.   
+1. Copy **dinput.dll** to `<Game Root>/`.   
+2. Copy **ed_voice.dll**(or **ed_voice_dx9.dll** for DX9 mode) to `<Game Root>/voice/`.   
+3. Copy **ED6_DT01.dat/.dir** (FC) or **ED6_DT21.dat/.dir** (SC & 3RD) with **Voice Scripts** to `<Game Root>/`.   
+4. Extract voice files(.at9) from the Vita edition game, convert them to ogg, then copy them to `<Game Root>/voice/ogg/`.   
    (**ch0123456789.at9** should be converted to **ch0123456789.ogg**)   
-4. (**For *Trails in the Sky* series published by Xseed**) Copy [**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini) to `<Game Root Folder>/voice/`.   
-5. Launch your game.   
+5. (**For *Trails in the Sky* series published by Xseed**) Copy [**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini) to `<Game Root>/voice/`.   
+6. Launch your game.   
 
 #### About Voice Scripts for *Sora no Kiseki* series:   
 Sorry, they are not done. So voice patches for *Sora no Kiseki* series are not available now.
 
 ## About the configuration file   
-The voice patch's configuration file is **ed_voice.ini**(Sora) or **za_voice.ini**(Zero/Ao),
+The voice patch's configuration file is `<Game Root>/voice/ed_voice.ini`(Sora) or `<Game Root>/voice/za_voice.ini`(Zero/Ao),
 it will be created after the game launched. And some configurations can be changed
 by hotkeys during game playing. Check the configuration file with a text editor for
 more details.
@@ -58,7 +59,7 @@ more details.
 
 - **NOTE**: *Trails in the Sky* series published by Xseed are supported by project
 [SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx). Check this project for its supported games.   
-             **Usage**: Copy **SoraDataEx.ini** to `<Game Root Folder>/voice/`.   
+             **Usage**: Copy **SoraDataEx.ini** to `<Game Root>/voice/`.   
 - **NOTE**: Voice patches for *Sora no Kiseki* series are not available because their voice scripts are not done.
 
 ## External libraries used in this project   
@@ -86,28 +87,30 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 ## 使用方法
 
 ### 《零/碧之轨迹》:   
-1. 复制**za_voice.dll**、**dinput.dll**到游戏根目录。  
-2. 复制**语音脚本**(.bin)到`data/scena/`。   
-3. 导出Vita版的语音文件(.at9), 转换为ogg格式后, 复制到`voice/ogg/`。   
+1. 复制**dinput.dll**到`<游戏根目录>/`。   
+2. 复制**za_voice.dll**到`<游戏根目录>/voice/`   
+3. 复制**语音脚本**(.bin)到`<游戏根目录>/data/scena/`。   
+4. 导出Vita版的语音文件(.at9), 转换为ogg格式后, 复制到`<游戏根目录>/voice/ogg/`。   
    (**v1234567.at9**需转换为**v1234567.ogg**)   
-4. 复制**ogg.dll**、**vorbis.dll**、**vorbisfile.dll** (或者libogg.dll、libvorbis.dll、libvorbisfile.dll)到`voice/dll/`。   
-5. 运行游戏。   
+5. 复制**ogg.dll**、**vorbis.dll**、**vorbisfile.dll** (或者libogg.dll、libvorbis.dll、libvorbisfile.dll)到`<游戏根目录>/voice/dll/`。   
+6. 运行游戏。   
 
 [ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts)是一个关于《零之轨迹》和《碧之轨迹》的**语音脚本**的项目。
 
 ### 《空之轨迹》系列:   
-1. 复制**ed_voice.dll**(DX9模式为**ed_voice_dx9.dll**), **dinput.dll**到游戏根目录。   
-2. 复制带**语音脚本**的**ED6_DT01.dat/.dir**(FC)或**ED6_DT21.dat/.dir**(SC及3RD)到游戏根目录。   
-3. 导出Vita版的语音文件(.at9), 转换为ogg格式后, 复制到`voice/ogg/`。   
+1. 复制**dinput.dll**到`<游戏根目录>/`。   
+2. 复制**ed_voice.dll**(DX9模式为**ed_voice_dx9.dll**)到`<游戏根目录>/voice/`。   
+3. 复制带**语音脚本**的**ED6_DT01.dat/.dir**(FC)或**ED6_DT21.dat/.dir**(SC及3RD)到游戏根目录。   
+4. 导出Vita版的语音文件(.at9), 转换为ogg格式后, 复制到`<游戏根目录>/voice/ogg/`。   
    (**ch0123456789.at9**需转换为**ch0123456789.ogg**)   
-4. (**对于Xseed发行的《空之轨迹》系列**) 复制[**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)到`<游戏根目录>/voice/`。   
-5. 运行游戏。     
+5. (**对于Xseed发行的《空之轨迹》系列**) 复制[**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)到`<游戏根目录>/voice/`。   
+6. 运行游戏。     
 
 #### 关于《空之轨迹》系列的语音脚本：   
 很抱歉，《空之轨迹》系列的语音脚本尚未完成，所以目前《空之轨迹》系列的语音补丁尚不可用。
 
 ## 关于配置文件   
-语音补丁的配置文件为**ed_voice.ini**(空)或**za_voice.ini**(零/碧)。
+语音补丁的配置文件为`<游戏根目录>/voice/ed_voice.ini`(空)或`<游戏根目录>/voice/za_voice.ini`(零/碧)。
 配置文件会在游戏启动的时候自动创建。并且，部分配置项可以在游戏进行的过程中通过快捷键来进行修改。
 具体请参考配置文件内的说明(用文本编辑器打开即可)。
 

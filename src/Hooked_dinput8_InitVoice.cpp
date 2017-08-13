@@ -33,9 +33,9 @@ constexpr int GAME_ZERO = 10;
 constexpr int GAME_AO = 11;
 constexpr int OFF_VLIST = 0xC00;
 
-constexpr char dll_name_sora[] = "ed_voice.dll";
-constexpr char dll_name_sora_dx9[] = "ed_voice_dx9.dll";
-constexpr char dll_name_za[] = "za_voice.dll";
+constexpr char dll_name_sora[] = "voice/ed_voice.dll";
+constexpr char dll_name_sora_dx9[] = "voice/ed_voice_dx9.dll";
+constexpr char dll_name_za[] = "voice/za_voice.dll";
 
 constexpr char rc_SoraData[] = "voice/SoraData.ini";
 constexpr char rc_SoraDataEx[] = "voice/SoraDataEx.ini";
