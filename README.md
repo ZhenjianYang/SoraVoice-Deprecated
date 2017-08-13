@@ -29,7 +29,7 @@ or build them with VS2017 (Desktop development with c++).
 *Zero no Kiseki* & *Ao no Kiseki*.
 
 ### For ***Sora no Kiseki*** series:   
-1. Copy **dinput8.dll** to `<Game Root>/`.   
+1. Copy **dsound.dll** to `<Game Root>/`.   
 2. Copy **ed_voice.dll**(or **ed_voice_dx9.dll** for DX9 mode) to `<Game Root>/voice/`.   
 3. Copy **ED6_DT01.dat/.dir** (FC) or **ED6_DT21.dat/.dir** (SC & 3RD) with **Voice Scripts** to `<Game Root>/`.   
 4. Extract voice files(.at9) from the Vita edition game, convert them to ogg, then copy them to `<Game Root>/voice/ogg/`.   
@@ -98,7 +98,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 [ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts)是一个关于《零之轨迹》和《碧之轨迹》的**语音脚本**的项目。
 
 ### 《空之轨迹》系列:   
-1. 复制**dinput8.dll**到`<游戏根目录>/`。   
+1. 复制**dsound.dll**到`<游戏根目录>/`。   
 2. 复制**ed_voice.dll**(DX9模式为**ed_voice_dx9.dll**)到`<游戏根目录>/voice/`。   
 3. 复制带**语音脚本**的**ED6_DT01.dat/.dir**(FC)或**ED6_DT21.dat/.dir**(SC及3RD)到游戏根目录。   
 4. 导出Vita版的语音文件(.at9), 转换为ogg格式后, 复制到`<游戏根目录>/voice/ogg/`。   
