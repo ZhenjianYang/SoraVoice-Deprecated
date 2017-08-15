@@ -25,7 +25,7 @@ using namespace std;
 #define LOG(...)
 #else
 FILE* _flog;
-#define LOG(...) _flog = fopen("hk_log.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
+#define LOG(...) _flog = fopen("voice/hk_log.log", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
 #endif // LOG_NOLOG
 
 constexpr int GAME_SORA = 1;

@@ -9,6 +9,7 @@ static void* hDll = nullptr;
 
 void SVCALL Init(void *p)
 {
+	LOG_SETLOGFILE("voice/voice.log");
 	LOG_OPEN;
 	InitParam* ip = (InitParam*)p;
 	if (!ip || ip->sv) return;
