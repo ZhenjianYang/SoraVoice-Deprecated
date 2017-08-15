@@ -31,7 +31,7 @@ or build them with VS2017 (Desktop development with c++).
 ### For ***Sora no Kiseki*** series:   
 1. Copy **dsound.dll** to `<Game Root>/`.   
 2. Copy **ed_voice.dll**(or **ed_voice_dx9.dll** for DX9 mode) to `<Game Root>/voice/`.   
-3. Copy **ED6_DT01.dat/.dir** (FC) or **ED6_DT21.dat/.dir** (SC & 3RD) with **Voice Scripts** to `<Game Root>/`.   
+3. Copy **Voice Scripts**(._SN) to to `<Game Root>/voice/scena/` or inject them into **ED6_DT01.dat**(FC)/**ED6_DT21.dat**(SC&3RD).   
 4. Extract voice files(.at9) from the Vita edition game, convert them to ogg, then copy them to `<Game Root>/voice/ogg/`.   
    (**ch0123456789.at9** should be converted to **ch0123456789.ogg**)   
 5. (**For *Trails in the Sky* series published by Xseed**) Copy [**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini) to `<Game Root>/voice/`.   
@@ -68,6 +68,10 @@ more details.
 -   DirectX8 SDK. From Microsoft.    
 -   DirectX9 SDK. Only header files are needed, I got them from [minidx9](https://github.com/hrydgard/minidx9).
 
+## Special Thanks   
+
+[Ouroboros](https://github.com/Ouroboros), developed decompile/compile tools for Kiseki series games, and provided many awesome hook ideas. 
+
 ------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
@@ -100,7 +104,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 ### 《空之轨迹》系列:   
 1. 复制**dsound.dll**到`<游戏根目录>/`。   
 2. 复制**ed_voice.dll**(DX9模式为**ed_voice_dx9.dll**)到`<游戏根目录>/voice/`。   
-3. 复制带**语音脚本**的**ED6_DT01.dat/.dir**(FC)或**ED6_DT21.dat/.dir**(SC及3RD)到游戏根目录。   
+3. 复制**语音脚本**(._SN)到`<游戏根目录>/voice/scena/`；或者，将它们导入到**ED6_DT01.dat**(FC)/**ED6_DT21.dat**(SC及3RD)。   
 4. 导出Vita版的语音文件(.at9), 转换为ogg格式后, 复制到`<游戏根目录>/voice/ogg/`。   
    (**ch0123456789.at9**需转换为**ch0123456789.ogg**)   
 5. (**对于Xseed发行的《空之轨迹》系列**) 复制[**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)到`<游戏根目录>/voice/`。   
@@ -133,3 +137,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 -   [libVorbis & libOgg](https://www.xiph.org/), 基于[BSD-like license](https://www.xiph.org/licenses/bsd/)。   
 -   DirectX8 SDK。来自微软。    
 -   DirectX9 SDK。只用到头文件, 这个工程里的文件是从[minidx9](https://github.com/hrydgard/minidx9)复制过来的。
+
+## 特别感谢   
+[Ouroboros](https://github.com/Ouroboros)，开发了轨迹系列游戏脚本的编译/反编译工具，并提供了各种神奇的Hook思路。
+
