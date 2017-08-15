@@ -31,7 +31,7 @@ or build them with VS2017 (Desktop development with c++).
 ### For ***Sora no Kiseki*** series:   
 1. Copy **dsound.dll** to `<Game Root>/`.   
 2. Copy **ed_voice.dll**(or **ed_voice_dx9.dll** for DX9 mode) to `<Game Root>/voice/`.   
-3. Copy **Voice Scripts**(._SN) to to `<Game Root>/voice/scena/` or inject them into **ED6_DT01.dat**(FC)/**ED6_DT21.dat**(SC&3RD).   
+3. Copy **Voice Scripts**(._SN) to `<Game Root>/voice/scena/` or inject them into **ED6_DT01.dat**(FC)/**ED6_DT21.dat**(SC&3RD).   
 4. Extract voice files(.at9) from the Vita edition game, convert them to ogg, then copy them to `<Game Root>/voice/ogg/`.   
    (**ch0123456789.at9** should be converted to **ch0123456789.ogg**)   
 5. (**For *Trails in the Sky* series published by Xseed**) Copy [**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini) to `<Game Root>/voice/`.   
