@@ -128,7 +128,7 @@
     <ClCompile Include="..\..\src\RC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\LoadDat.cpp">
+    <ClCompile Include="..\..\src\LoadScns.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

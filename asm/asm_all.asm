@@ -29,18 +29,16 @@ times (vs_scode-vs_aup) -($-$$) db fill_code
 	nop
 %endif
 
-%ifndef za
-	times (vs_dat-vs_scode) -($-$$) db fill_code
-	%include "asm_dat.asm"
-	%if ($-$$) % 2 != 0
-		nop
-	%endif
+times (vs_ldscn-vs_scode) -($-$$) db fill_code
+%include "asm_ldscn.asm"
+%if ($-$$) % 2 != 0
+	nop
+%endif
 
-	times (vs_datu-vs_dat) -($-$$) db fill_code
-	%include "asm_datu.asm"
-	%if ($-$$) % 2 != 0
-		nop
-	%endif
+times (vs_ldscnB-vs_ldscn) -($-$$) db fill_code
+%include "asm_ldscnB.asm"
+%if ($-$$) % 2 != 0
+	nop
 %endif
 
 times 0x100-($-$$) db fill_code

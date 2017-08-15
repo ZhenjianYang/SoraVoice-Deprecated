@@ -13,7 +13,8 @@ extern "C" {
 	void SVCALL Stop(void*);
 
 #ifndef ZA
-	unsigned SVCALL LoadDat(const char*, void*);
+	int SVCALL LoadScn(const char* name, char* buff);
+	int SVCALL LoadScns(void* p_PScns, int id, char **pp_t);
 #endif // !ZA
 #ifdef __cplusplus
 }

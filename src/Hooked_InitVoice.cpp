@@ -28,11 +28,13 @@ FILE* _flog;
 #define LOG(...) _flog = fopen("hk_log.txt", "a+"); fprintf(_flog, __VA_ARGS__), fprintf(_flog, "\n"); fclose(_flog);
 #endif // LOG_NOLOG
 
-constexpr int GAME_SORA = 0;
-constexpr int GAME_TITS_DX8 = 1;
-constexpr int GAME_TITS_DX9 = 2;
-constexpr int GAME_ZERO = 10;
-constexpr int GAME_AO = 11;
+constexpr int GAME_SORA = 1;
+constexpr int GAME_TITS_DX8 = 2;
+constexpr int GAME_TITS_DX9 = 3;
+constexpr int GAME_ZERO = 11;
+constexpr int GAME_AO = 12;
+#define IS_VALID_GAME(game) (game == GAME_SORA || game == GAME_TITS_DX8 || game == GAME_TITS_DX9 || game == GAME_ZERO || game == GAME_AO)
+
 constexpr int OFF_VLIST = 0xC00;
 
 constexpr char dll_name_sora[] = "voice/ed_voice.dll";
@@ -53,7 +55,8 @@ constexpr char import_names[][16] = {
 	"End",
 	"Play",
 	"Stop",
-	"LoadDat",
+	"LoadScn",
+	"LoadScns",
 };
 constexpr int NumImport = sizeof(import_names) / sizeof(*import_names);
 
@@ -75,7 +78,10 @@ constexpr const char* addr_list[] = {
 
 	"p_mute",
 	"p_keys",
-	"p_global"
+	"p_global",
+	"addr_ppscn",
+
+	"addr_iscn",
 };
 constexpr int num_addr = sizeof(addr_list) / sizeof(*addr_list);
 
@@ -91,8 +97,9 @@ const AsmCode asm_codes[] = {
 	{ "dlgse",addr_code + 0x200, true },
 	{ "aup",addr_code + 0x300, true },
 	{ "scode",addr_code + 0x400, true },
-	{ "dat",addr_code + 0x500, false },
-	{ "datu",addr_code + 0x600, false },
+	{ "ldscn",addr_code + 0x500, false },
+	{ "ldscnB",addr_code + 0x600, false },
+	{ "ldscnB2",addr_code + 0x600, false },
 };
 constexpr int num_asm_codes = sizeof(asm_codes) / sizeof(*asm_codes);
 
@@ -106,6 +113,9 @@ constexpr byte scode_sora[] = { 0x54, 0x5B, 0x5C, 0x5D, 0x5E };
 constexpr byte scode_za[] = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F };
 
 constexpr int Size = 0x1000;
+
+constexpr int addr_bits = 31;
+constexpr unsigned addr_mark = (1u << addr_bits) - 1u;
 
 using EDVoice = struct EDVoice {
 	HMODULE dll;
@@ -160,11 +170,16 @@ bool DoInit(const char* data_name)
 	memset(sp.get(), 0, Size);
 	InitParam* tp = (InitParam*)sp.get();
 
+	int game = 0;
 	const INI::Group *group = nullptr;
 	auto jcs = tp->jcs;
 	for (int i = 1; i < ini.Num(); i++) {
 		auto& tmp_group = ini.GetGroup(i);
 		LOG("Check data: %s", tmp_group.Name());
+
+		game = GetUIntFromValue(tmp_group.GetValue(str_Game.c_str()));
+		LOG("game = %d", game);
+		if (!IS_VALID_GAME(game)) continue;
 
 		bool ok = true;
 		for (int j = 0; j < num_asm_codes; j++) {
@@ -179,18 +194,26 @@ bool DoInit(const char* data_name)
 			LOG("from 0x%08X", jcs[j].next);
 			LOG("to 0x%08X", jcs[j].to);
 
-			if (jcs[j].next) {
-				if (jcs[j].to >= min_legal_to) {
-					byte* p = (byte*)jcs[j].next;
-					constexpr int size = 6;
-					if (IsBadReadPtr(p, size)) { ok = false; break; };
+			if (jcs[j].next & addr_mark) {
+				unsigned addr_next = jcs[j].next & addr_mark;
+				byte* p = (byte*)addr_next;
+				constexpr int size = 6;
+				if (IsBadReadPtr(p, size)) { ok = false; break; };
 
+				if (jcs[j].to >= min_legal_to) {
 					int len_op = p[0] == opjmp || p[0] == opcall ? 5 : 6;
 					int jc_len = GET_INT(p + len_op - 4);
 
-					unsigned va_to = jcs[j].next + jc_len + len_op;
+					unsigned va_to = addr_next + jc_len + len_op;
 					LOG("va_to 0x%08X", va_to);
-					if (va_to != jcs[j].to) { ok = false; break; }
+					if (va_to != jcs[j].to) {
+						if (asm_codes[j].force){
+							ok = false; break;
+						}
+						else {
+							jcs[j].next = jcs[j].to = 0;
+						}
+					}
 				}
 			}
 			else if(asm_codes[j].force) {
@@ -220,12 +243,11 @@ bool DoInit(const char* data_name)
 	}
 
 	if (!group) {
-		LOG("No mathed data found in ini");
+		LOG("No matched data found in ini");
 		return false;
 	}
-	LOG("Data found, %d, %s", group->Num(), group->Name());
+	LOG("Data found, num = %d, name = %s, game = %d", group->Num(), group->Name(), game);
 
-	int game = GetUIntFromValue(group->GetValue(str_Game.c_str()));
 	const bool isTiTS = game == GAME_TITS_DX8 || game == GAME_TITS_DX9;
 	const bool isSora = game == GAME_SORA || isTiTS;
 	const bool isDX8 = game == GAME_SORA || game == GAME_TITS_DX8;
@@ -312,8 +334,10 @@ bool DoInit(const char* data_name)
 	LOG("Last step.");
 
 	for (int j = 0; j < num_asm_codes; j++) {
-		byte* from = (byte*)ip->jcs[j].next;
+		unsigned addr_next = ip->jcs[j].next & addr_mark;
+		unsigned addr_type = ip->jcs[j].next >> addr_bits;
 
+		byte* from = (byte*)addr_next;
 		if (!from) continue;
 
 		int len_op;
@@ -324,7 +348,7 @@ bool DoInit(const char* data_name)
 			int to_add = (int8_t)((ip->jcs[j].to >> 8) & 0xFF);
 
 			if (to_add) {
-				ip->jcs[j].to = ip->jcs[j].next + to_add;
+				ip->jcs[j].to = addr_next + to_add;
 			}
 			else {
 				ip->jcs[j].to = 0;
@@ -335,7 +359,7 @@ bool DoInit(const char* data_name)
 		else {
 			len_op = from[0] == opjmp || from[0] == opcall ? 5 : 6;
 		}
-		ip->jcs[j].next += len_op;
+		ip->jcs[j].next = addr_next + len_op;
 
 		byte* vs_to = (byte*)ip + asm_codes[j].addr;
 		int jc_len = vs_to - from - 5;
@@ -343,7 +367,8 @@ bool DoInit(const char* data_name)
 		char buff[256];
 		memset(buff, opnop, sizeof(buff));
 
-		PUT(opjmp, buff);
+		const byte op = addr_type ? opcall : opjmp;
+		PUT(op, buff);
 		PUT(jc_len, buff + 1);
 
 		LOG("change code at : 0x%08X", (unsigned)from);

@@ -22,70 +22,74 @@ struct InitParam
 		const u8* p_keys;
 		//0x18
 		void** p_global;
-
 		//0x1C
-		void** reserved[4];
+		void* addr_ppscn;
+
+		//0x20
+		void* addr_iscn;
+		//0x24
+		void** reserved[6];
 	} addrs;
 
-	//0x2C
+	//0x3C
 	char *p_rnd_vlst;
 
-	//0x30
-	u32 exps[8];
+	//0x40
+	u32 exps[16];
 
-	//0x50
+	//0x80
 	struct {
 		u32 next;
 		u32 to;
-	} jcs[7];
+	} jcs[16];
 
-	//0x88
-	u8 scodes[8];
+	//0x100
+	u8 scodes[16];
 
-	//0x90
+	//0x110
 	struct {
-		//0x90
+		//0x110
 		u32 recent;
-		//0x94
+		//0x114
 		u32 now;
-		//0x98
+		//0x118
 		u32 time_textbeg;
-		//0x9C
+		//0x11C
 		u32 count_ch;
 	} rcd;
 	
-	//0xA0
+	//0x120
 	void* sv;
 
-	//0xA4
+	//0x124
 	struct Status {
-	//0xA4
+	//0x124
 		u8 ended;
 		u8 playing;
 		u8 mute;
 		u8 showing;
 
-	//0xA8
+	//0x128
 		u8 wait;
 		u8 waitv;
 		u8 scode;
 		u8 playingOri;
-	//0xAC
-		u8 reserved[4];
+	//0x12C
+		u8 reserved[8];
 	} status;
 
-	//0xB0
+	//0x134
 	struct Order {
 		u8 disableDududu;
 		u8 disableDialogSE;
 		u8 autoPlay;
 
-	//0xB3
-		u8 reserved[5];
+	//0x137
+		u8 reserved[9];
 	} order;
 
-	//0xB8
-	char Comment[128];
+	//0x140
+	char Comment[64];
 };
 #pragma pack(pop)
 
