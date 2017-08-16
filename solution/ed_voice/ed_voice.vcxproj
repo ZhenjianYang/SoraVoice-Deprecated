@@ -67,46 +67,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\ApiPack.h" />
-    <ClInclude Include="..\..\src\build_date.h" />
-    <ClInclude Include="..\..\src\EncodeHelper.h" />
-    <ClInclude Include="..\..\src\INI.h" />
-    <ClInclude Include="..\..\src\Mapping.h" />
-    <ClInclude Include="..\..\src\Clock.h" />
-    <ClInclude Include="..\..\src\Config.h" />
-    <ClInclude Include="..\..\src\Draw.h" />
-    <ClInclude Include="..\..\src\ed_voice.h" />
-    <ClInclude Include="..\..\src\Hook.h" />
-    <ClInclude Include="..\..\src\Message.h" />
-    <ClInclude Include="..\..\src\RC.h" />
-    <ClInclude Include="..\..\src\RC_ed_voice.h" />
-    <ClInclude Include="..\..\src\SoraVoice.h" />
+    <ClInclude Include="..\..\src\Draw\Draw.h" />
+    <ClInclude Include="..\..\src\Draw\Draw_D3D.h" />
+    <ClInclude Include="..\..\src\Draw\Draw_D3D_DX8.h" />
+    <ClInclude Include="..\..\src\Draw\Draw_D3D_DX9.h" />
+    <ClInclude Include="..\..\src\Hook\Hook.h" />
     <ClInclude Include="..\..\src\InitParam.h" />
-    <ClInclude Include="..\..\src\Log.h" />
-    <ClInclude Include="..\..\src\rc_ed_voice\resource.h" />
-    <ClInclude Include="..\..\src\SoraVoiceImpl.h" />
-    <ClInclude Include="..\..\src\SoundFile.h" />
-    <ClInclude Include="..\..\src\SoundFileImpl.h" />
-    <ClInclude Include="..\..\src\SoundPlayer.h" />
-    <ClInclude Include="..\..\src\SoundPlayerImpl.h" />
-    <ClInclude Include="..\..\src\Type.h" />
+    <ClInclude Include="..\..\src\Utils\ApiPack.h" />
+    <ClInclude Include="..\..\src\Utils\Clock.h" />
+    <ClInclude Include="..\..\src\Utils\EncodeHelper.h" />
+    <ClInclude Include="..\..\src\Utils\INI.h" />
+    <ClInclude Include="..\..\src\Utils\Log.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\ApiPack.cpp" />
-    <ClCompile Include="..\..\src\Clock.cpp" />
-    <ClCompile Include="..\..\src\Config.cpp" />
-    <ClCompile Include="..\..\src\DrawImpl.cpp" />
-    <ClCompile Include="..\..\src\ed_voice.cpp" />
-    <ClCompile Include="..\..\src\Hook.cpp" />
-    <ClCompile Include="..\..\src\INI.cpp" />
-    <ClCompile Include="..\..\src\InitParam.cpp" />
-    <ClCompile Include="..\..\src\LoadScns.cpp" />
-    <ClCompile Include="..\..\src\Log.cpp" />
-    <ClCompile Include="..\..\src\Message.cpp" />
-    <ClCompile Include="..\..\src\RC.cpp" />
-    <ClCompile Include="..\..\src\SoraVoiceImpl.cpp" />
-    <ClCompile Include="..\..\src\SoundFileImpl.cpp" />
-    <ClCompile Include="..\..\src\SoundPlayerImpl.cpp" />
+    <ClCompile Include="..\..\src\Draw\Draw.cpp" />
+    <ClCompile Include="..\..\src\Draw\Draw_D3D.cpp" />
+    <ClCompile Include="..\..\src\Draw\Draw_D3D_DX8.cpp" />
+    <ClCompile Include="..\..\src\Draw\Draw_D3D_DX9.cpp" />
+    <ClCompile Include="..\..\src\Hook\Hook.cpp" />
+    <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DInput.cpp" />
+    <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DX8.cpp" />
+    <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DX9.cpp" />
+    <ClCompile Include="..\..\src\Utils\ApiPack.cpp" />
+    <ClCompile Include="..\..\src\Utils\Clock.cpp" />
+    <ClCompile Include="..\..\src\Utils\INI.cpp" />
+    <ClCompile Include="..\..\src\Utils\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\rc_ed_voice\ed_voice.rc" />

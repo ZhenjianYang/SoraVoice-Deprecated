@@ -146,6 +146,24 @@ static unsigned GetUIntFromValue(const char* str) {
 	return std::strtoul(str, &p, rad);
 }
 
+static InitParam ip;
+
+__declspec(naked) void rNewShowTextMsg()
+{
+	__asm {
+		push    eax
+		push    ebx
+		call    ldscn_start
+	ldscn_start :
+		pop     ebx
+		pop     eax
+		sub     ebx, 7
+		mov     ip.addrs.p_d3dd, eax
+		pop     eax
+
+	}
+}
+
 bool DoInit(const char* data_name)
 {
 	INI ini; {

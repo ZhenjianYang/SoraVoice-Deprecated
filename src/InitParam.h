@@ -2,98 +2,93 @@
 
 #include "Type.h"
 
-#pragma pack(push, 1)
+#define GAME_IS_SORA(game) ((game) == InitParam::SORA || (game) == InitParam::TITS_DX8 || (game) == InitParam::TITS_DX9)
+#define GAME_IS_TITS(game) ((game) == InitParam::TITS_DX8 || (game) == InitParam::TITS_DX9)
+#define GAME_IS_ZA(game) ((game) == InitParam::ZERO || (game) == InitParam::AO)
+#define GAME_IS_DX8(game) ((game) == InitParam::SORA || (game) == InitParam::TITS_DX8)
+#define GAME_IS_DX9(game) ((game) == InitParam::TITS_DX9 || (game) == InitParam::ZERO || (game) == InitParam::AO)
+#define GAME_IS_VALID(game) (GAME_IS_SORA(game) || GAME_IS_ZA(game))
+
 struct InitParam
 {
-	//0x00
-	struct {
-		//0x00
-		void** p_d3dd;
-		//0x04
-		void** p_did;
-		//0x08
-		void** p_Hwnd;
-		//0x0C
-		void** p_pDS;
+	typedef unsigned char byte;
+	typedef struct Jcs {
+		unsigned next;
+		unsigned to;
+	} Jcs;
+	typedef enum Game {
+		SORA = 1,
+		TITS_DX8 = 2,
+		TITS_DX9 = 3,
+		ZERO = 11,
+		AO = 12,
+	} Game;
 
-		//0x10
-		void*  p_mute;
-		//0x14
-		const u8* p_keys;
-		//0x18
-		void** p_global;
-		//0x1C
-		void* addr_ppscn;
-
-		//0x20
-		void* addr_iscn;
-		//0x24
-		void** reserved[6];
-	} addrs;
-
-	//0x3C
-	char *p_rnd_vlst;
-
-	//0x40
-	u32 exps[16];
-
-	//0x80
-	struct {
-		u32 next;
-		u32 to;
-	} jcs[16];
-
-	//0x100
-	u8 scodes[16];
-
-	//0x110
-	struct {
-		//0x110
-		u32 recent;
-		//0x114
-		u32 now;
-		//0x118
-		u32 time_textbeg;
-		//0x11C
-		u32 count_ch;
-	} rcd;
-	
-	//0x120
+	Game game;
+	int dx9;
 	void* sv;
 
-	//0x124
 	struct Status {
-	//0x124
-		u8 ended;
-		u8 playing;
-		u8 mute;
-		u8 showing;
+		unsigned ended;
+		unsigned playing;
+		unsigned mute;
+		unsigned showing;
 
-	//0x128
-		u8 wait;
-		u8 waitv;
-		u8 scode;
-		u8 playingOri;
-	//0x12C
-		u8 reserved[8];
+		unsigned wait;
+		unsigned waitv;
+		unsigned scode;
+		unsigned playingOri;
 	} status;
 
-	//0x134
 	struct Order {
-		u8 disableDududu;
-		u8 disableDialogSE;
-		u8 autoPlay;
-
-	//0x137
-		u8 reserved[9];
+		unsigned disableDududu;
+		unsigned disableDialogSE;
+		unsigned autoPlay;
 	} order;
 
-	//0x140
+	struct {
+		unsigned recent;
+		unsigned now;
+		unsigned time_textbeg;
+		unsigned count_ch;
+	} rcd;
+
+	struct {
+		void** p_d3dd;
+		void** p_did;
+		void** p_Hwnd;
+		void** p_pDS;
+		void** p_global;
+		const byte* p_keys;
+
+		void* addr_mute;
+		void* addr_ppscn;
+		void* addr_iscn;
+	} addrs;
+
+	struct {
+		Jcs text;
+		Jcs dududu;
+		Jcs dlgse;
+		Jcs aup;
+		Jcs scode;
+		Jcs ldscn;
+		Jcs scnp;
+	} jcs;
+
+	struct {
+		unsigned TEXT;
+		unsigned SAY;
+		unsigned TALK;
+		unsigned MENU;
+		unsigned MENUEND;
+	} scode;
+
+	char *p_rnd_vlst;
 	char Comment[64];
 };
-#pragma pack(pop)
-
 static_assert(sizeof(void*) == 4, "32 bits only!");
-static_assert(sizeof(InitParam) <= 0x1C0, "Size of InitParam too big!");
+
+constexpr int size = sizeof(InitParam);
 
 bool InitAddrs(InitParam* initParam, void* hDll);
