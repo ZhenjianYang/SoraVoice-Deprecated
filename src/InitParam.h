@@ -2,12 +2,13 @@
 
 #include "Type.h"
 
-#define GAME_IS_SORA(game) ((game) == InitParam::SORA || (game) == InitParam::TITS_DX8 || (game) == InitParam::TITS_DX9)
+#define GAME_IS_SORA(game) ((game) == InitParam::SORA)
 #define GAME_IS_TITS(game) ((game) == InitParam::TITS_DX8 || (game) == InitParam::TITS_DX9)
+#define GAME_IS_ED6(game) (GAME_IS_SORA(game) || GAME_IS_TITS(game))
 #define GAME_IS_ZA(game) ((game) == InitParam::ZERO || (game) == InitParam::AO)
 #define GAME_IS_DX8(game) ((game) == InitParam::SORA || (game) == InitParam::TITS_DX8)
 #define GAME_IS_DX9(game) ((game) == InitParam::TITS_DX9 || (game) == InitParam::ZERO || (game) == InitParam::AO)
-#define GAME_IS_VALID(game) (GAME_IS_SORA(game) || GAME_IS_ZA(game))
+#define GAME_IS_VALID(game) (GAME_IS_ED6(game) || GAME_IS_ZA(game))
 
 struct InitParam
 {

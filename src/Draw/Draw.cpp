@@ -82,7 +82,7 @@ using PtrInfoList = std::list<PtrInfo>;
 
 static struct {
 	int dx9;
-	int sora;
+	int ed6;
 
 	unsigned* showing;
 	const unsigned* dftFormatList;
@@ -105,16 +105,16 @@ bool Draw::Init(void* initParam, const char* fontName) {
 	InitParam* ip = (InitParam*)initParam;
 
 	draw.dx9 = ip->dx9;
-	draw.sora = GAME_IS_SORA(ip->game);
+	draw.ed6 = GAME_IS_ED6(ip->game);
 
-	draw.dftFormatList = draw.sora ? DftFormatList_Sora : DftFormatList_ZA;
+	draw.dftFormatList = draw.ed6 ? DftFormatList_Sora : DftFormatList_ZA;
 
 	RECT rect;
 	if (GetClientRect((HWND)*ip->addrs.p_Hwnd, &rect)) {
 		draw.width = rect.right - rect.left;
 		draw.height = rect.bottom - rect.top;
 
-		if (!draw.sora)
+		if (!draw.ed6)
 			draw.vfix = (draw.height - draw.width * 9 / 16) / 2;
 
 		draw.fontSize = (draw.height - 2 * draw.vfix) / TEXT_NUM_SCRH;
