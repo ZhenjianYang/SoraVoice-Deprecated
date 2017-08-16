@@ -6,32 +6,8 @@
 
 #include <Utils/Log.h>
 #include <Utils/Clock.h>
+#include <Utils/EncodeHelper.h>
 
-
-//#ifdef DX9
-//#include <d3d9/d3dx9.h>
-//#else
-//#include <d3d8/d3dx8.h>
-//#endif
-//
-//#if DIRECT3D_VERSION == 0x0900
-//#define D3D IDirect3D9
-//#define D3DD IDirect3DDevice9
-//#elif DIRECT3D_VERSION == 0x0800
-//#define D3D IDirect3D8
-//#define D3DD IDirect3DDevice8
-//#else
-//static_assert(DIRECT3D_VERSION == 0x0900 || DIRECT3D_VERSION == 0x0800,
-//	"DIRECT3D_VERSION must be 0x0900 or 0x0800")
-//#endif
-//
-//#if DIRECT3D_VERSION == 0x0900
-//#define SPRITE_BEGIN_FLAG D3DXSPRITE_ALPHABLEND
-//#define SPRITE pSprite,
-//#else
-//#define SPRITE_BEGIN_FLAG
-//#define SPRITE
-//#endif
 #include <Windows.h>
 
 #include <list>
@@ -90,7 +66,6 @@ static constexpr const unsigned DftFormatList_ZA[] = {
 };
 
 using namespace Draw;
-
 
 struct Info
 {
