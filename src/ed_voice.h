@@ -8,8 +8,8 @@
 extern "C" {
 #endif // __cplusplus
 
-	void SVCALL Start(void*);
-	void SVCALL End(void*);
+	int SVCALL Start();
+	int SVCALL End();
 
 #ifdef __cplusplus
 }

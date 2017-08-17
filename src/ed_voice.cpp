@@ -4,11 +4,11 @@
 
 static void* hDll = nullptr;
 
-void SVCALL Start(void*) {
-
+int SVCALL Start() {
+	return 0;
 }
-void SVCALL End(void*) {
-
+int SVCALL End() {
+	return 0;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
