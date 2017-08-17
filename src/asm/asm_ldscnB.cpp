@@ -25,7 +25,7 @@ void ldscnB() {
 		test    eax, eax
 		jz      ldscnB_call_ori
 
-	ldscnB_return:
+	//ldscnB_return:
 		ret
 
 	ldscnB_call_ori:

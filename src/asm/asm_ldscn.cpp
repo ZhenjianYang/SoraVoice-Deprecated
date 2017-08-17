@@ -26,7 +26,7 @@ void ldscn() {
 		
 		jne     ldscn_iscn
 
-	ldscn_call_ori:
+	//ldscn_call_ori:
 		jmp     dword ptr [sv.jcs.ldscn.next]
 
 	ldscn_iscn:
