@@ -1,110 +1,227 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
+    <Filter Include="src">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    <Filter Include="src\asm">
+      <UniqueIdentifier>{b50182d7-e14e-4e56-a187-9faab6934f31}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Source Files\Hook">
-      <UniqueIdentifier>{a39bb80d-5403-48b5-8b04-28ad8f232b07}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Draw">
+    <Filter Include="src\Draw">
       <UniqueIdentifier>{7d2bf3c2-2706-4da7-b453-58ef2057e7ac}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Utils">
+    <Filter Include="src\Hook">
+      <UniqueIdentifier>{a39bb80d-5403-48b5-8b04-28ad8f232b07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Player">
+      <UniqueIdentifier>{212d9e1a-69e4-47dd-ad4b-6361ccebd764}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\RC">
+      <UniqueIdentifier>{0483e9e3-9e22-4e82-b837-e3955ea9dc63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Utils">
       <UniqueIdentifier>{2a4e02f4-4fdf-4e7e-b54c-ab2ac9874f00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\RC\files">
+      <UniqueIdentifier>{ab129275-b9ee-490f-9484-31f56dc5bc7f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Hook\Hook.h">
-      <Filter>Source Files\Hook</Filter>
+      <Filter>src\Hook</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Draw\Draw.h">
-      <Filter>Source Files\Draw</Filter>
+      <Filter>src\Draw</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Utils\ApiPack.h">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Utils\Clock.h">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Utils\INI.h">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Utils\Log.h">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Utils\EncodeHelper.h">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Draw\Draw_D3D.h">
-      <Filter>Source Files\Draw</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\InitParam.h">
-      <Filter>Source Files</Filter>
+      <Filter>src\Draw</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Draw\Draw_D3D_DX8.h">
-      <Filter>Source Files\Draw</Filter>
+      <Filter>src\Draw</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Draw\Draw_D3D_DX9.h">
-      <Filter>Source Files\Draw</Filter>
+      <Filter>src\Draw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\asm\asm.h">
+      <Filter>src\asm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\asm\asm_callee.h">
+      <Filter>src\asm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hook\Hook_Apis.h">
+      <Filter>src\Hook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Player\Decoder_Ogg.h">
+      <Filter>src\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Player\Decoder_Wav.h">
+      <Filter>src\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Player\Player.h">
+      <Filter>src\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Player\Decoder.h">
+      <Filter>src\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\RC\resource.h">
+      <Filter>src\RC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\RC\RC.h">
+      <Filter>src\RC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\RC\RC_SoraRC.h">
+      <Filter>src\RC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Utils\build_date.h">
+      <Filter>src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Utils\Type.h">
+      <Filter>src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mapping.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Message.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SoraVoice.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SVData.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Config.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ed_voice.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hook\Hook.cpp">
-      <Filter>Source Files\Hook</Filter>
+      <Filter>src\Hook</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DX8.cpp">
-      <Filter>Source Files\Hook</Filter>
+      <Filter>src\Hook</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DX9.cpp">
-      <Filter>Source Files\Hook</Filter>
+      <Filter>src\Hook</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DInput.cpp">
-      <Filter>Source Files\Hook</Filter>
+      <Filter>src\Hook</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Draw\Draw.cpp">
-      <Filter>Source Files\Draw</Filter>
+      <Filter>src\Draw</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Utils\ApiPack.cpp">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Utils\Clock.cpp">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Utils\INI.cpp">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Utils\Log.cpp">
-      <Filter>Source Files\Utils</Filter>
+      <Filter>src\Utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Draw\Draw_D3D.cpp">
-      <Filter>Source Files\Draw</Filter>
+      <Filter>src\Draw</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Draw\Draw_D3D_DX8.cpp">
-      <Filter>Source Files\Draw</Filter>
+      <Filter>src\Draw</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Draw\Draw_D3D_DX9.cpp">
-      <Filter>Source Files\Draw</Filter>
+      <Filter>src\Draw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_dlgse.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_dududu.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_ldscn.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_ldscnB.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_scode.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_text.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\CallLoadScns.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\CallSoraVoice.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_aup.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Player\Decoder_Ogg.cpp">
+      <Filter>src\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Player\Decoder_Wav.cpp">
+      <Filter>src\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Player\Player.cpp">
+      <Filter>src\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\RC\RC.cpp">
+      <Filter>src\RC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Message.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SoraVoice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SVData.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Config.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ed_voice.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\src\rc_ed_voice\ed_voice.rc">
-      <Filter>Resource Files</Filter>
+    <None Include="..\..\src\RC\files\SoraData.ini">
+      <Filter>src\RC\files</Filter>
+    </None>
+    <None Include="..\..\src\RC\files\ao_rnd_vlst.txt">
+      <Filter>src\RC\files</Filter>
+    </None>
+    <None Include="..\..\src\RC\files\Message_en.ini">
+      <Filter>src\RC\files</Filter>
+    </None>
+    <None Include="..\..\src\RC\files\Message_zh.ini">
+      <Filter>src\RC\files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\src\RC\ed_voice.rc">
+      <Filter>src\RC</Filter>
     </ResourceCompile>
-    <None Include="..\..\src\rc_ed_voice\Message_en.ini">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\src\rc_ed_voice\Message_zh.ini">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
 </Project>

@@ -3,7 +3,7 @@
 
 void ldscnB() {
 	_asm {
-		mov     edx, dword [esp + 8]
+		mov     edx, dword ptr [esp + 8]
 		mov     eax, edx
 		shr     eax, 16
 
@@ -12,16 +12,16 @@ void ldscnB() {
 		cmp     eax, 0x21
 		jne     ldscnB_call_ori
 	ldscnB_call:
-		mov     ecx, dword [esp + 4]
+		mov     ecx, dword ptr [esp + 4]
 		push    ecx
-		mov     dword [ecx], 0
+		mov     dword ptr [ecx], 0
 		and     edx, 0xFFFF
-		mov     ecx, dword [sv.addrs.addr_ppscn]
-		mov     ecx, dword [eax * 4 + ecx]
+		mov     ecx, dword ptr [sv.addrs.addr_ppscn]
+		mov     ecx, dword ptr [eax * 4 + ecx]
 		lea     eax, [edx * 8 + edx]
 		lea     eax, [ecx + eax * 4]
 		push    eax
-		call    dword ASM::LoadScn
+		call    dword ptr ASM::LoadScn
 		test    eax, eax
 		jz      ldscnB_call_ori
 
@@ -29,6 +29,6 @@ void ldscnB() {
 		ret
 
 	ldscnB_call_ori:
-		jmp     dword [sv.jcs.ldscn.to]
+		jmp     dword ptr [sv.jcs.ldscn.to]
 	}
 }

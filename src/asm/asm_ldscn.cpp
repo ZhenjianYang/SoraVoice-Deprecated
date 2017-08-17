@@ -14,10 +14,10 @@ void ldscn() {
 		push    ecx
 		push    edx
 		
-		push    dword [sv.addrs.addr_ppscn]
+		push    dword ptr [sv.addrs.addr_ppscn]
 		push    eax
-		push    dword [esp + 0x38]
-		call    dword [ASM::LoadScns]
+		push    dword ptr [esp + 0x38]
+		call    dword ptr [ASM::LoadScns]
 		test    eax, eax
 		
 		pop     edx
@@ -27,10 +27,10 @@ void ldscn() {
 		jne     ldscn_iscn
 
 	ldscn_call_ori:
-		jmp     dword [sv.jcs.ldscn.next]
+		jmp     dword ptr [sv.jcs.ldscn.next]
 
 	ldscn_iscn:
-		jmp     dword [sv.addrs.addr_iscn]
+		jmp     dword ptr [sv.addrs.addr_iscn]
 	}
 }
 

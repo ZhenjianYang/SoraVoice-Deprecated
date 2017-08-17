@@ -14,7 +14,7 @@ namespace Draw {
 
 		virtual ~D3D_DX9();
 
-		D3D_DX9(void* pD3DD, const char* fontName, unsigned fontSize);
+		D3D_DX9(void* pD3DD, const char* fontName, int fontSize);
 
 	private:
 		void* dx9_data;

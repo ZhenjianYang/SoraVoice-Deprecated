@@ -33,7 +33,7 @@ Draw::D3D_DX8::~D3D_DX8()
 	delete pd;
 }
 
-Draw::D3D_DX8::D3D_DX8(void * pD3DD, const char * fontName, unsigned fontSize)
+Draw::D3D_DX8::D3D_DX8(void * pD3DD, const char * fontName, int fontSize)
 {
 	this->dx8_data = new DX8_DATA{ (IDirect3DDevice8*)pD3DD,{ }, nullptr };
 

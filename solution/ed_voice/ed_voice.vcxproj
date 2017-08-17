@@ -67,36 +67,73 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\asm\asm.h" />
+    <ClInclude Include="..\..\src\asm\asm_callee.h" />
+    <ClInclude Include="..\..\src\Config.h" />
     <ClInclude Include="..\..\src\Draw\Draw.h" />
     <ClInclude Include="..\..\src\Draw\Draw_D3D.h" />
     <ClInclude Include="..\..\src\Draw\Draw_D3D_DX8.h" />
     <ClInclude Include="..\..\src\Draw\Draw_D3D_DX9.h" />
+    <ClInclude Include="..\..\src\ed_voice.h" />
     <ClInclude Include="..\..\src\Hook\Hook.h" />
-    <ClInclude Include="..\..\src\InitParam.h" />
+    <ClInclude Include="..\..\src\Hook\Hook_Apis.h" />
+    <ClInclude Include="..\..\src\mapping.h" />
+    <ClInclude Include="..\..\src\Message.h" />
+    <ClInclude Include="..\..\src\Player\Decoder.h" />
+    <ClInclude Include="..\..\src\Player\Decoder_Ogg.h" />
+    <ClInclude Include="..\..\src\Player\Decoder_Wav.h" />
+    <ClInclude Include="..\..\src\Player\Player.h" />
+    <ClInclude Include="..\..\src\RC\RC.h" />
+    <ClInclude Include="..\..\src\RC\RC_SoraRC.h" />
+    <ClInclude Include="..\..\src\RC\resource.h" />
+    <ClInclude Include="..\..\src\SoraVoice.h" />
+    <ClInclude Include="..\..\src\SVData.h" />
     <ClInclude Include="..\..\src\Utils\ApiPack.h" />
+    <ClInclude Include="..\..\src\Utils\build_date.h" />
     <ClInclude Include="..\..\src\Utils\Clock.h" />
     <ClInclude Include="..\..\src\Utils\EncodeHelper.h" />
     <ClInclude Include="..\..\src\Utils\INI.h" />
     <ClInclude Include="..\..\src\Utils\Log.h" />
+    <ClInclude Include="..\..\src\Utils\Type.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\asm\asm_aup.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_dlgse.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_dududu.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_ldscn.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_ldscnB.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_scode.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_text.cpp" />
+    <ClCompile Include="..\..\src\asm\CallLoadScns.cpp" />
+    <ClCompile Include="..\..\src\asm\CallSoraVoice.cpp" />
+    <ClCompile Include="..\..\src\Config.cpp" />
     <ClCompile Include="..\..\src\Draw\Draw.cpp" />
     <ClCompile Include="..\..\src\Draw\Draw_D3D.cpp" />
     <ClCompile Include="..\..\src\Draw\Draw_D3D_DX8.cpp" />
     <ClCompile Include="..\..\src\Draw\Draw_D3D_DX9.cpp" />
+    <ClCompile Include="..\..\src\ed_voice.cpp" />
     <ClCompile Include="..\..\src\Hook\Hook.cpp" />
     <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DInput.cpp" />
     <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DX8.cpp" />
     <ClCompile Include="..\..\src\Hook\Hook_ApiAddr_DX9.cpp" />
+    <ClCompile Include="..\..\src\Message.cpp" />
+    <ClCompile Include="..\..\src\Player\Decoder_Ogg.cpp" />
+    <ClCompile Include="..\..\src\Player\Decoder_Wav.cpp" />
+    <ClCompile Include="..\..\src\Player\Player.cpp" />
+    <ClCompile Include="..\..\src\RC\RC.cpp" />
+    <ClCompile Include="..\..\src\SoraVoice.cpp" />
+    <ClCompile Include="..\..\src\SVData.cpp" />
     <ClCompile Include="..\..\src\Utils\ApiPack.cpp" />
     <ClCompile Include="..\..\src\Utils\Clock.cpp" />
     <ClCompile Include="..\..\src\Utils\INI.cpp" />
     <ClCompile Include="..\..\src\Utils\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\src\rc_ed_voice\ed_voice.rc" />
-    <None Include="..\..\src\rc_ed_voice\Message_en.ini" />
-    <None Include="..\..\src\rc_ed_voice\Message_zh.ini" />
+    <ResourceCompile Include="..\..\src\RC\ed_voice.rc" />
+    <None Include="..\..\src\RC\files\Message_en.ini" />
+    <None Include="..\..\src\RC\files\Message_zh.ini" />
+    <None Include="..\..\src\RC\files\ao_rnd_vlst.txt" />
+    <None Include="..\..\src\RC\files\SoraData.ini" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

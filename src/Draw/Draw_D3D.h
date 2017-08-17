@@ -14,7 +14,7 @@ namespace Draw {
 
 		bool Valid() const { return this->valid; }
 
-		static D3D * GetD3D(int dx9, void* pD3DD, const char* fontName, unsigned fontSize);
+		static D3D * GetD3D(int dx9, void* pD3DD, const char* fontName, int fontSize);
 
 	protected:
 		bool valid;

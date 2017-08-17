@@ -47,7 +47,7 @@ Draw::D3D_DX9::~D3D_DX9()
 	delete pd;
 }
 
-Draw::D3D_DX9::D3D_DX9(void * pD3DD, const char * fontName, unsigned fontSize)
+Draw::D3D_DX9::D3D_DX9(void * pD3DD, const char * fontName, int fontSize)
 {
 	this->dx9_data = new DX9_DATA{ (IDirect3DDevice9*)pD3DD,{}, nullptr, nullptr };
 

@@ -4,7 +4,7 @@
 
 using namespace Draw;
 
-D3D * Draw::D3D::GetD3D(int dx9, void* pD3DD, const char* fontName, unsigned fontSize)
+D3D * Draw::D3D::GetD3D(int dx9, void* pD3DD, const char* fontName, int fontSize)
 {
 	D3D * res;
 	if (dx9) {

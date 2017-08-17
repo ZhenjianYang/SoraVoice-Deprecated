@@ -60,29 +60,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Hooked_dinput8.h" />
-    <ClInclude Include="..\..\src\Hooked_InitVoice.h" />
-    <ClInclude Include="..\..\src\INI.h" />
-    <ClInclude Include="..\..\src\RC.h" />
-    <ClInclude Include="..\..\src\rc_hk.h" />
-    <ClInclude Include="..\..\src\rc_hk\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hooked_dinput8.cpp" />
-    <ClCompile Include="..\..\src\Hooked_InitVoice.cpp" />
-    <ClCompile Include="..\..\src\INI.cpp" />
-    <ClCompile Include="..\..\src\RC.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\..\src\rc_hk\Hooked.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\src\rc_hk\SoraData.ini" />
-    <None Include="..\..\src\rc_hk\sora_all" />
-    <None Include="..\..\src\rc_hk\za_all" />
-    <None Include="..\..\src\rc_hk\tits_all" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\..\src\rc_hk\ao_rnd_vlst.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

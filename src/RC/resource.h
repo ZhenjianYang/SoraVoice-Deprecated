@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ 生成的包含文件。
-// 供 SoraVoice.rc 使用
+// 供 ed_voice.rc 使用
 //
 #define IDR_MESSAGE_EN                  102
 #define IDR_MESSAGE_ZH                  103
