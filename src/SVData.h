@@ -16,6 +16,7 @@ struct SVData
 		unsigned to;
 	} Jcs;
 	typedef enum Game {
+		NONE = 0,
 		SORA = 1,
 		TITS_DX8 = 2,
 		TITS_DX9 = 3,
@@ -62,8 +63,8 @@ struct SVData
 		void** p_pDS;
 		void** p_global;
 		const byte* p_keys;
+		void* p_mute;
 
-		void* addr_mute;
 		void* addr_ppscn;
 		void* addr_iscn;
 	} addrs;
@@ -75,10 +76,12 @@ struct SVData
 		Jcs aup;
 		Jcs scode;
 		Jcs ldscn;
+		Jcs ldscnB;
+		Jcs ldscnB2;
 		Jcs scnp;
 	} jcs;
 
-	struct {
+	struct Scode {
 		unsigned TEXT;
 		unsigned SAY;
 		unsigned TALK;

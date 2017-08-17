@@ -53,6 +53,8 @@ void* Hook::Hook_D3D_Present(void* pD3DD, int dx9, HookCallBack callback)
 		*addrPresent = (void*)Hooked_Present;
 
 		VirtualProtect(addrPresent, 4, oldProtect, &oldProtect2);
+
+		cbPresent = callback;
 	}
 
 	return (void*)pPresent;
@@ -71,6 +73,9 @@ void* Hook::Hook_DI_GetDeviceState(void* pDID, HookCallBack callback, void** pp_
 		*addrGetDeviceState = (void*)Hooked_GetDeviceState;
 
 		VirtualProtect(addrGetDeviceState, 4, oldProtect, &oldProtect2);
+
+		cbGetDeviceState = callback;
+		::pp_keys = pp_keys;
 	}
 	return (void*)pGetDeviceState;
 }

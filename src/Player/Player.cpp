@@ -166,7 +166,7 @@ public:
 private:
 	void thread_Playing();
 
-	bool openDecoder(const std::string& fileName);
+	bool openSoundFile(const std::string& fileName);
 	bool initDSBuff();
 	bool startPlay();
 	int playing();
@@ -230,7 +230,7 @@ void CPlayer::thread_Playing()
 		}
 
 		if (playID != InvalidPlayID) {
-			bool rst = openDecoder(fileName)
+			bool rst = openSoundFile(fileName)
 				&& initDSBuff()
 				&& startPlay();
 
@@ -270,7 +270,7 @@ void CPlayer::thread_Playing()
 	SetEvent(hEvent_End);
 }
 
-bool CPlayer::openDecoder(const std::string& fileName){
+bool CPlayer::openSoundFile(const std::string& fileName){
 	LOG("Open file %s ...", fileName.c_str());
 	LOG("%s File.", decoder == ogg ? "ogg" : "wav");
 	if (!decoder->Open(fileName.c_str())) {
@@ -301,7 +301,7 @@ bool CPlayer::initDSBuff(){
 	memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
 	dSBufferDesc.dwSize = sizeof(dSBufferDesc);
 	dSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME;
-	dSBufferDesc.dwBufferBytes = waveFormatEx.nAvgBytesPerSec * SAMPLES_BUF * NUM_BUF;
+	dSBufferDesc.dwBufferBytes = waveFormatEx.nBlockAlign * SAMPLES_BUF * NUM_BUF;
 	dSBufferDesc.dwReserved = 0;
 	dSBufferDesc.lpwfxFormat = &waveFormatEx;
 	dSBufferDesc.guid3DAlgorithm = { 0 };

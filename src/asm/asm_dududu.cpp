@@ -1,7 +1,8 @@
+#include "asm.h"
 #include "asm_callee.h"
 #include <SVData.h>
 
-void dududu() {
+__declspec(naked) void ASM::dududu() {
 	_asm {
 		cmp     dword ptr [sv.sora], 0
 		jne     dududu_sora
@@ -21,14 +22,14 @@ void dududu() {
 		cmp     dword ptr [sv.order.disableDududu], 0
 		je      short dududu_sora_over
 
-		mov     eax, dword ptr [sv.addrs.addr_mute]
+		mov     eax, dword ptr [sv.addrs.p_mute]
 		cmp     dword ptr [eax], 0
 		jne     short dududu_sora_over
 
 		mov     dword ptr [eax], 1
 		add     esp, 4
 		call    dword ptr [sv.jcs.dududu.to]
-		mov     eax, dword ptr [sv.addrs.addr_mute]
+		mov     eax, dword ptr [sv.addrs.p_mute]
 		mov     dword ptr [eax], 0
 		jmp     dword ptr [sv.jcs.dududu.next]
 	dududu_sora_over:
@@ -39,7 +40,7 @@ void dududu() {
 		cmp     dword ptr [sv.order.disableDududu], 0
 		jne     short dududu_tits_to
 		
-		mov     eax, dword ptr [sv.addrs.addr_mute]
+		mov     eax, dword ptr [sv.addrs.p_mute]
 		cmp     dword ptr [eax], 0
 		jne     short dududu_tits_to
 		

@@ -35,12 +35,11 @@ using byte = unsigned char;
 
 static const char DateVersion[] = BUILD_DATE;
 
-constexpr char LOG_FILE_PATH[] = "voice\\SoraVoice.log";
 constexpr int ORIVOICEID_LEN = 4;
 
 constexpr char ORIVOICEFILE_PREFIX[] = "data\\se\\ed7v";
 constexpr char ORIVOICEFILE_ATTR[] = ".wav";
-constexpr char CONFIG_FILE[] = "voice\\config.ini";
+constexpr char CONFIG_FILE[] = "voice\\ed_voice.ini";
 constexpr char VOICEFILE_PREFIX_ZA[] = "voice\\ogg\\v";
 constexpr char VOICEFILE_PREFIX_ED6[] = "voice\\ogg\\ch";
 constexpr char VOICEFILE_ATTR[] = ".ogg";
@@ -180,6 +179,8 @@ static void stopCallBack(PlayID playID, StopType stopType)
 
 void SoraVoice::Play(const char* t)
 {
+	if (!sv.status.startup) return;
+
 	if (*t != '#') return;
 	t++;
 
@@ -262,6 +263,8 @@ void SoraVoice::Play(const char* t)
 
 void SoraVoice::Stop()
 {
+	if (!sv.status.startup) return;
+
 	LOG("Stop is called.");
 
 	if (config.ShowInfo == Config::ShowInfo_WithMark && isAutoPlaying()) {
@@ -590,6 +593,8 @@ void SoraVoice::Input()
 
 void SoraVoice::Show()
 {
+	if (!sv.status.startup) return;
+
 	Clock::UpdateTime();
 
 	if(!isZa) SoraVoice::Input();
@@ -658,14 +663,13 @@ void SoraVoice::Show()
 }
 
 bool SoraVoice::Init() {
-	LOG_SETLOGFILE(LOG_FILE_PATH);
-	LOG_OPEN;
+	if (sv.status.startup || sv.status.ended) return false;
+
 	config.LoadConfig(CONFIG_FILE, true);
 
 	Clock::InitClock(sv.rcd.now, sv.rcd.recent);
 	Draw::Init();
 	Player::Init(*sv.addrs.p_pDS, stopCallBack);
-	Message.LoadMessage();
 
 	keys = new Keys(sv.addrs.p_keys, *sv.addrs.p_did);
 	aup = new AutoPlay(sv.rcd.now, sv.rcd.count_ch, sv.status.wait,
@@ -741,15 +745,21 @@ bool SoraVoice::Init() {
 
 	playRandomVoice(sv.p_rnd_vlst);
 
+	VOICEFILE_PREFIX = GAME_IS_ED6(sv.game) ? VOICEFILE_PREFIX_ED6 : VOICEFILE_PREFIX_ZA;
+	sv.status.startup = true;
 	return true;
 }
 
 bool SoraVoice::End() {
+	if (!sv.status.startup) return false;
+
 	Player::End();
 	Draw::End();
 	delete keys; keys = nullptr;
 	delete aup; aup = nullptr;
 
+	sv.status.startup = false;
+	sv.status.ended = true;
 	return true;
 }
 

@@ -8,7 +8,7 @@ public:
 	Wav() = default;
 	virtual ~Wav() { destory(); }
 	virtual bool Open(const char* fileName) override;
-	virtual int Read(void * buff, int samples_count) override;
+	virtual int Read(void * buff, int bytes) override;
 	virtual void Close() override;
 
 protected:

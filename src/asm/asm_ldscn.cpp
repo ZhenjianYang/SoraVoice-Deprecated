@@ -1,7 +1,8 @@
+#include "asm.h"
 #include "asm_callee.h"
 #include <SVData.h>
 
-void ldscn() {
+__declspec(naked) void ASM::ldscn() {
 	_asm {
 		sub     esp, 0x10
 		push    ebx

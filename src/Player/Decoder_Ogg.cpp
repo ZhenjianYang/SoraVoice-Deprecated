@@ -37,11 +37,11 @@ bool Ogg::Open(const char* fileName) {
 	return true;
 }
 
-int Ogg::Read(void * buff, int samples_count) {
-	if (!buff || !samples_count) return 0;
+int Ogg::Read(void * buff, int bytes) {
+	if (!buff || bytes < 0) return 0;
 
-	int request = samples_total - samples_read;
-	if (request > samples_count) request = samples_count;
+	int request = (samples_total - samples_read) * waveFormat.nBlockAlign;
+	if (request > bytes) request = bytes;
 
 	constexpr int block = 4096;
 	int bitstream = 0;
@@ -50,18 +50,18 @@ int Ogg::Read(void * buff, int samples_count) {
 	char* tBuff = (char*)buff;
 
 	while (read < request) {
-		int request = samples_count - read;
+		int request = bytes - read;
 		if(request > block) request = block;
-		int tread = OggApi::ov_read((OggVorbis_File*)ovFile, tBuff, waveFormat.nBlockAlign, 0, 2, 1, &bitstream);
+		int tread = OggApi::ov_read((OggVorbis_File*)ovFile, tBuff, request, 0, 2, 1, &bitstream);
 		if (tread <= 0) break;
 
 		tBuff += tread;
-		read += tread / waveFormat.nBlockAlign;
+		read += tread;
 	}
 
-	memset(tBuff, 0, (samples_count - read) * waveFormat.nBlockAlign);
+	memset(tBuff, 0, bytes - read);
 
-	samples_read += read;
+	samples_read += read / waveFormat.nBlockAlign;
 	return read;
 }
 

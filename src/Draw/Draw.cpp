@@ -102,6 +102,7 @@ static struct {
 bool Draw::Init() {
 	const bool isED6 = GAME_IS_ED6(sv.game);
 
+	draw.showing = &sv.status.showing;
 	draw.dftFormatList = isED6 ? DftFormatList_Sora : DftFormatList_ZA;
 
 	RECT rect;
@@ -143,7 +144,7 @@ bool Draw::End() {
 void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* text) {
 	unsigned dead = time == ShowTimeInfinity ? TIME_MAX : Clock::Now() + time;
 	constexpr auto NumValidType = InfoType::All;
-	const unsigned format = NumValidType < NumValidType ? draw.dftFormatList[(int)type] : draw.dftFormatList[(int)InfoType::All];
+	const unsigned format = type < NumValidType ? draw.dftFormatList[(int)type] : draw.dftFormatList[(int)InfoType::All];
 
 	LOG("Add text, type = %d", type);
 	const int h = int(draw.fontSize * 1.2);

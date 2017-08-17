@@ -1,7 +1,8 @@
+#include "asm.h"
 #include "asm_callee.h"
 #include <SVData.h>
 
-void text() {
+__declspec(naked) void ASM::text() {
 	_asm {
 		push    eax
 		

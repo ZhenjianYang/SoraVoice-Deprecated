@@ -112,6 +112,9 @@
     <ClInclude Include="..\..\src\ed_voice.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Init.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hook\Hook.cpp">
@@ -202,6 +205,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ed_voice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Init.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

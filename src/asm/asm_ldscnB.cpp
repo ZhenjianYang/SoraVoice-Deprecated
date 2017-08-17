@@ -1,7 +1,8 @@
+#include "asm.h"
 #include "asm_callee.h"
 #include <SVData.h>
 
-void ldscnB() {
+__declspec(naked) void ASM::ldscnB() {
 	_asm {
 		mov     edx, dword ptr [esp + 8]
 		mov     eax, edx
@@ -29,6 +30,6 @@ void ldscnB() {
 		ret
 
 	ldscnB_call_ori:
-		jmp     dword ptr [sv.jcs.ldscn.to]
+		jmp     dword ptr [sv.jcs.ldscnB.to]
 	}
 }

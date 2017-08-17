@@ -1,7 +1,8 @@
+#include "asm.h"
 #include "asm_callee.h"
 #include <SVData.h>
 
-void aup() {
+__declspec(naked) void ASM::aup() {
 	_asm {
 		cmp     dword ptr [sv.za], 0
 		je      aup_start

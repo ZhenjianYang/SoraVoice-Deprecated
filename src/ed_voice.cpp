@@ -1,14 +1,15 @@
 #include "ed_voice.h"
 
+#include <Init.h>
 #include <Windows.h>
 
 static void* hDll = nullptr;
 
 int SVCALL Start() {
-	return 0;
+	return StartSoraVoice(hDll);
 }
 int SVCALL End() {
-	return 0;
+	return EndSoraVoice();
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)

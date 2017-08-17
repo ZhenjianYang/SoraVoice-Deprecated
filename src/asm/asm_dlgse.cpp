@@ -1,7 +1,8 @@
+#include "asm.h"
 #include "asm_callee.h"
 #include <SVData.h>
 
-void dlgse() {
+__declspec(naked) void ASM::dlgse() {
 	_asm {
 		push    dword ptr [sv.order.disableDialogSE]
 
@@ -30,14 +31,14 @@ void dlgse() {
 		test    eax, eax
 		je      short dlgse_sora_over
 
-		mov     eax, dword ptr [sv.addrs.addr_mute]
+		mov     eax, dword ptr [sv.addrs.p_mute]
 		cmp     dword ptr [eax], 0
 		jne     short dlgse_sora_over
 
 		mov     dword ptr [eax], 1
 		add     esp, 4
 		call    dword ptr [sv.jcs.dlgse.to]
-		mov     eax, dword ptr [sv.addrs.addr_mute]
+		mov     eax, dword ptr [sv.addrs.p_mute]
 		mov     dword ptr [eax], 0
 		jmp     dword ptr [sv.jcs.dlgse.next]
 	dlgse_sora_over:
@@ -48,7 +49,7 @@ void dlgse() {
 		test    eax, eax
 		jne     dlgse_tits_to
 		
-		mov     eax, dword ptr [sv.addrs.addr_mute]
+		mov     eax, dword ptr [sv.addrs.p_mute]
 		cmp     dword ptr [eax], 0
 		jne     short dlgse_tits_to
 		

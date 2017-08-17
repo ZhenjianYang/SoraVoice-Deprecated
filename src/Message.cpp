@@ -2,6 +2,7 @@
 
 #include <RC/RC.h>
 #include <Utils/INI.h>
+#include <SVData.h>
 
 #include <Windows.h>
 
@@ -101,7 +102,8 @@ bool CMessage::LoadMessage(const char * resName)
 	SET_MESSAGE(top, ShowInfoAuto);
 
 	SET_MESSAGE_LIST(top, Switch, CMessage::_Message.Off, CMessage::_Message.On);
-	SET_MESSAGE_LIST(top, OriginalVoiceSwitch, CMessage::_Message.OriEvoVoiceBoth, CMessage::_Message.EvoVoicOnly, CMessage::_Message.OriVoiceOnly);
+	SET_MESSAGE_LIST(top, OriginalVoiceSwitch, CMessage::_Message.OriEvoVoiceBoth, 
+							CMessage::_Message.EvoVoicOnly, CMessage::_Message.OriVoiceOnly);
 	SET_MESSAGE_LIST(top, AutoPlaySwitch, CMessage::_Message.Off, CMessage::_Message.AutoPlayVoice, CMessage::_Message.AutoPlayAll);
 	SET_MESSAGE_LIST(top, ShowInfoSwitch, CMessage::_Message.Off, CMessage::_Message.On, CMessage::_Message.ShowInfoAuto);
 
@@ -122,13 +124,10 @@ bool CMessage::LoadMessage(const char * resName)
 	SET_MESSAGE_CMT(top, EnableKeys_ZA);
 	SET_MESSAGE_CMT(top, EnableKeys_Sora);
 
-#ifdef ZA
-	CMessage::_Message.Title = CMessage::_Message.Title_ZA;
-	CMessage::_Message.CMT.EnableKeys = CMessage::_Message.CMT.EnableKeys_ZA;
-#else
-	CMessage::_Message.Title = CMessage::_Message.Title_Sora;
-	CMessage::_Message.CMT.EnableKeys = CMessage::_Message.CMT.EnableKeys_Sora;
-#endif // ZA
+	CMessage::_Message.Title = GAME_IS_ZA(sv.game) ? CMessage::_Message.Title_ZA :
+									CMessage::_Message.Title_Sora;
+	CMessage::_Message.CMT.EnableKeys = SVData::AO == sv.game ? CMessage::_Message.CMT.EnableKeys_ZA :
+									CMessage::_Message.CMT.EnableKeys_Sora;
 
 	return true;
 }

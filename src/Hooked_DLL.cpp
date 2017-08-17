@@ -64,7 +64,7 @@ long SVCALL HOOKED_API CALL_PARAM_DCL
 		dll = LoadLibraryA(OLD_NAME_DLL);
 		if (!dll) {
 			char buff[MAX_PATH_LEN + 1];
-			//ExpandEnvironmentStringsA(SYS_PATH_DLL, buff, sizeof(buff));
+			ExpandEnvironmentStringsA(SYS_PATH_DLL, buff, sizeof(buff));
 			dll = LoadLibraryA(buff);
 		}
 

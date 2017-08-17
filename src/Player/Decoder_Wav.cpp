@@ -45,17 +45,17 @@ bool Wav::Open(const char* fileName) {
 	return true;
 }
 
-int Wav::Read(void * buff, int samples_count) {
-	if (!buff || samples_count < 0) return 0;
+int Wav::Read(void * buff, int bytes) {
+	if (!buff || bytes < 0) return 0;
 
-	memset(buff, 0, samples_count * waveFormat.nBlockAlign);
+	memset(buff, 0, bytes);
 
-	int request = samples_total - samples_read;
-	if (request > samples_count) request = samples_count;
+	int request = (samples_total - samples_read) * waveFormat.nBlockAlign;
+	if (request > bytes) request = bytes;
 
-	int read = fread(buff, waveFormat.nBlockAlign, request, (FILE*)file);
+	int read = fread(buff, 1, request, (FILE*)file);
 
-	samples_read += read;
+	samples_read += read / waveFormat.nBlockAlign;
 	return read;
 }
 
