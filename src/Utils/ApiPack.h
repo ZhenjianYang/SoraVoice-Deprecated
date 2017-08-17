@@ -1,12 +1,8 @@
 #pragma once
 
-class ApiPack
+namespace ApiPack
 {
-public:
-	static void AddApi(const char* name, void* ptrApi);
-	static void* GetApi(const char* name);
-
-private:
-	virtual ~ApiPack() = 0;
+	void AddApi(const char* name, void* ptrApi);
+	void* GetApi(const char* name);
 };
 

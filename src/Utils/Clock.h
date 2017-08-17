@@ -1,17 +1,15 @@
 #pragma once
 
-class Clock
+namespace Clock
 {
-public:
-	static constexpr int TimeUnitsPerSecond = 1000;
+	constexpr int TimeUnitsPerSecond = 1000;
 
-	static void InitClock(unsigned &now, unsigned &recent);
+	void InitClock(unsigned &now, unsigned &recent);
 
-	static void UpdateTime();
-	static const unsigned& Now();
-	static const unsigned& Recent();
+	void UpdateTime();
+	const unsigned& Now();
+	const unsigned& Recent();
 
-private:
-	virtual ~Clock() = 0;
+	void Sleep(unsigned sleepTime);
 };
 

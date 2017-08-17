@@ -1,17 +1,18 @@
 #pragma once
 
-class SoraVoice
+#ifndef SVCALL
+#define SVCALL __stdcall
+#endif
+
+namespace SoraVoice
 {
-public:
-	virtual void Play(const char* v) = 0;
-	virtual void Stop() = 0;
-	virtual void Input() = 0;
-	virtual void Show() = 0;
+	void Play(const char* v);
+	void Stop();
+	void Input();
+	void Show();
 
-	virtual ~SoraVoice() {};
-
-	static SoraVoice* CreateInstance(void* initParam);
-	static void DestoryInstance(SoraVoice* sv);
+	bool Init();
+	bool End();
 };
 
 

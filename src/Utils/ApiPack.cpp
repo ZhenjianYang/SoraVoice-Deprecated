@@ -5,7 +5,7 @@
 using namespace std;
 using MapNameApi = unordered_map<string, void*>;
 
-MapNameApi apis;
+static MapNameApi apis;
 
 void ApiPack::AddApi(const char * name, void * ptrApi) {
 	apis[name] = ptrApi;

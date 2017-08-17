@@ -50,6 +50,16 @@ constexpr char rc_ao_vlist[] = "voice/ao_rnd_vlst.txt";
 
 constexpr int min_legal_to = 0x100000;
 
+struct SCODE {
+	unsigned TEXT;
+	unsigned SAY;
+	unsigned TALK;
+	unsigned MENU;
+	unsigned MENUEND;
+}
+sv.scode.ZA { 0x55, 0x5C, 0x5D, 0x5E, 0x5F},
+sv.scode.SORA { 0x54,  0x5B, 0x5C, 0x5D, 0x5E};
+
 constexpr char import_names[][16] = {
 	"Init",
 	"End",

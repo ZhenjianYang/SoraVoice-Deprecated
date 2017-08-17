@@ -1,8 +1,0 @@
-LIBRARY "ed_voice_dx9.dll"
-EXPORTS
-Init @1
-End @2
-Play @3
-Stop @4
-LoadScn @5
-LoadScns @6

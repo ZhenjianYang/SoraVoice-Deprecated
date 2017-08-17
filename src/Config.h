@@ -48,18 +48,17 @@ struct Config
 	DEFINE_CONFIG(EnableKeys, 1);
 	DEFINE_CONFIG(SaveChange, 1);
 
-	bool LoadConfig(const char* configFn);
+	bool LoadConfig(const char* configFn, bool create = false);
 	bool SaveConfig(const char* configFn) const;
 
 	void Reset(bool all = false) { load_default(all); }
 	Config() { load_default(); }
 	Config(const char* configFn, bool create = false) { 
-		if (!LoadConfig(configFn) && create)
-			SaveConfig(configFn);
+		LoadConfig(configFn, false);
 	}
 private:
 	void load_default(bool all = true);
 };
 
-
+extern Config config;
 

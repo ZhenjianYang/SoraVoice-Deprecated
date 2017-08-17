@@ -24,7 +24,7 @@ namespace Draw {
 
 	static constexpr unsigned ShowTimeInfinity = 0;
 
-	bool Init(void* initParam, const char* fontName);
+	bool Init();
 	bool End();
 
 	void DrawInfos();

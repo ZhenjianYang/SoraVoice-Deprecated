@@ -1,5 +1,7 @@
 #include "Hook.h"
 
+#include "Hook_Apis.h"
+
 #include <Windows.h>
 
 #ifndef WINAPI
@@ -18,10 +20,6 @@ using CallGetDeviceState = decltype(Hooked_GetDeviceState)*;
 CallGetDeviceState pGetDeviceState = nullptr;
 static Hook::HookCallBack cbGetDeviceState;
 static void **pp_keys;
-
-inline void** GetAddrGetDeviceState(void* pDID);
-inline void** GetAddrPresent(void* pD3DD);
-inline void** GetAddrPresentDX8(void* pD3DD);
 
 long WINAPI Hooked_Present(void* pD3DD, void* pSourceRect, void* pDestRect, void* hDestWindowOverride, void* pDirtyRegion) {
 	if (cbPresent) {
@@ -52,7 +50,7 @@ void* Hook::Hook_D3D_Present(void* pD3DD, int dx9, HookCallBack callback)
 		if (!VirtualProtect(addrPresent, 4, PAGE_EXECUTE_READWRITE, &oldProtect)) return nullptr;
 
 		pPresent = (CallPresent)*addrPresent;
-		*addrPresent = Hooked_Present;
+		*addrPresent = (void*)Hooked_Present;
 
 		VirtualProtect(addrPresent, 4, oldProtect, &oldProtect2);
 	}
@@ -70,7 +68,7 @@ void* Hook::Hook_DI_GetDeviceState(void* pDID, HookCallBack callback, void** pp_
 		if (!VirtualProtect(addrGetDeviceState, 4, PAGE_EXECUTE_READWRITE, &oldProtect)) return nullptr;
 
 		pGetDeviceState = (CallGetDeviceState)*addrGetDeviceState;
-		*addrGetDeviceState = Hooked_GetDeviceState;
+		*addrGetDeviceState = (void*)Hooked_GetDeviceState;
 
 		VirtualProtect(addrGetDeviceState, 4, oldProtect, &oldProtect2);
 	}

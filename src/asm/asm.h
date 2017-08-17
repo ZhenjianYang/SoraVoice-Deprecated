@@ -1,15 +1,9 @@
 #pragma once
 
-#include "InitParam.h"
-
-extern struct {
-	void* text;
-	void* dududu;
-	void* dlgse;
-	void* aup;
-	void* scode;
-	void* ldscn;
-	void* 
-} asm_call;
-
-extern InitParam ip;
+__declspec(naked) void text();
+__declspec(naked) void dududu();
+__declspec(naked) void dlgse();
+__declspec(naked) void aup();
+__declspec(naked) void scode();
+__declspec(naked) void ldscn();
+__declspec(naked) void ldscnB();

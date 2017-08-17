@@ -38,10 +38,10 @@
 #define LOG_OPEN_WITHPARAM(_param) _log_open(_param)
 #define LOG_CLOSE _log_close()
 
-#define LOG_INFO(format, ...)  _log_print(LOG_TYPE_INFO, format , __VA_ARGS__)
-#define LOG_DEBUG(format, ...) _log_print(LOG_TYPE_DEBUG, format, __VA_ARGS__)
-#define LOG_ERROR(format, ...) _log_print(LOG_TYPE_ERROR, format, __VA_ARGS__)
-#define LOG(format, ...) LOG_INFO(format, __VA_ARGS__)
+#define LOG_INFO(format, ...)  _log_print(LOG_TYPE_INFO, format , ##__VA_ARGS__)
+#define LOG_DEBUG(format, ...) _log_print(LOG_TYPE_DEBUG, format, ##__VA_ARGS__)
+#define LOG_ERROR(format, ...) _log_print(LOG_TYPE_ERROR, format, ##__VA_ARGS__)
+#define LOG(format, ...) LOG_INFO(format, ##__VA_ARGS__)
 
 #define LOG_EMPTY_LINE _log_empty_line()
 

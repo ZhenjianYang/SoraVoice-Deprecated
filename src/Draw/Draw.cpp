@@ -2,7 +2,8 @@
 
 #include "Draw_D3D.h"
 
-#include <InitParam.h>
+#include <SVData.h>
+#include <Config.h>
 
 #include <Utils/Log.h>
 #include <Utils/Clock.h>
@@ -73,7 +74,7 @@ struct Info
 	RECT rect;
 	unsigned color;
 	unsigned format;
-	InfoType type;
+	Draw::InfoType type;
 
 	unsigned deadTime;
 };
@@ -81,9 +82,6 @@ using PtrInfo = std::unique_ptr<Info>;
 using PtrInfoList = std::list<PtrInfo>;
 
 static struct {
-	int dx9;
-	int ed6;
-
 	unsigned* showing;
 	const unsigned* dftFormatList;
 
@@ -101,20 +99,17 @@ static struct {
 	int fontSize = 0;
 } draw;
 
-bool Draw::Init(void* initParam, const char* fontName) {
-	InitParam* ip = (InitParam*)initParam;
+bool Draw::Init() {
+	const bool isED6 = GAME_IS_ED6(sv.game);
 
-	draw.dx9 = ip->dx9;
-	draw.ed6 = GAME_IS_ED6(ip->game);
-
-	draw.dftFormatList = draw.ed6 ? DftFormatList_Sora : DftFormatList_ZA;
+	draw.dftFormatList = isED6 ? DftFormatList_Sora : DftFormatList_ZA;
 
 	RECT rect;
-	if (GetClientRect((HWND)*ip->addrs.p_Hwnd, &rect)) {
+	if (GetClientRect((HWND)*sv.addrs.p_Hwnd, &rect)) {
 		draw.width = rect.right - rect.left;
 		draw.height = rect.bottom - rect.top;
 
-		if (!draw.ed6)
+		if (!isED6)
 			draw.vfix = (draw.height - draw.width * 9 / 16) / 2;
 
 		draw.fontSize = (draw.height - 2 * draw.vfix) / TEXT_NUM_SCRH;
@@ -135,7 +130,7 @@ bool Draw::Init(void* initParam, const char* fontName) {
 		return false;
 	}
 
-	draw.d3d = D3D::GetD3D(draw.dx9, *ip->addrs.p_d3dd, fontName, draw.fontSize);
+	draw.d3d = D3D::GetD3D(GAME_IS_DX9(sv.game), *sv.addrs.p_d3dd, config.FontName, draw.fontSize);
 	return draw.d3d;
 }
 bool Draw::End() {

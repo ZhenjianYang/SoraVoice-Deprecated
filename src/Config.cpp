@@ -1,5 +1,6 @@
 #include "Config.h"
-#include "Message.h"
+#include <SVData.h>
+#include <Message.h>
 
 #include <fstream>
 #include <map>
@@ -53,13 +54,18 @@ static bool _getValue(ArrayType &var, const KeyValue& kv, const char* name) {
 	return true;
 }
 
-bool Config::LoadConfig(const char * configFn)
+bool Config::LoadConfig(const char * configFn, bool create)
 {
 	load_default();
 
 	ifstream ifs(configFn);
 
-	if (!ifs) return false;
+	if (!ifs) {
+		if(create) {
+			SaveConfig(configFn);
+		}
+		return false;
+	}
 	KeyValue kv;
 
 	char buff[MAXCH_ONELINE];
@@ -125,11 +131,11 @@ bool Config::SaveConfig(const char * configFn) const
 	OUTPUT_VALUE(Volume, ofs);
 	ofs << '\n';
 
-#ifdef ZA
-	OUTPUT_VALUE(OriginalVoice, ofs);
-	OUTPUT_VALUE(OriVolumePercent, ofs);
-	ofs << '\n';
-#endif // ZA
+	if(sv.game == SVData::AO) {
+		OUTPUT_VALUE(OriginalVoice, ofs);
+		OUTPUT_VALUE(OriVolumePercent, ofs);
+		ofs << '\n';
+	}
 
 	OUTPUT_VALUE(AutoPlay, ofs);
 	OUTPUT_VALUE(WaitTimePerChar, ofs);
@@ -178,3 +184,5 @@ void Config::load_default(bool all)
 		SET_DEFAULT(SaveChange);
 	}
 }
+
+Config config;

@@ -1,6 +1,7 @@
 #include "Message.h"
-#include "RC.h"
-#include "INI.h"
+
+#include <RC/RC.h>
+#include <Utils/INI.h>
 
 #include <Windows.h>
 
