@@ -15,12 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\Hooked_dinput8.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\src\Hooked_dinput8.cpp">
+    <ClCompile Include="..\..\src\Hooked_DLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

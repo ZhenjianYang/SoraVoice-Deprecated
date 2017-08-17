@@ -15,12 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\Hooked_dsound.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\src\Hooked_dsound.cpp">
+    <ClCompile Include="..\..\src\Hooked_DLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
