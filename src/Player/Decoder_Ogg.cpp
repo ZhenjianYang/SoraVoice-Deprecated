@@ -32,7 +32,7 @@ bool Ogg::Open(const char* fileName) {
 	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
 
 	samples_read = 0;
-	samples_total = OggApi::ov_pcm_total((OggVorbis_File*)ovFile, -1);
+	samples_total = (int)OggApi::ov_pcm_total((OggVorbis_File*)ovFile, -1);
 
 	return true;
 }
