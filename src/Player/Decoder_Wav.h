@@ -4,7 +4,7 @@
 
 class Wav : public Decoder {
 public:
-	static constexpr char Attr[] = ".wav";
+	static constexpr char Attr[] = "wav";
 	Wav() = default;
 	virtual ~Wav() { destory(); }
 	virtual bool Open(const char* fileName) override;

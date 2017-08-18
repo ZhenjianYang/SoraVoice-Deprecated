@@ -4,7 +4,7 @@
 
 class Ogg : public Decoder {
 public:
-	static constexpr char Attr[] = ".ogg";
+	static constexpr char Attr[] = "ogg";
 
 	Ogg();
 	virtual ~Ogg() { destory(); }

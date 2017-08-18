@@ -270,7 +270,7 @@ static bool SearchGame(const char* iniName) {
 				}
 			}
 			buff_ao_vlist[j] = '\0';
-			SV.p_rnd_vlst = pvlst_rst;
+			SV.p_rnd_vlst = buff_ao_vlist;
 		}
 	}
 

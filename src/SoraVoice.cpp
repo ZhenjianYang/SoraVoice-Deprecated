@@ -129,7 +129,9 @@ static void playRandomVoice(const char* vlist) {
 		std::uniform_int_distribution<int> dist(0, vl.size() - 1);
 
 		LOG("Play Random voice.");
-		Player::Play(vl[dist(random)], Config.Volume);
+		int volume = Config.Volume * Config.OriVolumePercent / 120;
+		if (volume > Config.MAX_Volume) volume = Config.MAX_Volume;
+		Player::Play(vl[dist(random)], volume);
 	}
 }
 
