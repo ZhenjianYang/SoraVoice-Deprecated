@@ -18,7 +18,7 @@ NACKED void ASM::ldscn() {
 
 		push    dword ptr[SV.addrs.addr_ppscn];
 		push    eax;
-		push    dword ptr[esp + 0x38];
+		push    esi;
 		call    ASM_LoadScns;
 		test    eax, eax;
 

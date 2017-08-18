@@ -113,7 +113,7 @@ const AsmCode asm_codes[] = {
 	{ "dlgse",	(unsigned)ASM::dlgse,	0 },
 	{ "aup",	(unsigned)ASM::aup,		AsmCode::Jmp },
 	{ "scode",	(unsigned)ASM::scode,	AsmCode::Jmp },
-	{ "ldscn",	(unsigned)ASM::ldscn,	AsmCode::NotForce },
+	{ "ldscn",	(unsigned)ASM::ldscn,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "ldscnB",	(unsigned)ASM::ldscnB,	AsmCode::NotForce },
 	{ "ldscnB2",(unsigned)ASM::ldscnB,	AsmCode::NotForce },
 };
