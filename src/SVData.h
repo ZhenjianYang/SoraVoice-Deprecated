@@ -97,7 +97,7 @@ struct SVData
 	char Comment[64];
 };
 
-extern SVData sv;
+extern SVData SV;
 
 #ifdef __cplusplus
 }

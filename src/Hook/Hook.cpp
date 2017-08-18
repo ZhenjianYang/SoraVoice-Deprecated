@@ -19,7 +19,7 @@ static Hook::HookCallBack cbPresent;
 using CallGetDeviceState = decltype(Hooked_GetDeviceState)*;
 CallGetDeviceState pGetDeviceState = nullptr;
 static Hook::HookCallBack cbGetDeviceState;
-static void **pp_keys;
+static void **p_p_keys;
 
 long WINAPI Hooked_Present(void* pD3DD, void* pSourceRect, void* pDestRect, void* hDestWindowOverride, void* pDirtyRegion) {
 	if (cbPresent) {
@@ -33,7 +33,7 @@ long WINAPI Hooked_GetDeviceState(void* This, unsigned cbData, void* lpvData)
 	auto rst = pGetDeviceState(This, cbData, lpvData);
 
 	if (cbGetDeviceState && cbData == 0x100) {
-		if(pp_keys) *pp_keys = lpvData;
+		if(p_p_keys) *p_p_keys = lpvData;
 			
 		cbGetDeviceState();
 	}
@@ -60,7 +60,7 @@ void* Hook::Hook_D3D_Present(void* pD3DD, int dx9, HookCallBack callback)
 	return (void*)pPresent;
 }
 
-void* Hook::Hook_DI_GetDeviceState(void* pDID, HookCallBack callback, void** pp_keys)
+void* Hook::Hook_DI_GetDeviceState(void* pDID, HookCallBack callback, void** ppkeys)
 {
 	if(!pDID) return nullptr;
 
@@ -75,7 +75,7 @@ void* Hook::Hook_DI_GetDeviceState(void* pDID, HookCallBack callback, void** pp_
 		VirtualProtect(addrGetDeviceState, 4, oldProtect, &oldProtect2);
 
 		cbGetDeviceState = callback;
-		::pp_keys = pp_keys;
+		p_p_keys = ppkeys;
 	}
 	return (void*)pGetDeviceState;
 }

@@ -12,7 +12,7 @@ int SVCALL End() {
 	return EndSoraVoice();
 }
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID)
 {
 	if (DLL_PROCESS_ATTACH == fdwReason) {
 		::hDll = hinstDLL;

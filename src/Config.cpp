@@ -54,7 +54,7 @@ static bool _getValue(ArrayType &var, const KeyValue& kv, const char* name) {
 	return true;
 }
 
-bool Config::LoadConfig(const char * configFn, bool create)
+bool CConfig::LoadConfig(const char * configFn, bool create)
 {
 	load_default();
 
@@ -75,7 +75,7 @@ bool Config::LoadConfig(const char * configFn, bool create)
 		char* p = buff;
 		if (first) {
 			first = false;
-			if (p[0] == (char)0xEF && p[1] == (char)0xBB && p[2] == (char)0xBF) {
+			if (p[0] == (char)'\xEF' && p[1] == (char)'\xBB' && p[2] == (char)'\xBF') {
 				p += 3;
 			}
 		}
@@ -122,7 +122,7 @@ bool Config::LoadConfig(const char * configFn, bool create)
 	return true;
 }
 
-bool Config::SaveConfig(const char * configFn) const
+bool CConfig::SaveConfig(const char * configFn) const
 {
 	ofstream ofs(configFn);
 	if (!ofs) return false;
@@ -131,7 +131,7 @@ bool Config::SaveConfig(const char * configFn) const
 	OUTPUT_VALUE(Volume, ofs);
 	ofs << '\n';
 
-	if(sv.game == SVData::AO) {
+	if(SV.game == SVData::AO) {
 		OUTPUT_VALUE(OriginalVoice, ofs);
 		OUTPUT_VALUE(OriVolumePercent, ofs);
 		ofs << '\n';
@@ -160,7 +160,7 @@ bool Config::SaveConfig(const char * configFn) const
 	return true;
 }
 
-void Config::load_default(bool all)
+void CConfig::load_default(bool all)
 {
 	SET_DEFAULT(Volume);
 	SET_DEFAULT(OriginalVoice);
@@ -185,4 +185,4 @@ void Config::load_default(bool all)
 	}
 }
 
-Config config;
+CConfig Config;

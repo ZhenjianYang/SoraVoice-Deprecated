@@ -30,9 +30,9 @@ static HMODULE moduleHandle;
 static HMODULE dsd_dll;
 static HMODULE d3dx_dll;
 
-int StartSoraVoice(void* moduleHandle)
+int StartSoraVoice(void* mh)
 {
-	::moduleHandle = (HMODULE)moduleHandle;
+	::moduleHandle = (HMODULE)mh;
 
 	if(LoadRC() && SearchGame() && InitSV() && ApplyMemoryPatch()){
 		DoStart();
@@ -159,11 +159,11 @@ static bool SearchGame(const char* iniName) {
 	}
 	LOG("ini file opened. %d", ini.Num());
 
-	memset(&sv, 0, sizeof(sv));
+	memset(&SV, 0, sizeof(SV));
 
 	int game = 0;
 	const INI::Group *group = nullptr;
-	SVData::Jcs *jcs = (SVData::Jcs *)&sv.jcs;
+	SVData::Jcs *jcs = (SVData::Jcs *)&SV.jcs;
 	for (int i = 1; i < ini.Num(); i++) {
 		auto& tmp_group = ini.GetGroup(i);
 		LOG("Check data: %s", tmp_group.Name());
@@ -239,24 +239,24 @@ static bool SearchGame(const char* iniName) {
 	}
 	LOG("Data found, num = %d, name = %s, game = %d", group->Num(), group->Name(), game);
 
-	sv.game = (SVData::Game)game;
-	sv.sora = GAME_IS_SORA(sv.game);
-	sv.za = GAME_IS_ZA(sv.game);
-	sv.tits = GAME_IS_TITS(sv.game);
+	SV.game = (SVData::Game)game;
+	SV.sora = GAME_IS_SORA(SV.game);
+	SV.za = GAME_IS_ZA(SV.game);
+	SV.tits = GAME_IS_TITS(SV.game);
 
-	memcpy(&sv.scode, GAME_IS_ED6(sv.game) ? &scode_sora: &scode_za, sizeof(sv.scode));
+	memcpy(&SV.scode, GAME_IS_ED6(SV.game) ? &scode_sora: &scode_za, sizeof(SV.scode));
 
-	unsigned * const addrs = (decltype(addrs))&sv.addrs;
+	unsigned * const addrs = (decltype(addrs))&SV.addrs;
 	for (int j = 0; j < num_addr; j++) {
 		addrs[j] = GetUIntFromValue(group->GetValue(addr_list[j]));
 	}
 
 	const char* comment = group->GetValue(str_Comment.c_str());
 	if (comment) {
-		strncpy(sv.Comment, comment, sizeof(sv.Comment));
+		strncpy(SV.Comment, comment, sizeof(SV.Comment));
 	}
 
-	if (sv.game == SVData::AO) {
+	if (SV.game == SVData::AO) {
 		unique_ptr<RC> rc_vlist(RC::Get(rc_ao_vlist));
 		if (rc_vlist && rc_vlist->First()) {
 			int size = (int)rc_vlist->Size();
@@ -319,30 +319,30 @@ constexpr const char* STR_D3DX9_APIS[][2] = {
 
 bool InitSV()
 {
-	LOG("p = 0x%08X", (unsigned)&sv);
-	LOG("p->p_d3dd = 0x%08X", (unsigned)sv.addrs.p_d3dd);
-	LOG("p->p_did = 0x%08X", (unsigned)sv.addrs.p_did);
-	LOG("p->p_Hwnd = 0x%08X", (unsigned)sv.addrs.p_Hwnd);
-	LOG("p->p_pDS = 0x%08X", (unsigned)sv.addrs.p_pDS);
-	LOG("p->p_mute = 0x%08X", (unsigned)sv.addrs.p_mute);
-	LOG("p->p_keys = 0x%08X", (unsigned)sv.addrs.p_keys);
-	LOG("p->p_global = 0x%08X", (unsigned)sv.addrs.p_global);
-	LOG("p->p_rnd_vlst = 0x%08X", (unsigned)sv.p_rnd_vlst);
+	LOG("p = 0x%08X", (unsigned)&SV);
+	LOG("p->p_d3dd = 0x%08X", (unsigned)SV.addrs.p_d3dd);
+	LOG("p->p_did = 0x%08X", (unsigned)SV.addrs.p_did);
+	LOG("p->p_Hwnd = 0x%08X", (unsigned)SV.addrs.p_Hwnd);
+	LOG("p->p_pDS = 0x%08X", (unsigned)SV.addrs.p_pDS);
+	LOG("p->p_mute = 0x%08X", (unsigned)SV.addrs.p_mute);
+	LOG("p->p_keys = 0x%08X", (unsigned)SV.addrs.p_keys);
+	LOG("p->p_global = 0x%08X", (unsigned)SV.addrs.p_global);
+	LOG("p->p_rnd_vlst = 0x%08X", (unsigned)SV.p_rnd_vlst);
 
-	if (GAME_IS_ZA(sv.game) && sv.addrs.p_global) {
-		if (sv.addrs.p_d3dd) sv.addrs.p_d3dd = (void**)((char*)*sv.addrs.p_global + (int)sv.addrs.p_d3dd);
-		if (sv.addrs.p_did) sv.addrs.p_did = (void**)((char*)*sv.addrs.p_global + (int)sv.addrs.p_did);
-		if (sv.addrs.p_Hwnd) sv.addrs.p_Hwnd = (void**)((char*)*sv.addrs.p_global + (int)sv.addrs.p_Hwnd);
+	if (GAME_IS_ZA(SV.game) && SV.addrs.p_global) {
+		if (SV.addrs.p_d3dd) SV.addrs.p_d3dd = (void**)((char*)*SV.addrs.p_global + (int)SV.addrs.p_d3dd);
+		if (SV.addrs.p_did) SV.addrs.p_did = (void**)((char*)*SV.addrs.p_global + (int)SV.addrs.p_did);
+		if (SV.addrs.p_Hwnd) SV.addrs.p_Hwnd = (void**)((char*)*SV.addrs.p_global + (int)SV.addrs.p_Hwnd);
 
-		LOG("Adjuested p->p_d3dd = 0x%08X", (unsigned)sv.addrs.p_d3dd);
-		LOG("Adjuested p->p_did = 0x%08X", (unsigned)sv.addrs.p_did);
-		LOG("Adjuested p->p_Hwnd = 0x%08X", (unsigned)sv.addrs.p_Hwnd);
+		LOG("Adjuested p->p_d3dd = 0x%08X", (unsigned)SV.addrs.p_d3dd);
+		LOG("Adjuested p->p_did = 0x%08X", (unsigned)SV.addrs.p_did);
+		LOG("Adjuested p->p_Hwnd = 0x%08X", (unsigned)SV.addrs.p_Hwnd);
 	}
 
-	BIND(d3dd, sv.addrs.p_d3dd);
-	BIND(did, sv.addrs.p_did);
-	BIND(hWnd, sv.addrs.p_Hwnd);
-	BIND(pDS, sv.addrs.p_pDS);
+	BIND(d3dd, SV.addrs.p_d3dd);
+	BIND(did, SV.addrs.p_did);
+	BIND(hWnd, SV.addrs.p_Hwnd);
+	BIND(pDS, SV.addrs.p_pDS);
 
 	LOG("d3dd = 0x%08X", (unsigned)d3dd);
 	LOG("did = 0x%08X", (unsigned)did);
@@ -386,9 +386,9 @@ bool InitSV()
 
 	LOG("Now going to get d3dx Apis");
 
-	if (GAME_IS_DX9(sv.game)) {
+	if (GAME_IS_DX9(SV.game)) {
 		d3dx_dll = NULL;
-		d3dx_dll = LoadLibrary(GAME_IS_ZA(sv.game) ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
+		d3dx_dll = LoadLibrary(GAME_IS_ZA(SV.game) ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
 		if (d3dx_dll) {
 			for (auto api : STR_D3DX9_APIS) {
 				void* ptrApi = (void*)GetProcAddress(d3dx_dll, api[1]);
@@ -399,7 +399,7 @@ bool InitSV()
 			}
 		}//if (d3dx_dll) 
 		else {
-			LOG("Load %s failed.", GAME_IS_ZA(sv.game) ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
+			LOG("Load %s failed.", GAME_IS_ZA(SV.game) ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
 		}
 	}
 
@@ -458,7 +458,7 @@ bool InitSV()
 
 bool ApplyMemoryPatch()
 {
-	SVData::Jcs *jcs = (SVData::Jcs *)&sv.jcs;
+	SVData::Jcs *jcs = (SVData::Jcs *)&SV.jcs;
 	for (int j = 0; j < num_asm_codes; j++) {
 		unsigned addr_next = jcs[j].next;
 		unsigned addr_type = asm_codes[j].flags;
@@ -500,8 +500,8 @@ bool ApplyMemoryPatch()
 		LOG("change code at : 0x%08X", (unsigned)from);
 		DWORD dwProtect, dwProtect2;
 		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &dwProtect)) {
-			if (!sv.addrs.p_mute && add_pmute) {
-				sv.addrs.p_mute = *(void**)(from + add_pmute);
+			if (!SV.addrs.p_mute && add_pmute) {
+				SV.addrs.p_mute = *(void**)(from + add_pmute);
 			}
 			std::memcpy(from, buff, len_op);
 			VirtualProtect(from, len_op, dwProtect, &dwProtect2);
@@ -511,13 +511,13 @@ bool ApplyMemoryPatch()
 		}
 	}
 
-	if (!sv.addrs.p_mute) sv.addrs.p_mute = &fake_mute;
+	if (!SV.addrs.p_mute) SV.addrs.p_mute = &fake_mute;
 	return true;
 }
 
 bool DoStart()
 {
-	if (GAME_IS_ED6(sv.game)) {
+	if (GAME_IS_ED6(SV.game)) {
 		return SoraVoice::Init();
 	}
 	else {

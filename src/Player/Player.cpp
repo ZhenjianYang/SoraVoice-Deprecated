@@ -38,56 +38,52 @@ using PlayInfo = struct {
 };
 using PlayQueue = std::queue<PlayInfo>;
 
-namespace PL {
-	static Status status = Status::Stoped;
+static Status PL_status = Status::Stoped;
 
-	static PlayID playID = InvalidPlayID;
-	static std::string fileName;
-	static Decoder* decoder = nullptr;
+static PlayID PL_playID = InvalidPlayID;
+static std::string PL_fileName;
+static Decoder* PL_decoder = nullptr;
 
-	static bool stop = false;
-	static bool ended = false;
+static bool PL_stop = false;
+static bool PL_ended = false;
 
-	static IDirectSound* pDSD = nullptr;
+static IDirectSound* PL_pDSD = nullptr;
 
-	static StopCallBack stopCallBack = nullptr;
-	static std::mutex mt_stopCallBack;
+static StopCallBack PL_stopCallBack = nullptr;
+static std::mutex PL_mt_stopCallBack;
 
-	static int volume = MaxVolume;
+static int PL_volume = MaxVolume;
 
-	static IDirectSoundBuffer *pDSBuff = nullptr;
-	static std::mutex mt_DSBuff;
-	static int buffSize = 0;
-	static int buffIndex = 0;
-	static int endPos = MaxVolume;
-	static int curPos = 0;
-	static int prePos = 0;
+static IDirectSoundBuffer *PL_pDSBuff = nullptr;
+static std::mutex PL_mt_DSBuff;
+static int PL_buffSize = 0;
+static int PL_buffIndex = 0;
+static int PL_endPos = MaxVolume;
+static int PL_curPos = 0;
+static int PL_prePos = 0;
 
-	static WAVEFORMATEX waveFormatEx {};
-	static DSBUFFERDESC dSBufferDesc {};
+static WAVEFORMATEX PL_waveFormatEx{};
+static DSBUFFERDESC PL_dSBufferDesc{};
 
-	static PlayQueue playQueue;
-	static std::mutex mt_playQueue;
+static PlayQueue PL_playQueue;
+static std::mutex PL_mt_playQueue;
 
-	static HANDLE hEvent_Playing;
-	static HANDLE hEvent_End;
-	static std::thread th_playing;
+static HANDLE PL_hEvent_Playing;
+static HANDLE PL_hEvent_End;
+static std::thread PL_th_playing;
 
-	static struct {
-		Ogg ogg;
-		Wav wav;
-	} _Decoders;
-	static struct {
-		Decoder* const decoder;
-		std::string attr;
-	} decoders[] = {
-	{ &_Decoders.ogg, Ogg::Attr},
-	{ &_Decoders.wav, Wav::Attr}
-	};
-	static Decoder *DFT_Decoder = &_Decoders.ogg;
-}
-
-using namespace PL;
+static struct {
+	Ogg ogg;
+	Wav wav;
+} _Decoders;
+static struct {
+	Decoder* const decoder;
+	std::string attr;
+} Decoders[] = {
+	{ &_Decoders.ogg, Ogg::Attr },
+	{ &_Decoders.wav, Wav::Attr }
+};
+static Decoder *DFT_Decoder = &_Decoders.ogg;
 
 static void thread_Playing();
 
@@ -97,66 +93,66 @@ static bool startPlay();
 static int playing();
 static void finishPlay();
 
-static inline int TO_DSVOLUME(int volume);
+static inline int toDSVolume(int volume);
 static inline Decoder* getDecoderByFileName(const std::string& fileName);
 static inline PlayID generatePlayID();
 
 Status Player::GetStatus() {
-	return status;
+	return PL_status;
 }
 
 PlayID Player::GetCurrentPlayID() {
-	return playID;
+	return PL_playID;
 }
 
 const char* Player::GetCurrentFile() {
-	return fileName.empty() ? nullptr : fileName.c_str();
+	return PL_fileName.empty() ? nullptr : PL_fileName.c_str();
 }
 
 PlayID Player::Play(const char* fileName, int volume, Decoder* decoder /*= nullptr*/) {
 	PlayID playID = generatePlayID();
 	if(!decoder) decoder = getDecoderByFileName(fileName);
 	{
-		LockGuard lock(mt_playQueue);
-		playQueue.push({ playID, decoder, fileName });
+		LockGuard lock(PL_mt_playQueue);
+		PL_playQueue.push({ playID, decoder, fileName });
 	}
-	PL::volume = volume;
-	stop = false;
-	SetEvent(hEvent_Playing);
+	PL_volume = volume;
+	PL_stop = false;
+	SetEvent(PL_hEvent_Playing);
 	return playID;
 }
 
 void Player::Stop() {
-	stop = true;
+	PL_stop = true;
 }
 
 void Player::SetVolume(int volume /*= MaxVolume*/) {
-	PL::volume = volume;
+	PL_volume = volume;
 	{
-		LockGuard lock(mt_DSBuff);
-		if(pDSBuff)
-			pDSBuff->SetVolume(TO_DSVOLUME(volume));
+		LockGuard lock(PL_mt_DSBuff);
+		if(PL_pDSBuff)
+			PL_pDSBuff->SetVolume(toDSVolume(volume));
 	}
 };
 
 void Player::SetStopCallBack(StopCallBack stopCallBack /*= nullptr*/) {
-	LockGuard lock(mt_stopCallBack);
-	PL::stopCallBack = stopCallBack;
+	LockGuard lock(PL_mt_stopCallBack);
+	PL_stopCallBack = stopCallBack;
 }
 
 StopCallBack Player::GetStopCallBack() {
-	LockGuard lock(mt_stopCallBack);
-	return stopCallBack;
+	LockGuard lock(PL_mt_stopCallBack);
+	return PL_stopCallBack;
 }
 
 bool Player::Init(void * pDSD, StopCallBack stopCallBack)
 {
 	pDSD = (decltype(pDSD))pDSD;
-	PL::stopCallBack = stopCallBack;
-	hEvent_Playing = CreateEvent(NULL, FALSE, FALSE, NULL);
-	hEvent_End = CreateEvent(NULL, FALSE, FALSE, NULL);
-	th_playing = std::thread(thread_Playing);
-	th_playing.detach();
+	PL_stopCallBack = stopCallBack;
+	PL_hEvent_Playing = CreateEvent(NULL, FALSE, FALSE, NULL);
+	PL_hEvent_End = CreateEvent(NULL, FALSE, FALSE, NULL);
+	PL_th_playing = std::thread(thread_Playing);
+	PL_th_playing.detach();
 	Ogg::SetOggApis(ApiPack::GetApi(STR_ov_open_callbacks),
 					ApiPack::GetApi(STR_ov_info),
 					ApiPack::GetApi(STR_ov_read),
@@ -168,18 +164,18 @@ bool Player::Init(void * pDSD, StopCallBack stopCallBack)
 
 bool Player::End()
 {
-	ended = true;
+	PL_ended = true;
 	Stop();
 	{
-		LockGuard lock(mt_playQueue);
-		while (!playQueue.empty()) playQueue.pop();
+		LockGuard lock(PL_mt_playQueue);
+		while (!PL_playQueue.empty()) PL_playQueue.pop();
 	}
-	SetEvent(hEvent_Playing);
-	WaitForSingleObject(hEvent_End, DELTA_TIME * 3);
+	SetEvent(PL_hEvent_Playing);
+	WaitForSingleObject(PL_hEvent_End, DELTA_TIME * 3);
 	return true;
 }
 
-int TO_DSVOLUME(int volume) {
+int toDSVolume(int volume) {
 	return (volume) == 0 ?
 		DSBVOLUME_MIN :
 		(int)(2000 * std::log10(double(volume) / MaxVolume));
@@ -187,7 +183,7 @@ int TO_DSVOLUME(int volume) {
 
 Decoder* getDecoderByFileName(const std::string& fileName) {
 	std::string attr = fileName.substr(fileName.rfind('.') + 1);
-	for(auto da : decoders) {
+	for(auto da : Decoders) {
 		if(attr == da.attr) {
 			return da.decoder;
 		}
@@ -202,30 +198,30 @@ PlayID generatePlayID() {
 
 void thread_Playing()
 {
-	while (!ended)
+	while (!PL_ended)
 	{
-		DWORD waitResult = WaitForSingleObject(hEvent_Playing, INFINITE);
+		DWORD waitResult = WaitForSingleObject(PL_hEvent_Playing, INFINITE);
 		if (waitResult != WAIT_OBJECT_0) continue;
 
-		status = Status::Playing;
-		playID = InvalidPlayID;
-		fileName.clear();
+		PL_status = Status::Playing;
+		PL_playID = InvalidPlayID;
+		PL_fileName.clear();
 
 		std::queue<PlayID> forceStop;
 		{
-			LockGuard lock(mt_playQueue);
-			while (playQueue.size() > 1)
+			LockGuard lock(PL_mt_playQueue);
+			while (PL_playQueue.size() > 1)
 			{
-				forceStop.push(playQueue.front().playID);
-				playQueue.pop();
+				forceStop.push(PL_playQueue.front().playID);
+				PL_playQueue.pop();
 			}
 
-			if (!playQueue.empty())
+			if (!PL_playQueue.empty())
 			{
-				playID = playQueue.front().playID;
-				fileName = std::move(playQueue.front().fileNm);
-				decoder = playQueue.front().decoder;
-				playQueue.pop();
+				PL_playID = PL_playQueue.front().playID;
+				PL_fileName = std::move(PL_playQueue.front().fileNm);
+				PL_decoder = PL_playQueue.front().decoder;
+				PL_playQueue.pop();
 			}
 		}
 
@@ -239,15 +235,15 @@ void thread_Playing()
 			}
 		}
 
-		if (playID != InvalidPlayID) {
-			bool rst = openSoundFile(fileName)
+		if (PL_playID != InvalidPlayID) {
+			bool rst = openSoundFile(PL_fileName)
 				&& initDSBuff()
 				&& startPlay();
 
 			if (rst) {
 				int remain = 0;
-				while (!stop && playQueue.empty() && (remain = playing())) {
-					int delta = remain * Clock::TimeUnitsPerSecond / waveFormatEx.nAvgBytesPerSec + 1;
+				while (!PL_stop && PL_playQueue.empty() && (remain = playing()) > 0) {
+					int delta = remain * Clock::TimeUnitsPerSecond / PL_waveFormatEx.nAvgBytesPerSec + 1;
 					if (delta > DELTA_TIME) delta = DELTA_TIME;
 					Clock::Sleep(delta);
 				}
@@ -260,7 +256,7 @@ void thread_Playing()
 			if (!rst) {
 				stopType = StopType::Error;
 			}
-			else if (stop || !playQueue.empty()) {
+			else if (PL_stop || !PL_playQueue.empty()) {
 				stopType = StopType::ForceStop;
 			}
 			else {
@@ -269,21 +265,21 @@ void thread_Playing()
 
 			StopCallBack tmp_stopCallBack = GetStopCallBack();
 			if (tmp_stopCallBack) {
-				tmp_stopCallBack(playID, stopType);
+				tmp_stopCallBack(PL_playID, stopType);
 			}
 		} //if (play.playID != InvalidPlayID)
 
-		fileName.clear();
-		playID = InvalidPlayID;
-		status = Status::Stoped;
+		PL_fileName.clear();
+		PL_playID = InvalidPlayID;
+		PL_status = Status::Stoped;
 	} //while (!ended)
-	SetEvent(hEvent_End);
+	SetEvent(PL_hEvent_End);
 }
 
 bool openSoundFile(const std::string& fileName){
 	LOG("Open file %s ...", fileName.c_str());
-	LOG("%s File.", decoder == &_Decoders.ogg ? "ogg" : "wav");
-	if (!decoder->Open(fileName.c_str())) {
+	LOG("%s File.", PL_decoder == &_Decoders.ogg ? "ogg" : "wav");
+	if (!PL_decoder->Open(fileName.c_str())) {
 		LOG("Open file as sound file failed!");
 		return false;
 	}
@@ -291,39 +287,39 @@ bool openSoundFile(const std::string& fileName){
 		"    Channels      : %d\n"
 		"    SamplesPerSec : %d\n"
 		"    Total Time  : %d ms",
-		decoder->WaveFormat.nChannels,
-		decoder->WaveFormat.nSamplesPerSec,
-		decoder->SamplesTotal() * 1000 / decoder->WaveFormat.nSamplesPerSec
+		PL_decoder->WaveFormat.nChannels,
+		PL_decoder->WaveFormat.nSamplesPerSec,
+		PL_decoder->SamplesTotal() * 1000 / PL_decoder->WaveFormat.nSamplesPerSec
 	);
 
-	waveFormatEx.wFormatTag = decoder->WaveFormat.wFormatTag;
-	waveFormatEx.nChannels = decoder->WaveFormat.nChannels;
-	waveFormatEx.nSamplesPerSec = decoder->WaveFormat.nSamplesPerSec;
-	waveFormatEx.wBitsPerSample = decoder->WaveFormat.wBitsPerSample;
-	waveFormatEx.nBlockAlign = decoder->WaveFormat.nBlockAlign;
-	waveFormatEx.nAvgBytesPerSec = decoder->WaveFormat.nAvgBytesPerSec;
-	waveFormatEx.cbSize = 0;
+	PL_waveFormatEx.wFormatTag = PL_decoder->WaveFormat.wFormatTag;
+	PL_waveFormatEx.nChannels = PL_decoder->WaveFormat.nChannels;
+	PL_waveFormatEx.nSamplesPerSec = PL_decoder->WaveFormat.nSamplesPerSec;
+	PL_waveFormatEx.wBitsPerSample = PL_decoder->WaveFormat.wBitsPerSample;
+	PL_waveFormatEx.nBlockAlign = PL_decoder->WaveFormat.nBlockAlign;
+	PL_waveFormatEx.nAvgBytesPerSec = PL_decoder->WaveFormat.nAvgBytesPerSec;
+	PL_waveFormatEx.cbSize = 0;
 
 	return true;
 }
 
 bool initDSBuff(){
-	memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
-	dSBufferDesc.dwSize = sizeof(dSBufferDesc);
-	dSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME;
-	dSBufferDesc.dwBufferBytes = waveFormatEx.nBlockAlign * SAMPLES_BUF * NUM_BUF;
-	dSBufferDesc.dwReserved = 0;
-	dSBufferDesc.lpwfxFormat = &waveFormatEx;
-	dSBufferDesc.guid3DAlgorithm = { 0 };
+	memset(&PL_dSBufferDesc, 0, sizeof(PL_dSBufferDesc));
+	PL_dSBufferDesc.dwSize = sizeof(PL_dSBufferDesc);
+	PL_dSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME;
+	PL_dSBufferDesc.dwBufferBytes = PL_waveFormatEx.nBlockAlign * SAMPLES_BUF * NUM_BUF;
+	PL_dSBufferDesc.dwReserved = 0;
+	PL_dSBufferDesc.lpwfxFormat = &PL_waveFormatEx;
+	PL_dSBufferDesc.guid3DAlgorithm = { 0 };
 
-	buffSize = dSBufferDesc.dwBufferBytes / NUM_BUF;
+	PL_buffSize = PL_dSBufferDesc.dwBufferBytes / NUM_BUF;
 
-	buffIndex = 0;
-	endPos = INVALID_POS;
-	curPos = 0;
-	prePos = 0;
+	PL_buffIndex = 0;
+	PL_endPos = INVALID_POS;
+	PL_curPos = 0;
+	PL_prePos = 0;
 
-	if (DS_OK != pDSD->CreateSoundBuffer(&dSBufferDesc, &pDSBuff, NULL)) {
+	if (DS_OK != PL_pDSD->CreateSoundBuffer(&PL_dSBufferDesc, &PL_pDSBuff, NULL)) {
 		LOG("Create sound buff failed!");
 		return false;
 	}
@@ -334,75 +330,75 @@ bool initDSBuff(){
 bool startPlay(){
 	void *AP1, *AP2;
 	DWORD AB1, AB2;
-	if (DS_OK == pDSBuff->Lock(0, buffSize * (NUM_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
-		decoder->Read(AP1, AB1);
-		if (AP2) decoder->Read(AP2, AB2);
-		pDSBuff->Unlock(AP1, AB1, AP2, AB2);
+	if (DS_OK == PL_pDSBuff->Lock(0, PL_buffSize * (NUM_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
+		PL_decoder->Read(AP1, AB1);
+		if (AP2) PL_decoder->Read(AP2, AB2);
+		PL_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 	}
 	else {
-		pDSBuff->Release();
+		PL_pDSBuff->Release();
 		LOG("Write first data failed!");
 		return 0;
 	}
 	LOG("First data wroten");
 
-	pDSBuff->SetVolume(TO_DSVOLUME(volume));
-	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
+	PL_pDSBuff->SetVolume(toDSVolume(PL_volume));
+	PL_pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
 
 	LOG("Playing...");
 	return 1;
 }
 
 int playing() {
-	pDSBuff->GetCurrentPosition((LPDWORD)&curPos, NULL);
-	if(curPos < prePos) {
-		buffIndex = 0;
-		if(endPos != INVALID_POS) endPos -= dSBufferDesc.dwBufferBytes;
+	PL_pDSBuff->GetCurrentPosition((LPDWORD)&PL_curPos, NULL);
+	if (PL_curPos < PL_prePos) {
+		PL_buffIndex = 0;
+		if (PL_endPos != INVALID_POS) PL_endPos -= PL_dSBufferDesc.dwBufferBytes;
 	}
-	prePos = curPos;
-	if(curPos > endPos) {
+	PL_prePos = PL_curPos;
+	if (PL_curPos > PL_endPos) {
 		return 0;
 	}
-	else if(curPos > buffIndex * buffSize) {
-		const int buffReadIndex = (buffIndex + NUM_BUF - 1) % NUM_BUF;
+	else if (PL_curPos > PL_buffIndex * PL_buffSize) {
+		const int buffReadIndex = (PL_buffIndex + NUM_BUF - 1) % NUM_BUF;
 
-		const int start = buffReadIndex * buffSize;
+		const int start = buffReadIndex * PL_buffSize;
 		const int size = buffReadIndex == NUM_BUF - 1 ?
-			dSBufferDesc.dwBufferBytes - (NUM_BUF - 1) * buffSize
-			: buffSize;
+			PL_dSBufferDesc.dwBufferBytes - (NUM_BUF - 1) * PL_buffSize
+			: PL_buffSize;
 
 		void *AP1, *AP2;
 		DWORD AB1, AB2;
 		int read = 0;
 
-		if (DS_OK == pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
-			read = decoder->Read(AP1, AB1);
-			if (AP2) read += decoder->Read(AP2, AB2);
-			pDSBuff->Unlock(AP1, AB1, AP2, AB2);
+		if (DS_OK == PL_pDSBuff->Lock(start, size, &AP1, &AB1, &AP2, &AB2, 0)) {
+			read = PL_decoder->Read(AP1, AB1);
+			if (AP2) read += PL_decoder->Read(AP2, AB2);
+			PL_pDSBuff->Unlock(AP1, AB1, AP2, AB2);
 		}
 
-		if (endPos == INVALID_POS && read < size) {
-			endPos = start + read;
-			if (endPos < curPos) endPos += dSBufferDesc.dwBufferBytes;
+		if (PL_endPos == INVALID_POS && read < size) {
+			PL_endPos = start + read;
+			if (PL_endPos < PL_curPos) PL_endPos += PL_dSBufferDesc.dwBufferBytes;
 		}
-		buffIndex += 1;
+		PL_buffIndex += 1;
 	}
 
-	return endPos == INVALID_POS ?
-			dSBufferDesc.dwBufferBytes - curPos % buffSize
-			: endPos - curPos;
+	return PL_endPos == INVALID_POS ?
+		PL_dSBufferDesc.dwBufferBytes - PL_curPos % PL_buffSize
+		: PL_endPos - PL_curPos;
 }
 
 void finishPlay() {
-	decoder->Close();
-	decoder = nullptr;
+	PL_decoder->Close();
+	PL_decoder = nullptr;
 
 	{
-		LockGuard lock(mt_DSBuff);
-		if (pDSBuff) {
-			pDSBuff->Stop();
-			pDSBuff->Release();
-			pDSBuff = NULL;
+		LockGuard lock(PL_mt_DSBuff);
+		if (PL_pDSBuff) {
+			PL_pDSBuff->Stop();
+			PL_pDSBuff->Release();
+			PL_pDSBuff = NULL;
 		}
 	}
 }

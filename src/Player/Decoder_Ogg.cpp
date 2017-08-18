@@ -25,10 +25,10 @@ bool Ogg::Open(const char* fileName) {
 	vorbis_info* info = OggApi::ov_info((OggVorbis_File*)ovFile, -1);
 
 	waveFormat.wFormatTag = 1;
-	waveFormat.nChannels = info->channels;
+	waveFormat.nChannels = (u16)info->channels;
 	waveFormat.nSamplesPerSec = info->rate;
 	waveFormat.wBitsPerSample = 16;
-	waveFormat.nBlockAlign = info->channels * 16 / 8;
+	waveFormat.nBlockAlign = (u16)(info->channels * 16 / 8);
 	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
 
 	samples_read = 0;
@@ -50,9 +50,9 @@ int Ogg::Read(void * buff, int bytes) {
 	char* tBuff = (char*)buff;
 
 	while (read < request) {
-		int request = bytes - read;
-		if(request > block) request = block;
-		int tread = OggApi::ov_read((OggVorbis_File*)ovFile, tBuff, request, 0, 2, 1, &bitstream);
+		int req = bytes - read;
+		if(req > block) req = block;
+		int tread = OggApi::ov_read((OggVorbis_File*)ovFile, tBuff, req, 0, 2, 1, &bitstream);
 		if (tread <= 0) break;
 
 		tBuff += tread;

@@ -13,7 +13,7 @@
 										static constexpr const char* DFT_##name = dft;\
 										DEFINE_CONFIG_COMMON(name);
 
-struct Config
+struct CConfig
 {
 	static constexpr int ShowInfo_Off = 0;
 	static constexpr int ShowInfo_On = 1;
@@ -52,13 +52,13 @@ struct Config
 	bool SaveConfig(const char* configFn) const;
 
 	void Reset(bool all = false) { load_default(all); }
-	Config() { load_default(); }
-	Config(const char* configFn, bool create = false) { 
-		LoadConfig(configFn, false);
+	CConfig() { load_default(); }
+	CConfig(const char* configFn, bool create = false) { 
+		LoadConfig(configFn, create);
 	}
 private:
 	void load_default(bool all = true);
 };
 
-extern Config config;
+extern CConfig Config;
 

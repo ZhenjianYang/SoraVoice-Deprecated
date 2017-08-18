@@ -1,3 +1,3 @@
 #include "SVData.h"
 
-SVData sv;
+SVData SV;

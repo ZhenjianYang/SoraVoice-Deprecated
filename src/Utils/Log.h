@@ -9,7 +9,7 @@
 #include <cstdio>
 
 #ifndef LOG_FILENAME
-#define LOG_FILENAME "voice/za_voice.log"
+#define LOG_FILENAME "voice/ed_voice.log"
 #endif
 
 #ifndef LOG_NOFILEOUT
@@ -31,7 +31,7 @@
 #endif
 
 #define LOG(format, ...) 	{\
-		using _Clock = std::chrono::high_resolution_clock;\
+		using _Clock = std::chrono::system_clock;\
 		auto _now = _Clock::now();\
 		auto _millis_part = std::chrono::duration_cast<std::chrono::milliseconds>(\
 				_now.time_since_epoch()).count() % 1000;\

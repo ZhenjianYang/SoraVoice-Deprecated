@@ -124,9 +124,9 @@ bool CMessage::LoadMessage(const char * resName)
 	SET_MESSAGE_CMT(top, EnableKeys_ZA);
 	SET_MESSAGE_CMT(top, EnableKeys_Sora);
 
-	CMessage::_Message.Title = GAME_IS_ZA(sv.game) ? CMessage::_Message.Title_ZA :
+	CMessage::_Message.Title = GAME_IS_ZA(SV.game) ? CMessage::_Message.Title_ZA :
 									CMessage::_Message.Title_Sora;
-	CMessage::_Message.CMT.EnableKeys = SVData::AO == sv.game ? CMessage::_Message.CMT.EnableKeys_ZA :
+	CMessage::_Message.CMT.EnableKeys = SVData::AO == SV.game ? CMessage::_Message.CMT.EnableKeys_ZA :
 									CMessage::_Message.CMT.EnableKeys_Sora;
 
 	return true;
