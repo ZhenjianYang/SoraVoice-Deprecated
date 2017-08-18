@@ -237,7 +237,7 @@ void Draw::DrawInfos() {
 		if (info->format & DT_BOTTOM) rect_shadow.bottom += DR_shadow;
 		else rect_shadow.top += DR_shadow;
 
-		unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (0xFF << 24);
+		unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (0xFF000000 & info->color);
 
 		DR_d3d->DrawString(info->text, -1, &rect_shadow, info->format, color_shadow);
 	}
