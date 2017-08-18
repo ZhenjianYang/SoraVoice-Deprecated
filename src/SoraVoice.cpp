@@ -610,8 +610,8 @@ void SoraVoice::Show()
 		Draw::RemoveInfo(InfoType::Dead);
 	}
 
-	if (aup->count_ch == 1) {
-		aup->count_ch++;
+	if (SV.status.first_text) {
+		SV.status.first_text = 0;
 		if (Config.ShowInfo == CConfig::ShowInfo_WithMark && isAutoPlaying()) {
 			AddInfo(InfoType::AutoPlayMark, Draw::ShowTimeInfinity, Config.FontColor ,Message.AutoPlayMark);
 		}
@@ -633,7 +633,7 @@ void SoraVoice::Show()
 		}
 		else if (aup->wait && !aup->time_autoplay) {
 			aup->time_autoplay = aup->time_textbeg
-				+ (aup->count_ch - 1) * Config.WaitTimePerChar + Config.WaitTimeDialog - TIME_PREC / 2;
+				+ (aup->count_ch * Config.WaitTimePerChar + Config.WaitTimeDialog - TIME_PREC) / 2;
 
 			SV.order.disableDududu = 0;
 		}

@@ -76,6 +76,7 @@ NACKED void ASM::text() {
 		jne     short text_return;
 		mov     eax, dword ptr[SV.rcd.now];
 		mov     dword ptr[SV.rcd.time_textbeg], eax;
+		mov     dword ptr[SV.status.first_text], 1;
 		jmp     short text_return;
 
 	jcode:

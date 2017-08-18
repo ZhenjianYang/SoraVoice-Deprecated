@@ -45,6 +45,7 @@ struct SVData
 		unsigned scode;
 
 		unsigned playingOri;
+		unsigned first_text;
 	} status;
 
 	struct Order {
