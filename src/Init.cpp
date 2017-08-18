@@ -353,51 +353,6 @@ bool InitSV()
 	LOG("Hwnd = 0x%08X", hWnd);
 	LOG("pDS = 0x%08X", pDS);
 
-	{
-		LOG("Now going to load vorbisfile.dll ...");
-
-		void* ov_open_callbacks = nullptr;
-		void* ov_info = nullptr;
-		void* ov_read = nullptr;
-		void* ov_clear = nullptr;
-		void* ov_pcm_total = nullptr;
-
-		HMODULE ogg_dll = NULL;
-		for (auto dir : DllDirs) {
-			SetDllDirectoryA(dir);
-			for (auto filename : OvDllNames) {
-				ogg_dll = LoadLibraryA(filename);
-				if (ogg_dll) break;
-			}
-		}
-		SetDllDirectoryA(NULL);
-		if (ogg_dll) {
-			ov_open_callbacks = (void*)GetProcAddress(ogg_dll, STR_ov_open_callbacks);
-			ov_info = (void*)GetProcAddress(ogg_dll, STR_ov_info);
-			ov_read = (void*)GetProcAddress(ogg_dll, STR_ov_read);
-			ov_clear = (void*)GetProcAddress(ogg_dll, STR_ov_clear);
-			ov_pcm_total = (void*)GetProcAddress(ogg_dll, STR_ov_pcm_total);
-		}
-
-		LOG("Loaded ov_open_callbacks = 0x%08X", ov_open_callbacks);
-		LOG("Loaded ov_info = 0x%08X", ov_info);
-		LOG("Loaded ov_read = 0x%08X", ov_read);
-		LOG("Loaded ov_clear = 0x%08X", ov_clear);
-		LOG("Loaded ov_pcm_total = 0x%08X", ov_pcm_total);
-
-		if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear || !ov_pcm_total) {
-			LOG("Load ogg apis failed.");
-			return false;
-		}
-		else {
-			ApiPack::AddApi(STR_ov_open_callbacks, ov_open_callbacks);
-			ApiPack::AddApi(STR_ov_info, ov_info);
-			ApiPack::AddApi(STR_ov_read, ov_read);
-			ApiPack::AddApi(STR_ov_clear, ov_clear);
-			ApiPack::AddApi(STR_ov_pcm_total, ov_pcm_total);
-		}
-	}
-
 	if (!pDS) {
 		LOG("pDS is nullptr, now going to creat DirectSoundDevice");
 		if (!hWnd) {
@@ -449,6 +404,54 @@ bool InitSV()
 		}//if (d3dx_dll) 
 		else {
 			LOG("Load %s failed.", GAME_IS_ZA(sv.game) ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
+		}
+	}
+
+	{
+		LOG("Now going to load vorbisfile.dll ...");
+
+		void* ov_open_callbacks = nullptr;
+		void* ov_info = nullptr;
+		void* ov_read = nullptr;
+		void* ov_clear = nullptr;
+		void* ov_pcm_total = nullptr;
+
+		HMODULE ogg_dll = NULL;
+		for (auto dir : DllDirs) {
+			SetDllDirectoryA(dir);
+			for (auto filename : OvDllNames) {
+				ogg_dll = LoadLibraryA(filename);
+				if (ogg_dll) break;
+			}
+		}
+		SetDllDirectoryA(NULL);
+		if (ogg_dll) {
+			ov_open_callbacks = (void*)GetProcAddress(ogg_dll, STR_ov_open_callbacks);
+			ov_info = (void*)GetProcAddress(ogg_dll, STR_ov_info);
+			ov_read = (void*)GetProcAddress(ogg_dll, STR_ov_read);
+			ov_clear = (void*)GetProcAddress(ogg_dll, STR_ov_clear);
+			ov_pcm_total = (void*)GetProcAddress(ogg_dll, STR_ov_pcm_total);
+		}
+
+		LOG("Loaded ov_open_callbacks = 0x%08X", ov_open_callbacks);
+		LOG("Loaded ov_info = 0x%08X", ov_info);
+		LOG("Loaded ov_read = 0x%08X", ov_read);
+		LOG("Loaded ov_clear = 0x%08X", ov_clear);
+		LOG("Loaded ov_pcm_total = 0x%08X", ov_pcm_total);
+
+		if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear || !ov_pcm_total) {
+			LOG("Load ogg apis failed.");
+			if(ogg_dll) {
+				FreeLibrary(ogg_dll);
+			}
+			return false;
+		}
+		else {
+			ApiPack::AddApi(STR_ov_open_callbacks, ov_open_callbacks);
+			ApiPack::AddApi(STR_ov_info, ov_info);
+			ApiPack::AddApi(STR_ov_read, ov_read);
+			ApiPack::AddApi(STR_ov_clear, ov_clear);
+			ApiPack::AddApi(STR_ov_pcm_total, ov_pcm_total);
 		}
 	}
 
