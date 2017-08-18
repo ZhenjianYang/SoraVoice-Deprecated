@@ -129,7 +129,6 @@
     <ClCompile Include="..\..\src\Utils\ApiPack.cpp" />
     <ClCompile Include="..\..\src\Utils\Clock.cpp" />
     <ClCompile Include="..\..\src\Utils\INI.cpp" />
-    <ClCompile Include="..\..\src\Utils\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\RC\ed_voice.rc" />

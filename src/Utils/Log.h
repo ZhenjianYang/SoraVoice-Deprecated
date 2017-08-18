@@ -1,78 +1,47 @@
-#ifndef __LOG_H__
-#define __LOG_H__
+#pragma once
 
-#define LOG_OUT_FILE 0x01
-#define LOG_OUT_STDLOG 0x02
-#define LOG_OUT_STDOUT 0x04
-#define LOG_OUT_ALL (LOG_OUT_FILE | LOG_OUT_STDLOG | LOG_OUT_STDOUT)
-#define LOG_OUT_DFT (LOG_OUT_FILE | LOG_OUT_STDLOG)
+#ifndef LOG
+#ifdef LOG_NOLOG
+#define LOG(...)
+#else
+#include <chrono>
+#include <ctime>
+#include <cstdio>
 
-#define LOG_TYPE_INFO 0x10
-#define LOG_TYPE_DEBUG 0x20
-#define LOG_TYPE_ERROR 0x40
-#define LOG_TYPE_ALL (LOG_TYPE_INFO | LOG_TYPE_DEBUG | LOG_TYPE_ERROR)
-#define LOG_TYPE_DFT (LOG_TYPE_INFO | LOG_TYPE_ERROR)
-#define LOG_TYPE_RUNMODE (LOG_TYPE_INFO | LOG_TYPE_ERROR)
-#define LOG_TYPE_DEBUGMODE LOG_TYPE_ALL
+#ifndef LOG_FILENAME
+#define LOG_FILENAME "voice/za_voice.log"
+#endif
 
-#define LOG_PARAM_ALL (LOG_OUT_ALL | LOG_TYPE_ALL)
-#define LOG_PARAM_DFT (LOG_OUT_DFT | LOG_TYPE_DFT)
-#define LOG_PARAM_RUNMODE (LOG_OUT_DFT | LOG_TYPE_RUNMODE)
-#define LOG_PARAM_DEBUGMODE (LOG_OUT_DFT | LOG_TYPE_DEBUGMODE)
+#ifndef LOG_NOFILEOUT
+#define LOG_TO_FILE(format, ...) \
+		auto _f = std::fopen(LOG_FILENAME, "a");\
+		std::fprintf(_f, "[%04d-%02d-%02d %02d:%02d:%02d.%03d]" format "\n", _t->tm_year + 1900, _t->tm_mon + 1, _t->tm_mday,\
+						_t->tm_hour, _t->tm_min, _t->tm_sec, (int)_millis_part, ##__VA_ARGS__);\
+		std::fclose(_f);
+#else
+#define LOG_TO_FILE(...)
+#endif
 
-#define LOG_PARAM_NOPREINFO 0x1000
+#ifndef LOG_NOFSTDOUT
+#define LOG_TO_STDOUT(format, ...) \
+		std::printf("[%04d-%02d-%02d %02d:%02d:%02d.%03d]" format "\n", _t->tm_year + 1900, _t->tm_mon + 1, _t->tm_mday,\
+						_t->tm_hour, _t->tm_min, _t->tm_sec, (int)_millis_part, ##__VA_ARGS__);
+#else
+#define LOG_TO_STDOUT(...)
+#endif
 
-#define LOG_STRMARK_INFO "INF"
-#define LOG_STRMARK_DEBUG "DBG"
-#define LOG_STRMARK_ERROR "ERR"
+#define LOG(format, ...) 	{\
+		using _Clock = std::chrono::high_resolution_clock;\
+		auto _now = _Clock::now();\
+		auto _millis_part = std::chrono::duration_cast<std::chrono::milliseconds>(\
+				_now.time_since_epoch()).count() % 1000;\
+		auto tt = _Clock::to_time_t(_now);\
+		auto _t = std::localtime(&tt);\
+		LOG_TO_FILE(format, ##__VA_ARGS__);\
+		LOG_TO_STDOUT(format, ##__VA_ARGS__);\
+	}
 
-#define LOG_LOGFILE_DFT "log.txt"
+#endif // !LOG_NOLOG
+#endif //!LOG
 
-#ifndef LOG_NOLOG
 
-#define LOG_SETLOGFILE(filename) _log_setlogfile(filename)
-#define LOG_SETPARAM(_param) _log_setparam(_param)
-#define LOG_ADDPARAM(_param) _log_addparam(_param)
-#define LOG_DELPARAM(_param) _log_delparam(_param)
-#define LOG_OPEN _log_open(LOG_PARAM_DFT)
-#define LOG_OPEN_WITHPARAM(_param) _log_open(_param)
-#define LOG_CLOSE _log_close()
-
-#define LOG_INFO(format, ...)  _log_print(LOG_TYPE_INFO, format , ##__VA_ARGS__)
-#define LOG_DEBUG(format, ...) _log_print(LOG_TYPE_DEBUG, format, ##__VA_ARGS__)
-#define LOG_ERROR(format, ...) _log_print(LOG_TYPE_ERROR, format, ##__VA_ARGS__)
-#define LOG(format, ...) LOG_INFO(format, ##__VA_ARGS__)
-
-#define LOG_EMPTY_LINE _log_empty_line()
-
-void _log_addparam(int _param);
-void _log_delparam(int _param);
-void _log_setparam(int _param);
-void _log_setlogfile(const char* filename);
-void _log_open(int _param);
-void _log_close();
-
-void _log_print(int type, const char* format, ...);
-
-void _log_empty_line();
-
-#else 
-
-#define LOG_SETLOGFILE(filename)
-#define LOG_SETPARAM(_param)
-#define LOG_ADDPARAM(_param)
-#define LOG_DELPARAM(_param)
-#define LOG_OPEN
-#define LOG_OPEN_WITHPARAM(_param)
-#define LOG_CLOSE
-
-#define LOG_INFO(format, ...)
-#define LOG_DEBUG(format, ...)
-#define LOG_ERROR(format, ...)
-#define LOG(format, ...)
-
-#define LOG_EMPTY_LINE
-	
-#endif //LOG_NOLOG
-
-#endif //__LOG_H__

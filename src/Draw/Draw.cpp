@@ -146,7 +146,7 @@ void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* tex
 	constexpr auto NumValidType = InfoType::All;
 	const unsigned format = type < NumValidType ? draw.dftFormatList[(int)type] : draw.dftFormatList[(int)InfoType::All];
 
-	LOG("Add text, type = %d", type);
+	LOG("Add text, type = %d", (int)type);
 	const int h = int(draw.fontSize * 1.2);
 
 	auto it = draw.infoList.end();
@@ -221,7 +221,7 @@ void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* tex
 		rect.right = rect.left + text_width;
 	}
 
-	LOG("top = %d, bottom = %d, left = %d, right = %d", rect.top, rect.bottom, rect.left, rect.right);
+	LOG("top = %ld, bottom = %ld, left = %ld, right = %ld", rect.top, rect.bottom, rect.left, rect.right);
 
 	*draw.showing = draw.infoList.size() > 0;
 }

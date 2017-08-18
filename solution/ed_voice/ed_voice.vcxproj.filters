@@ -144,9 +144,6 @@
     <ClCompile Include="..\..\src\Utils\INI.cpp">
       <Filter>src\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Utils\Log.cpp">
-      <Filter>src\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Draw\Draw_D3D.cpp">
       <Filter>src\Draw</Filter>
     </ClCompile>

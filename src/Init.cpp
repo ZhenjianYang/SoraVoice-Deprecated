@@ -32,9 +32,6 @@ static HMODULE d3dx_dll;
 
 int StartSoraVoice(void* moduleHandle)
 {
-	LOG_SETLOGFILE(LOG_FILE_PATH);
-	LOG_OPEN;
-
 	::moduleHandle = (HMODULE)moduleHandle;
 
 	if(LoadRC() && SearchGame() && InitSV() && ApplyMemoryPatch()){
@@ -50,7 +47,6 @@ int EndSoraVoice()
 {
 	DoEnd();
 
-	LOG_CLOSE;
 	return 1;
 }
 
@@ -323,24 +319,24 @@ constexpr const char* STR_D3DX9_APIS[][2] = {
 
 bool InitSV()
 {
-	LOG("p = 0x%08X", &sv);
-	LOG("p->p_d3dd = 0x%08X", sv.addrs.p_d3dd);
-	LOG("p->p_did = 0x%08X", sv.addrs.p_did);
-	LOG("p->p_Hwnd = 0x%08X", sv.addrs.p_Hwnd);
-	LOG("p->p_pDS = 0x%08X", sv.addrs.p_pDS);
-	LOG("p->p_mute = 0x%08X", sv.addrs.p_mute);
-	LOG("p->p_keys = 0x%08X", sv.addrs.p_keys);
-	LOG("p->p_global = 0x%08X", sv.addrs.p_global);
-	LOG("p->p_rnd_vlst = 0x%08X", sv.p_rnd_vlst);
+	LOG("p = 0x%08X", (unsigned)&sv);
+	LOG("p->p_d3dd = 0x%08X", (unsigned)sv.addrs.p_d3dd);
+	LOG("p->p_did = 0x%08X", (unsigned)sv.addrs.p_did);
+	LOG("p->p_Hwnd = 0x%08X", (unsigned)sv.addrs.p_Hwnd);
+	LOG("p->p_pDS = 0x%08X", (unsigned)sv.addrs.p_pDS);
+	LOG("p->p_mute = 0x%08X", (unsigned)sv.addrs.p_mute);
+	LOG("p->p_keys = 0x%08X", (unsigned)sv.addrs.p_keys);
+	LOG("p->p_global = 0x%08X", (unsigned)sv.addrs.p_global);
+	LOG("p->p_rnd_vlst = 0x%08X", (unsigned)sv.p_rnd_vlst);
 
 	if (GAME_IS_ZA(sv.game) && sv.addrs.p_global) {
 		if (sv.addrs.p_d3dd) sv.addrs.p_d3dd = (void**)((char*)*sv.addrs.p_global + (int)sv.addrs.p_d3dd);
 		if (sv.addrs.p_did) sv.addrs.p_did = (void**)((char*)*sv.addrs.p_global + (int)sv.addrs.p_did);
 		if (sv.addrs.p_Hwnd) sv.addrs.p_Hwnd = (void**)((char*)*sv.addrs.p_global + (int)sv.addrs.p_Hwnd);
 
-		LOG("Adjuested p->p_d3dd = 0x%08X", sv.addrs.p_d3dd);
-		LOG("Adjuested p->p_did = 0x%08X", sv.addrs.p_did);
-		LOG("Adjuested p->p_Hwnd = 0x%08X", sv.addrs.p_Hwnd);
+		LOG("Adjuested p->p_d3dd = 0x%08X", (unsigned)sv.addrs.p_d3dd);
+		LOG("Adjuested p->p_did = 0x%08X", (unsigned)sv.addrs.p_did);
+		LOG("Adjuested p->p_Hwnd = 0x%08X", (unsigned)sv.addrs.p_Hwnd);
 	}
 
 	BIND(d3dd, sv.addrs.p_d3dd);
@@ -348,10 +344,10 @@ bool InitSV()
 	BIND(hWnd, sv.addrs.p_Hwnd);
 	BIND(pDS, sv.addrs.p_pDS);
 
-	LOG("d3dd = 0x%08X", d3dd);
-	LOG("did = 0x%08X", did);
-	LOG("Hwnd = 0x%08X", hWnd);
-	LOG("pDS = 0x%08X", pDS);
+	LOG("d3dd = 0x%08X", (unsigned)d3dd);
+	LOG("did = 0x%08X", (unsigned)did);
+	LOG("Hwnd = 0x%08X", (unsigned)hWnd);
+	LOG("pDS = 0x%08X", (unsigned)pDS);
 
 	if (!pDS) {
 		LOG("pDS is nullptr, now going to creat DirectSoundDevice");
@@ -376,7 +372,7 @@ bool InitSV()
 			}//if (pDirectSoundCreate)
 		}//if (dsd_dll) 
 
-		LOG("new pDS = 0x%08X", pDS);
+		LOG("new pDS = 0x%08X", (unsigned)pDS);
 	}
 
 	if (!pDS) {
@@ -398,7 +394,7 @@ bool InitSV()
 				void* ptrApi = (void*)GetProcAddress(d3dx_dll, api[1]);
 				if (ptrApi) {
 					ApiPack::AddApi(api[0], ptrApi);
-					LOG("Api %s (Original:%s) loaded, address = 0x%08X", api[0], api[1], ptrApi);
+					LOG("Api %s (Original:%s) loaded, address = 0x%08X", api[0], api[1], (unsigned)ptrApi);
 				}
 			}
 		}//if (d3dx_dll) 
@@ -433,11 +429,11 @@ bool InitSV()
 			ov_pcm_total = (void*)GetProcAddress(ogg_dll, STR_ov_pcm_total);
 		}
 
-		LOG("Loaded ov_open_callbacks = 0x%08X", ov_open_callbacks);
-		LOG("Loaded ov_info = 0x%08X", ov_info);
-		LOG("Loaded ov_read = 0x%08X", ov_read);
-		LOG("Loaded ov_clear = 0x%08X", ov_clear);
-		LOG("Loaded ov_pcm_total = 0x%08X", ov_pcm_total);
+		LOG("Loaded ov_open_callbacks = 0x%08X", (unsigned)ov_open_callbacks);
+		LOG("Loaded ov_info = 0x%08X", (unsigned)ov_info);
+		LOG("Loaded ov_read = 0x%08X", (unsigned)ov_read);
+		LOG("Loaded ov_clear = 0x%08X", (unsigned)ov_clear);
+		LOG("Loaded ov_pcm_total = 0x%08X", (unsigned)ov_pcm_total);
 
 		if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear || !ov_pcm_total) {
 			LOG("Load ogg apis failed.");

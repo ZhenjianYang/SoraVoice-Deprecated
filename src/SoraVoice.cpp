@@ -161,7 +161,7 @@ inline static void AddInfo(InfoType type, unsigned time, unsigned color, Texts..
 
 static void stopCallBack(PlayID playID, StopType stopType)
 {
-	LOG("StopCallBack: playID = 0x%08d, stopType = %d", playID, stopType);
+	LOG("StopCallBack: playID = 0x%08d, stopType = %d", playID, (int)stopType);
 	LockGuard lock(mt_playID);
 	if (playID == curPlayID) {
 		if (stopType == StopType::PlayEnd) {
@@ -209,7 +209,7 @@ void SoraVoice::Play(const char* t)
 		LOG("Number of mapping is %d", NUM_MAPPING);
 
 		if (num_vid >= NUM_MAPPING) {
-			LOG("Adjusted Voice ID is out of the range of Mapping", NUM_MAPPING);
+			LOG("Adjusted Voice ID is out of the range of Mapping");
 			return;
 		}
 
@@ -718,7 +718,7 @@ bool SoraVoice::Init() {
 
 	void* pPresent = Hook::Hook_D3D_Present(*sv.addrs.p_d3dd, GAME_IS_DX9(sv.game), SoraVoice::Show);
 	if (pPresent) {
-		LOG("Present hooked, old Present = 0x%08X", pPresent);
+		LOG("Present hooked, old Present = 0x%08X", (unsigned)pPresent);
 	}
 	else {
 		LOG("Hook Present failed.");
@@ -729,7 +729,7 @@ bool SoraVoice::Init() {
 			LOG("Now going to hook GetDeviceState...");
 			void* pGetDeviceState = Hook::Hook_DI_GetDeviceState(*sv.addrs.p_did, SoraVoice::Input, (void**)&sv.addrs.p_keys);
 			if (pGetDeviceState) {
-				LOG("GetDeviceState hooked, old GetDeviceState = 0x%08X", pGetDeviceState);
+				LOG("GetDeviceState hooked, old GetDeviceState = 0x%08X", (unsigned)pGetDeviceState);
 			}
 			else {
 				LOG("Hook GetDeviceState failed.");
