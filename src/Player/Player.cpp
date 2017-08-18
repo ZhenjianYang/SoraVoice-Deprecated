@@ -399,8 +399,12 @@ void CPlayer::finishPlay() {
 
 Status Player::GetStatus() { return player->GetStatus(); }
 
-PlayID Player::GetCurrentPlayID();
-const char* Player::GetCurrentFile();
+PlayID Player::GetCurrentPlayID() {
+	return player->GetCurrentPlayID();
+}
+const char* Player::GetCurrentFile() {
+	return player->GetCurrentFile();
+}
 
 bool Player::Init(void * pDSD, StopCallBack stopCallBack)
 {
