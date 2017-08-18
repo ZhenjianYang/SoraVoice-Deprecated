@@ -26,6 +26,9 @@ NACKED void ASM::scode() {
 	record_code:
 		movzx   eax, al;
 		mov     dword ptr[SV.status.scode], eax;
+		mov     dword ptr[SV.status.wait], 0;
+		mov     dword ptr[SV.status.waitv], 0;
+		mov     dword ptr[SV.rcd.count_ch], 0;
 
 	scode_return:
 		pop     eax;

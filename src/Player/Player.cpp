@@ -147,7 +147,7 @@ StopCallBack Player::GetStopCallBack() {
 
 bool Player::Init(void * pDSD, StopCallBack stopCallBack)
 {
-	pDSD = (decltype(pDSD))pDSD;
+	PL_pDSD = (decltype(PL_pDSD))pDSD;
 	PL_stopCallBack = stopCallBack;
 	PL_hEvent_Playing = CreateEvent(NULL, FALSE, FALSE, NULL);
 	PL_hEvent_End = CreateEvent(NULL, FALSE, FALSE, NULL);
