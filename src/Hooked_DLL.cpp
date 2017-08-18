@@ -86,6 +86,7 @@ long SVCALL HOOKED_API CALL_PARAM_DCL
 				if (!ed_voice_apis.Start()) {
 					FreeLibrary(dll_ed_voice);
 					ed_voice_apis.Start = ed_voice_apis.End = nullptr;
+					dll_ed_voice = nullptr;
 				}
 			}
 		}

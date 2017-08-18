@@ -36,13 +36,14 @@ int StartSoraVoice(void* moduleHandle)
 	LOG_OPEN;
 
 	::moduleHandle = (HMODULE)moduleHandle;
-	return LoadRC()
-		&& SearchGame()
-		&& InitSV()
-		&& ApplyMemoryPatch()
-		&& DoStart();
 
-	return 1;
+	if(LoadRC() && SearchGame() && InitSV() && ApplyMemoryPatch()){
+		DoStart();
+		return 1;
+	} else {
+		DoEnd();
+		return 0;
+	}
 }
 
 int EndSoraVoice()

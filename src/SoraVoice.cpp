@@ -752,14 +752,14 @@ bool SoraVoice::Init() {
 
 bool SoraVoice::End() {
 	if (!sv.status.startup) return false;
+	sv.status.startup = false;
+	sv.status.ended = true;
 
 	Player::End();
 	Draw::End();
 	delete keys; keys = nullptr;
 	delete aup; aup = nullptr;
 
-	sv.status.startup = false;
-	sv.status.ended = true;
 	return true;
 }
 
