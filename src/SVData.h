@@ -8,6 +8,10 @@
 #define GAME_IS_DX9(game) ((game) == SVData::TITS_DX9 || (game) == SVData::ZERO || (game) == SVData::AO)
 #define GAME_IS_VALID(game) (GAME_IS_ED6(game) || GAME_IS_ZA(game))
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct SVData
 {
 	typedef unsigned char byte;
@@ -92,6 +96,11 @@ struct SVData
 	char *p_rnd_vlst;
 	char Comment[64];
 };
-static_assert(sizeof(void*) == 4, "32 bits only!");
 
 extern SVData sv;
+
+#ifdef __cplusplus
+}
+#endif
+
+static_assert(sizeof(void*) == 4, "32 bits only!");

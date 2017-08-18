@@ -61,7 +61,10 @@
     <ClInclude Include="..\..\src\asm\asm.h">
       <Filter>src\asm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\asm\asm_callee.h">
+    <ClInclude Include="..\..\src\asm\Calls.h">
+      <Filter>src\asm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\asm\inline_asm.h">
       <Filter>src\asm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Hook\Hook_Apis.h">
@@ -153,6 +156,9 @@
     <ClCompile Include="..\..\src\Draw\Draw_D3D_DX9.cpp">
       <Filter>src\Draw</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_aup.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\asm\asm_dlgse.cpp">
       <Filter>src\asm</Filter>
     </ClCompile>
@@ -171,13 +177,10 @@
     <ClCompile Include="..\..\src\asm\asm_text.cpp">
       <Filter>src\asm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\asm\CallLoadScns.cpp">
+    <ClCompile Include="..\..\src\asm\Calls_LoadScns.cpp">
       <Filter>src\asm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\asm\CallSoraVoice.cpp">
-      <Filter>src\asm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\asm\asm_aup.cpp">
+    <ClCompile Include="..\..\src\asm\Calls_SoraVoice.cpp">
       <Filter>src\asm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Player\Decoder_Ogg.cpp">

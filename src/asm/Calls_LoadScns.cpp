@@ -1,4 +1,4 @@
-#include "asm_callee.h"
+#include "Calls.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -17,7 +17,7 @@ struct PScns {
 	char* scn_buff[SCN_NUM];
 };
 
-int SVCALL ASM::LoadScn(const char* name, char* buff) {
+int SVCALL ASM_LoadScn(const char* name, char* buff) {
 	char path[sizeof(PATH_SN) + MAX_NAME_LEN] = PATH_SN;
 	path[sizeof(path) - 1] = '\0';
 
@@ -32,7 +32,7 @@ int SVCALL ASM::LoadScn(const char* name, char* buff) {
 	return size;
 }
 
-int SVCALL ASM::LoadScns(void* p_PScns, int id, char **pp_t) {
+int SVCALL ASM_LoadScns(void* p_PScns, int id, char **pp_t) {
 	PScns* ps = (PScns*)p_PScns;
 
 	for (unsigned i = 0; i < SCN_NUM; i++) {
@@ -40,14 +40,14 @@ int SVCALL ASM::LoadScns(void* p_PScns, int id, char **pp_t) {
 	}
 
 	char* sn_name = *(pp_t + (id >> 16)) + 36 * (id & 0xFFFF);
-	if (LoadScn(sn_name, ps->scn_buff[0]) < 0x40) return 0;
+	if (ASM_LoadScn(sn_name, ps->scn_buff[0]) < 0x40) return 0;
 	ps->first = ps->scn_buff[0];
 
 	for (unsigned i = 1; i < SCN_NUM; i++) {
 		int id_tmp = *(int*)(ps->scn_buff[0] + 0x20 + 4 * i);
 		if (id_tmp != -1) {
 			char* sn_name_tmp = *(pp_t + (id_tmp >> 16)) + 36 * (id_tmp & 0xFFFF);
-			if (!LoadScn(sn_name_tmp, ps->scn_buff[i])) {
+			if (!ASM_LoadScn(sn_name_tmp, ps->scn_buff[i])) {
 				return 0;
 			};
 		}
