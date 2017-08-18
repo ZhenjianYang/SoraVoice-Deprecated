@@ -81,62 +81,62 @@ struct Info
 using PtrInfo = std::unique_ptr<Info>;
 using PtrInfoList = std::list<PtrInfo>;
 
-static struct {
-	unsigned* showing;
-	const unsigned* dftFormatList;
+namespace DR {
+	static unsigned* showing;
+	static const unsigned* dftFormatList;
 
-	D3D* d3d = nullptr;
-	PtrInfoList infoList;
+	static D3D* d3d = nullptr;
+	static PtrInfoList infoList;
 
-	int width = 0;
-	int height = 0;
-	int vfix = 0;
-	int vbound = 0;
-	int hbound = 0;
-	int linespace = 0;
-	int shadow = 0;
+	static int width = 0;
+	static int height = 0;
+	static int vfix = 0;
+	static int vbound = 0;
+	static int hbound = 0;
+	static int linespace = 0;
+	static int shadow = 0;
 
-	int fontSize = 0;
-} draw;
+	static int fontSize = 0;
+}
 
 bool Draw::Init() {
 	const bool isED6 = GAME_IS_ED6(sv.game);
 
-	draw.showing = &sv.status.showing;
-	draw.dftFormatList = isED6 ? DftFormatList_Sora : DftFormatList_ZA;
+	DR::showing = &sv.status.showing;
+	DR::dftFormatList = isED6 ? DftFormatList_Sora : DftFormatList_ZA;
 
 	RECT rect;
 	if (GetClientRect((HWND)*sv.addrs.p_Hwnd, &rect)) {
-		draw.width = rect.right - rect.left;
-		draw.height = rect.bottom - rect.top;
+		DR::width = rect.right - rect.left;
+		DR::height = rect.bottom - rect.top;
 
 		if (!isED6)
-			draw.vfix = (draw.height - draw.width * 9 / 16) / 2;
+			DR::vfix = (DR::height - DR::width * 9 / 16) / 2;
 
-		draw.fontSize = (draw.height - 2 * draw.vfix) / TEXT_NUM_SCRH;
-		if (draw.fontSize < MIN_FONT_SIZE) draw.fontSize = MIN_FONT_SIZE;
+		DR::fontSize = (DR::height - 2 * DR::vfix) / TEXT_NUM_SCRH;
+		if (DR::fontSize < MIN_FONT_SIZE) DR::fontSize = MIN_FONT_SIZE;
 
-		draw.vbound = (int)(draw.fontSize * VBOUND_RATE + 0.5);
-		draw.hbound = (int)(draw.fontSize * HBOUND_RATE + 0.5);
+		DR::vbound = (int)(DR::fontSize * VBOUND_RATE + 0.5);
+		DR::hbound = (int)(DR::fontSize * HBOUND_RATE + 0.5);
 
-		draw.shadow = (int)(draw.fontSize * TEXT_SHADOW_POS_RATE + 0.5);
-		draw.linespace = (int)(draw.fontSize * LINE_SPACE_RATE + 0.5);
+		DR::shadow = (int)(DR::fontSize * TEXT_SHADOW_POS_RATE + 0.5);
+		DR::linespace = (int)(DR::fontSize * LINE_SPACE_RATE + 0.5);
 
-		LOG("screen width = %d", draw.width);
-		LOG("screen height = %d", draw.height);
-		LOG("Font Size = %d", draw.fontSize);
+		LOG("screen width = %d", DR::width);
+		LOG("screen height = %d", DR::height);
+		LOG("Font Size = %d", DR::fontSize);
 	}
 	else {
 		LOG("Get screen size failed!");
 		return false;
 	}
 
-	draw.d3d = D3D::GetD3D(GAME_IS_DX9(sv.game), *sv.addrs.p_d3dd, config.FontName, draw.fontSize);
-	return draw.d3d;
+	DR::d3d = D3D::GetD3D(GAME_IS_DX9(sv.game), *sv.addrs.p_d3dd, config.FontName, DR::fontSize);
+	return DR::d3d;
 }
 bool Draw::End() {
-	delete draw.d3d;
-	draw.d3d = nullptr;
+	delete DR::d3d;
+	DR::d3d = nullptr;
 
 	return false;
 }
@@ -144,16 +144,16 @@ bool Draw::End() {
 void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* text) {
 	unsigned dead = time == ShowTimeInfinity ? TIME_MAX : Clock::Now() + time;
 	constexpr auto NumValidType = InfoType::All;
-	const unsigned format = type < NumValidType ? draw.dftFormatList[(int)type] : draw.dftFormatList[(int)InfoType::All];
+	const unsigned format = type < NumValidType ? DR::dftFormatList[(int)type] : DR::dftFormatList[(int)InfoType::All];
 
 	LOG("Add text, type = %d", (int)type);
-	const int h = int(draw.fontSize * 1.2);
+	const int h = int(DR::fontSize * 1.2);
 
-	auto it = draw.infoList.end();
+	auto it = DR::infoList.end();
 
 	bool creatNew = true;
 	if (type != InfoType::Hello) {
-		for (it = draw.infoList.begin(); it != draw.infoList.end(); ++it) {
+		for (it = DR::infoList.begin(); it != DR::infoList.end(); ++it) {
 			if ((*it)->type == type) {
 				creatNew = false;
 				break;
@@ -163,8 +163,8 @@ void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* tex
 
 	if (creatNew) {
 		LOG("Create new Text.");
-		draw.infoList.push_back(PtrInfo(new Info));
-		it = --draw.infoList.end();
+		DR::infoList.push_back(PtrInfo(new Info));
+		it = --DR::infoList.end();
 	}
 	else {
 		LOG("No need to create new Text.");
@@ -185,88 +185,88 @@ void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* tex
 	if (creatNew) {
 		memset(&rect, 0, sizeof(rect));
 		std::set<int> invalid_bottom, invalid_top;
-		for (auto it2 = draw.infoList.begin(); it2 != draw.infoList.end(); ++it2) {
+		for (auto it2 = DR::infoList.begin(); it2 != DR::infoList.end(); ++it2) {
 			if (it == it2 || (((*it)->format & DT_RIGHT) != ((*it2)->format & DT_RIGHT))) continue;
 			invalid_top.insert((*it2)->rect.top);
 			invalid_bottom.insert((*it2)->rect.bottom);
 		}
 
 		if ((*it)->format & DT_BOTTOM) {
-			for (int bottom = draw.height - draw.vbound - draw.vfix; ; bottom -= h + draw.linespace) {
+			for (int bottom = DR::height - DR::vbound - DR::vfix; ; bottom -= h + DR::linespace) {
 				if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
 					rect.bottom = bottom;
 					break;
 				}
 			}
-			rect.top = rect.bottom - h - draw.linespace;
+			rect.top = rect.bottom - h - DR::linespace;
 		}
 		else {
-			for (int top = draw.vbound + draw.vfix; ; top += h + draw.linespace) {
+			for (int top = DR::vbound + DR::vfix; ; top += h + DR::linespace) {
 				if (invalid_top.find(top) == invalid_top.end()) {
 					rect.top = top;
 					break;
 				}
 			}
 
-			rect.bottom = rect.top + h + draw.linespace;
+			rect.bottom = rect.top + h + DR::linespace;
 		}
 	} //if (creatNew)
 
 	if ((*it)->format & DT_RIGHT) {
-		rect.right = draw.width - draw.hbound;
+		rect.right = DR::width - DR::hbound;
 		rect.left = rect.right - text_width;
 	}
 	else {
-		rect.left = draw.hbound;
+		rect.left = DR::hbound;
 		rect.right = rect.left + text_width;
 	}
 
 	LOG("top = %ld, bottom = %ld, left = %ld, right = %ld", rect.top, rect.bottom, rect.left, rect.right);
 
-	*draw.showing = draw.infoList.size() > 0;
+	*DR::showing = DR::infoList.size() > 0;
 }
 
 void Draw::DrawInfos() {
-	if (!draw.d3d) return;
+	if (!DR::d3d) return;
 
-	draw.d3d->BeginScene();
+	DR::d3d->BeginScene();
 
 	RECT rect_shadow;
-	for (const auto& info : draw.infoList) {
+	for (const auto& info : DR::infoList) {
 		rect_shadow = info->rect;
-		if (info->format & DT_RIGHT) rect_shadow.right += draw.shadow;
-		else rect_shadow.left += draw.shadow;
-		if (info->format & DT_BOTTOM) rect_shadow.bottom += draw.shadow;
-		else rect_shadow.top += draw.shadow;
+		if (info->format & DT_RIGHT) rect_shadow.right += DR::shadow;
+		else rect_shadow.left += DR::shadow;
+		if (info->format & DT_BOTTOM) rect_shadow.bottom += DR::shadow;
+		else rect_shadow.top += DR::shadow;
 
 		unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (0xFF << 24);
 
-		draw.d3d->DrawString(info->text, -1, &rect_shadow, info->format, color_shadow);
+		DR::d3d->DrawString(info->text, -1, &rect_shadow, info->format, color_shadow);
 	}
 
-	for (const auto& info : draw.infoList) {
-		draw.d3d->DrawString(info->text, -1, &info->rect, info->format, info->color);
+	for (const auto& info : DR::infoList) {
+		DR::d3d->DrawString(info->text, -1, &info->rect, info->format, info->color);
 	}
 
-	draw.d3d->EndScene();
+	DR::d3d->EndScene();
 }
 
 void Draw::RemoveInfo(InfoType type) {
 	switch (type)
 	{
 	case InfoType::All:
-		draw.infoList.clear();
+		DR::infoList.clear();
 		break;
 	case InfoType::Dead:
-		draw.infoList.remove_if([](const PtrInfo& t) { return t->deadTime < Clock::Now(); });
+		DR::infoList.remove_if([](const PtrInfo& t) { return t->deadTime < Clock::Now(); });
 		break;
 	default:
-		draw.infoList.remove_if([&type](const PtrInfo& t) { return t->type == type; });
+		DR::infoList.remove_if([&type](const PtrInfo& t) { return t->type == type; });
 		break;
 	}
-	*draw.showing = draw.infoList.size();
+	*DR::showing = DR::infoList.size();
 }
 
 const unsigned& Draw::Showing() {
-	return *draw.showing;
+	return *DR::showing;
 }

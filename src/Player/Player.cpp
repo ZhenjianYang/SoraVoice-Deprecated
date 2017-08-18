@@ -38,159 +38,169 @@ using PlayInfo = struct {
 };
 using PlayQueue = std::queue<PlayInfo>;
 
-static inline int TO_DSVOLUME(int volume) {
+namespace PL {
+	static Status status = Status::Stoped;
+
+	static PlayID playID = InvalidPlayID;
+	static std::string fileName;
+	static Decoder* decoder = nullptr;
+
+	static bool stop = false;
+	static bool ended = false;
+
+	static IDirectSound* pDSD = nullptr;
+
+	static StopCallBack stopCallBack = nullptr;
+	static std::mutex mt_stopCallBack;
+
+	static int volume = MaxVolume;
+
+	static IDirectSoundBuffer *pDSBuff = nullptr;
+	static std::mutex mt_DSBuff;
+	static int buffSize = 0;
+	static int buffIndex = 0;
+	static int endPos = MaxVolume;
+	static int curPos = 0;
+	static int prePos = 0;
+
+	static WAVEFORMATEX waveFormatEx {};
+	static DSBUFFERDESC dSBufferDesc {};
+
+	static PlayQueue playQueue;
+	static std::mutex mt_playQueue;
+
+	static HANDLE hEvent_Playing;
+	static HANDLE hEvent_End;
+	static std::thread th_playing;
+
+	static struct {
+		Ogg ogg;
+		Wav wav;
+	} _Decoders;
+	static struct {
+		Decoder* const decoder;
+		std::string attr;
+	} decoders[] = {
+	{ &_Decoders.ogg, Ogg::Attr},
+	{ &_Decoders.wav, Wav::Attr}
+	};
+	static Decoder *DFT_Decoder = &_Decoders.ogg;
+}
+
+using namespace PL;
+
+static void thread_Playing();
+
+static bool openSoundFile(const std::string& fileName);
+static bool initDSBuff();
+static bool startPlay();
+static int playing();
+static void finishPlay();
+
+static inline int TO_DSVOLUME(int volume);
+static inline Decoder* getDecoderByFileName(const std::string& fileName);
+static inline PlayID generatePlayID();
+
+Status Player::GetStatus() {
+	return status;
+}
+
+PlayID Player::GetCurrentPlayID() {
+	return playID;
+}
+
+const char* Player::GetCurrentFile() {
+	return fileName.empty() ? nullptr : fileName.c_str();
+}
+
+PlayID Player::Play(const char* fileName, int volume, Decoder* decoder /*= nullptr*/) {
+	PlayID playID = generatePlayID();
+	if(!decoder) decoder = getDecoderByFileName(fileName);
+	{
+		LockGuard lock(mt_playQueue);
+		playQueue.push({ playID, decoder, fileName });
+	}
+	PL::volume = volume;
+	stop = false;
+	SetEvent(hEvent_Playing);
+	return playID;
+}
+
+void Player::Stop() {
+	stop = true;
+}
+
+void Player::SetVolume(int volume /*= MaxVolume*/) {
+	PL::volume = volume;
+	{
+		LockGuard lock(mt_DSBuff);
+		if(pDSBuff)
+			pDSBuff->SetVolume(TO_DSVOLUME(volume));
+	}
+};
+
+void Player::SetStopCallBack(StopCallBack stopCallBack /*= nullptr*/) {
+	LockGuard lock(mt_stopCallBack);
+	PL::stopCallBack = stopCallBack;
+}
+
+StopCallBack Player::GetStopCallBack() {
+	LockGuard lock(mt_stopCallBack);
+	return stopCallBack;
+}
+
+bool Player::Init(void * pDSD, StopCallBack stopCallBack)
+{
+	pDSD = (decltype(pDSD))pDSD;
+	PL::stopCallBack = stopCallBack;
+	hEvent_Playing = CreateEvent(NULL, FALSE, FALSE, NULL);
+	hEvent_End = CreateEvent(NULL, FALSE, FALSE, NULL);
+	th_playing = std::thread(thread_Playing);
+	th_playing.detach();
+	Ogg::SetOggApis(ApiPack::GetApi(STR_ov_open_callbacks),
+					ApiPack::GetApi(STR_ov_info),
+					ApiPack::GetApi(STR_ov_read),
+					ApiPack::GetApi(STR_ov_clear),
+					ApiPack::GetApi(STR_ov_pcm_total)
+					);
+	return true;
+}
+
+bool Player::End()
+{
+	ended = true;
+	Stop();
+	{
+		LockGuard lock(mt_playQueue);
+		while (!playQueue.empty()) playQueue.pop();
+	}
+	SetEvent(hEvent_Playing);
+	WaitForSingleObject(hEvent_End, DELTA_TIME * 3);
+	return true;
+}
+
+int TO_DSVOLUME(int volume) {
 	return (volume) == 0 ?
 		DSBVOLUME_MIN :
 		(int)(2000 * std::log10(double(volume) / MaxVolume));
 }
 
-static class CPlayer {
-	Status status = Status::Stoped;
-
-	PlayID playID = InvalidPlayID;
-	std::string fileName;
-	Decoder* decoder = nullptr;
-
-	bool stop = false;
-	bool ended = false;
-
-	Decoder* const ogg;
-	Decoder* const wav;
-
-	IDirectSound* const pDSD;
-
-	StopCallBack stopCallBack;
-	std::mutex mt_stopCallBack;
-
-	int volume = MaxVolume;
-
-	IDirectSoundBuffer *pDSBuff = nullptr;
-	std::mutex mt_DSBuff;
-	int buffSize = 0;
-	int buffIndex = 0;
-	int endPos = MaxVolume;
-	int curPos = 0;
-	int prePos = 0;
-
-	WAVEFORMATEX waveFormatEx {};
-	DSBUFFERDESC dSBufferDesc {};
-
-	PlayQueue playQueue;
-	std::mutex mt_playQueue;
-
-	const HANDLE hEvent_Playing;
-	const HANDLE hEvent_End;
-	std::thread th_playing;
-
-public:
-	CPlayer(void * pDSD, StopCallBack stopCallBack)
-		: ogg(new Ogg), wav(new Wav),
-		pDSD((decltype(this->pDSD))pDSD),
-		stopCallBack(stopCallBack),
-		hEvent_Playing(CreateEvent(NULL, FALSE, FALSE, NULL)),
-		hEvent_End(CreateEvent(NULL, FALSE, FALSE, NULL)),
-		th_playing(&CPlayer::thread_Playing, this)
-	{
-		th_playing.detach();
-		Ogg::SetOggApis(ApiPack::GetApi(STR_ov_open_callbacks),
-						ApiPack::GetApi(STR_ov_info),
-						ApiPack::GetApi(STR_ov_read),
-						ApiPack::GetApi(STR_ov_clear),
-						ApiPack::GetApi(STR_ov_pcm_total)
-		);
-	}
-
-	~CPlayer() {
-		ended = true;
-		Stop();
-		{
-			LockGuard lock(mt_playQueue);
-			while (!playQueue.empty()) playQueue.pop();
-		}
-		SetEvent(hEvent_Playing);
-		auto rst = WaitForSingleObject(hEvent_End, DELTA_TIME * 3);
-		if (rst == WAIT_OBJECT_0) {
-			delete ogg;
-			delete wav;
+Decoder* getDecoderByFileName(const std::string& fileName) {
+	std::string attr = fileName.substr(fileName.rfind('.') + 1);
+	for(auto da : decoders) {
+		if(attr == da.attr) {
+			return da.decoder;
 		}
 	}
+	return DFT_Decoder;
+}
 
-	Status GetStatus() const {
-		return status;
-	}
+PlayID generatePlayID() {
+	static PlayID last = InvalidPlayID;
+	return ++last == InvalidPlayID ? ++last : last;
+}
 
-	PlayID GetCurrentPlayID() const {
-		return playID;
-	}
-
-	const char* GetCurrentFile() const {
-		return fileName.empty() ? nullptr : fileName.c_str();
-	}
-
-	PlayID Play(const char* fileName, int volume, Decoder* decoder = nullptr) {
-		PlayID playID = generatePlayID();
-		if(!decoder) decoder = getDecoderByFileName(fileName);
-		{
-			LockGuard lock(mt_playQueue);
-			this->playQueue.push({ playID, decoder, fileName });
-		}
-		this->volume = volume;
-		stop = false;
-		SetEvent(hEvent_Playing);
-		return playID;
-	}
-
-	void Stop() {
-		stop = true;
-	}
-
-	void SetVolume(int volume = MaxVolume) {
-		this->volume = volume;
-		{
-			LockGuard lock(mt_DSBuff);
-			if(pDSBuff)
-				pDSBuff->SetVolume(TO_DSVOLUME(volume));
-		}
-	};
-
-	void SetStopCallBack(StopCallBack stopCallBack = nullptr) {
-		LockGuard lock(mt_stopCallBack);
-		this->stopCallBack = stopCallBack;
-	}
-
-	StopCallBack GetStopCallBack() {
-		LockGuard lock(mt_stopCallBack);
-		return stopCallBack;
-	}
-
-private:
-	void thread_Playing();
-
-	bool openSoundFile(const std::string& fileName);
-	bool initDSBuff();
-	bool startPlay();
-	int playing();
-	void finishPlay();
-
-	Decoder* getDecoderByFileName(const char* fileName) {
-		constexpr int len_attr = sizeof(Ogg::Attr) - 1;
-		auto p = fileName;
-		int len = 0;
-		while(*p) { p++; len++; }
-		if(len < len_attr) return wav;
-		for(int i = 0; i < len_attr; i++) {
-			if(*(p + i - len_attr) != Ogg::Attr[i]) return wav;
-		}
-		return ogg;
-	}
-
-	static PlayID generatePlayID() {
-		static PlayID last = InvalidPlayID;
-		return ++last == InvalidPlayID ? ++last : last;
-	}
-} *player;
-
-void CPlayer::thread_Playing()
+void thread_Playing()
 {
 	while (!ended)
 	{
@@ -270,9 +280,9 @@ void CPlayer::thread_Playing()
 	SetEvent(hEvent_End);
 }
 
-bool CPlayer::openSoundFile(const std::string& fileName){
+bool openSoundFile(const std::string& fileName){
 	LOG("Open file %s ...", fileName.c_str());
-	LOG("%s File.", decoder == ogg ? "ogg" : "wav");
+	LOG("%s File.", decoder == &_Decoders.ogg ? "ogg" : "wav");
 	if (!decoder->Open(fileName.c_str())) {
 		LOG("Open file as sound file failed!");
 		return false;
@@ -297,7 +307,7 @@ bool CPlayer::openSoundFile(const std::string& fileName){
 	return true;
 }
 
-bool CPlayer::initDSBuff(){
+bool initDSBuff(){
 	memset(&dSBufferDesc, 0, sizeof(dSBufferDesc));
 	dSBufferDesc.dwSize = sizeof(dSBufferDesc);
 	dSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME;
@@ -321,7 +331,7 @@ bool CPlayer::initDSBuff(){
 	return true;
 }
 
-bool CPlayer::startPlay(){
+bool startPlay(){
 	void *AP1, *AP2;
 	DWORD AB1, AB2;
 	if (DS_OK == pDSBuff->Lock(0, buffSize * (NUM_BUF - 1), &AP1, &AB1, &AP2, &AB2, 0)) {
@@ -336,14 +346,14 @@ bool CPlayer::startPlay(){
 	}
 	LOG("First data wroten");
 
-	pDSBuff->SetVolume(TO_DSVOLUME(this->volume));
+	pDSBuff->SetVolume(TO_DSVOLUME(volume));
 	pDSBuff->Play(0, 0, DSBPLAY_LOOPING);
 
 	LOG("Playing...");
 	return 1;
 }
 
-int CPlayer::playing() {
+int playing() {
 	pDSBuff->GetCurrentPosition((LPDWORD)&curPos, NULL);
 	if(curPos < prePos) {
 		buffIndex = 0;
@@ -383,7 +393,7 @@ int CPlayer::playing() {
 			: endPos - curPos;
 }
 
-void CPlayer::finishPlay() {
+void finishPlay() {
 	decoder->Close();
 	decoder = nullptr;
 
@@ -397,35 +407,3 @@ void CPlayer::finishPlay() {
 	}
 }
 
-Status Player::GetStatus() { return player->GetStatus(); }
-
-PlayID Player::GetCurrentPlayID() {
-	return player->GetCurrentPlayID();
-}
-const char* Player::GetCurrentFile() {
-	return player->GetCurrentFile();
-}
-
-bool Player::Init(void * pDSD, StopCallBack stopCallBack)
-{
-	player = new CPlayer(pDSD, stopCallBack);
-	return true;
-}
-
-bool Player::End()
-{
-	delete player;
-	player = nullptr;
-	return true;
-}
-
-PlayID Player::Play(const char* fileName, int volume, Decoder* decoder /*= nullptr*/) {
-	return player->Play(fileName, volume, decoder);
-}
-void Player::Stop() { player->Stop(); }
-void Player::SetVolume(int volume /*= MaxVolume*/)  { player->SetVolume(volume); }
-
-void Player::SetStopCallBack(StopCallBack stopCallBack /*= nullptr*/) {
-	player->SetStopCallBack(stopCallBack);
-};
-StopCallBack Player::GetStopCallBack() { return player->GetStopCallBack(); }
