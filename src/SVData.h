@@ -93,9 +93,12 @@ struct SVData
 		unsigned MENUEND;
 	} scode;
 
-	char *p_rnd_vlst;
+	const char *p_rnd_vlst;
 	char Comment[64];
 };
+
+int InitSVData();
+int CleanSVData();
 
 extern SVData SV;
 

@@ -78,7 +78,7 @@ constexpr int KEYS_NUM = 256;
 struct Keys {
 	const byte* const &keys;
 	DID* const pDID;
-	byte last[KEYS_NUM];
+	byte last[KEYS_NUM]{};
 	Keys(const byte* &keys, void* pDID)
 		:keys(keys), pDID((decltype(this->pDID))pDID) {
 	}
@@ -668,6 +668,14 @@ void SoraVoice::Show()
 
 bool SoraVoice::Init() {
 	if (SV.status.startup || SV.status.ended) return false;
+	VC_isZa = GAME_IS_ZA(SV.game);
+
+	if (VC_isZa) {
+		if (!InitSVData()) {
+			LOG("Init SV failed.");
+			return false;
+		}
+	}
 
 	Config.LoadConfig(CONFIG_FILE, true);
 
@@ -728,7 +736,7 @@ bool SoraVoice::Init() {
 		LOG("Hook Present failed.");
 	}
 
-	if(GAME_IS_ZA(SV.game)) {
+	if(VC_isZa) {
 		if (Config.EnableKeys) {
 			LOG("Now going to hook GetDeviceState...");
 			void* pGetDeviceState = Hook::Hook_DI_GetDeviceState(*SV.addrs.p_did, SoraVoice::Input, (void**)&SV.addrs.p_keys);
