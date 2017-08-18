@@ -45,6 +45,8 @@ constexpr const char* STR_D3DX9_APIS[][2] = {
 
 int InitSVData()
 {
+	SV.status.ended = 1;
+
 	LOG("p = 0x%08X", (unsigned)&SV);
 	LOG("p->p_d3dd = 0x%08X", (unsigned)SV.addrs.p_d3dd);
 	LOG("p->p_did = 0x%08X", (unsigned)SV.addrs.p_did);
@@ -187,18 +189,7 @@ int InitSVData()
 
 	Message.LoadMessage();
 
-	return true;
-}
+	SV.status.ended = 0;
 
-int CleanSVData() {
-	if (d3dx_dll) {
-		FreeLibrary(d3dx_dll);
-		d3dx_dll = nullptr;
-	}
-	if (dsd_dll) {
-		FreeLibrary(dsd_dll);
-		dsd_dll = nullptr;
-	}
-	memset(&SV, 0, sizeof(SV));
-	return true;
+	return 1;
 }

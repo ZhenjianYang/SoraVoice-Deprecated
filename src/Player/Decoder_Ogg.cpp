@@ -73,7 +73,7 @@ void Ogg::Close() {
 
 void Ogg::destory()
 {
-	Close();
+	if(OggApi::ov_clear) Close();
 	delete (OggVorbis_File*)ovFile;
 	ovFile = nullptr;
 }

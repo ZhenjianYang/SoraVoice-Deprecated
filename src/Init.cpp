@@ -11,6 +11,7 @@
 #include <SoraVoice.h>
 
 #include <Windows.h>
+#include <Psapi.h>
 
 #include <memory>
 #include <sstream>
@@ -24,26 +25,26 @@ static bool ApplyMemoryPatch();
 static bool DoStart();
 
 static HMODULE moduleHandle;
+static MODULEINFO mi_exe;
 
 int StartSoraVoice(void* mh)
 {
+	if (!GetModuleInformation(GetCurrentProcess(), GetModuleHandleA(NULL), &mi_exe, sizeof(mi_exe))) {
+		return 0;
+	}
+
 	::moduleHandle = (HMODULE)mh;
 
 	if (!LoadRC() || !SearchGame()) return 0;
-	if (GAME_IS_ED6(SV.game) && !InitSVData()) {
-		CleanSVData(); return 0;
-	}
-	if (!ApplyMemoryPatch()) {
-		CleanSVData(); return 0;
-	}
-	DoStart();
+	if (GAME_IS_ED6(SV.game) && !InitSVData()) return 0;
+
+	if(ApplyMemoryPatch()) DoStart();
 	return 1;
 }
 
 int EndSoraVoice()
 {
 	SoraVoice::End();
-	CleanSVData();
 	return 1;
 }
 
@@ -157,11 +158,12 @@ static bool SearchGame(const char* iniName) {
 	}
 	LOG("ini file opened. %d", ini.Num());
 
-	memset(&SV, 0, sizeof(SV));
+	std::memset(&SV, 0, sizeof(SV));
 
 	int game = 0;
 	const INI::Group *group = nullptr;
 	SVData::Jcs *jcs = (SVData::Jcs *)&SV.jcs;
+	const unsigned addr_max = (unsigned)mi_exe.lpBaseOfDll + mi_exe.SizeOfImage;
 	for (int i = 1; i < ini.Num(); i++) {
 		auto& tmp_group = ini.GetGroup(i);
 		LOG("Check data: %s", tmp_group.Name());
@@ -179,6 +181,11 @@ static bool SearchGame(const char* iniName) {
 
 			jcs[j].next = GetUIntFromValue(tmp_group.GetValue(from.c_str()));
 			jcs[j].to = GetUIntFromValue(tmp_group.GetValue(to.c_str()));
+
+			if (jcs[j].next > addr_max || jcs[j].to > addr_max) {
+				ok = false;
+				break;
+			}
 
 			LOG("from 0x%08X", jcs[j].next);
 			LOG("to 0x%08X", jcs[j].to);
@@ -242,7 +249,7 @@ static bool SearchGame(const char* iniName) {
 	SV.za = GAME_IS_ZA(SV.game);
 	SV.tits = GAME_IS_TITS(SV.game);
 
-	memcpy(&SV.scode, GAME_IS_ED6(SV.game) ? &scode_sora: &scode_za, sizeof(SV.scode));
+	std::memcpy(&SV.scode, GAME_IS_ED6(SV.game) ? &scode_sora: &scode_za, sizeof(SV.scode));
 
 	unsigned * const addrs = (decltype(addrs))&SV.addrs;
 	for (int j = 0; j < num_addr; j++) {

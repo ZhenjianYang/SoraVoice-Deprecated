@@ -99,7 +99,6 @@ struct SVData
 };
 
 int InitSVData();
-int CleanSVData();
 
 extern SVData SV;
 
