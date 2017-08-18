@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define PATH_SN "voice/scena/"
+#define PATH_SN "voice//scena/"
+#define OLD_PATH_SN "./data/scena/"
 #define MAX_NAME_LEN 12
 
 #define BUFF_SIZE 0x10000
@@ -54,4 +55,24 @@ int SVCALL ASM_LoadScns(void* p_PScns, int id, char **pp_t) {
 	}
 	return 1;
 }
+
+#include <io.h>
+void SVCALL ASM_RdScnPath(char* path) {
+	constexpr int len_old = sizeof(OLD_PATH_SN) - 1;
+	constexpr int len_new = sizeof(PATH_SN) - 1;
+	static_assert(len_new == len_old, "len_new != len_old");
+
+	int i;
+	for (i = 0; i < len_old; i++) {
+		if (path[i] != OLD_PATH_SN[i]) {
+			break;
+		}
+		path[i] = PATH_SN[i];
+	}
+
+	if (i != len_old || -1 == _access(path, 4)) {
+		while (--i >= 0) path[i] = OLD_PATH_SN[i];
+	}
+}
+
 

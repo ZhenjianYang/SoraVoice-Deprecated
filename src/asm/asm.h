@@ -8,4 +8,5 @@ namespace ASM {
 	void scode();
 	void ldscn();
 	void ldscnB();
+	void scnp();
 }

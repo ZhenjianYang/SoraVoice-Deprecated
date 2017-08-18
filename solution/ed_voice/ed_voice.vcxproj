@@ -104,6 +104,7 @@
     <ClCompile Include="..\..\src\asm\asm_dududu.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldscn.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldscnB.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_scnp.cpp" />
     <ClCompile Include="..\..\src\asm\asm_scode.cpp" />
     <ClCompile Include="..\..\src\asm\asm_text.cpp" />
     <ClCompile Include="..\..\src\asm\Calls_LoadScns.cpp" />

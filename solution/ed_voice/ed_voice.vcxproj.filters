@@ -210,6 +210,9 @@
     <ClCompile Include="..\..\src\Init.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_scnp.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\RC\files\SoraData.ini">
