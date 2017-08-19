@@ -32,11 +32,20 @@ or build them with VS2017 (Desktop development with c++).
 But, **Voice Scripts** for *Sora no Kiseki* series are not finished yet. So voice patches for *Sora no Kiseki* series
 are not available now.
 
+## About dsound.dll   
+For *Sora no Kiseki*/*Trails in the Sky* series, you can use **dsound.dll** instead of **dinput8.dll**, in case that
+you couldn't use **dinput8.dll** for some reasons (e.g. another MOD also use dinput8.dll).   
+
 ## About the configuration file   
 The voice patch's configuration file is `<Game Root>/voice/ed_voice.ini`.
 It will be created after the game launched. And some configurations can be changed
 by hotkeys during game playing. Check the configuration file with a text editor for
 more details.
+
+## About extra features
+As a default setting, voice patch will automaticly advance dialogs.
+And the dialog's SE will be diabled if the dialog has voice.   
+For more details about these features, check the configuration file `ed_voice.ini`.
 
 ## By now, this project can work for   
 |Game Title                    |Publisher |Version       | Language 
@@ -97,10 +106,17 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 用于简体中文PC版的语音脚本已经完成。   
 但是，《空之轨迹》系列的语音脚本尚未完成，所以目前《空之轨迹》系列的语音补丁尚不可用。
 
+## 关于dsound.dll   
+对于《空之轨迹》系列, 可以用**dsound.dll**替换掉**dinput8.dll**, 以应对**dinput8.dll**无法使用的情况(比如另一个MOD也使用了dinput8.dll)。 
+
 ## 关于配置文件   
 语音补丁的配置文件为`<游戏根目录>/voice/ed_voice.ini`。
 配置文件会在游戏启动的时候自动创建。并且，部分配置项可以在游戏进行的过程中通过快捷键来进行修改。
 具体请参考配置文件内的说明(用文本编辑器打开即可)。
+
+## 关于补丁的额外功能    
+在默认配置下，补丁会让对话框自动前进；同时，会禁用掉有语音对话框的文字音效。   
+关于这些功能的更多说明，请参考配置文件`ed_voice.ini`。
 
 ## 目前，本工程可用于   
 |游戏标题          |发行商    |版本       | 语言 
