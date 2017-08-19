@@ -4,9 +4,11 @@
 #include <Windows.h>
 
 static void* hDll = nullptr;
+static int last_rst = 0;
 
 int SVCALL Start() {
-	return StartSoraVoice(hDll);
+	if (!last_rst) last_rst = StartSoraVoice(hDll);
+	return last_rst;
 }
 int SVCALL End() {
 	return EndSoraVoice();
