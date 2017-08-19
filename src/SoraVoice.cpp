@@ -633,7 +633,7 @@ void SoraVoice::Show()
 		}
 		else if (aup->wait && !aup->time_autoplay) {
 			aup->time_autoplay = aup->time_textbeg
-				+ (aup->count_ch * Config.WaitTimePerChar + Config.WaitTimeDialog - TIME_PREC) / 2;
+				+ aup->count_ch * Config.WaitTimePerChar + Config.WaitTimeDialog - TIME_PREC / 2;
 
 			SV.order.disableDududu = 0;
 		}
