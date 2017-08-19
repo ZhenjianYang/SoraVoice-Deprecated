@@ -183,15 +183,15 @@ static bool SearchGame(const char* iniName) {
 			jcs[j].next = GetUIntFromValue(tmp_group.GetValue(from.c_str()));
 			jcs[j].to = GetUIntFromValue(tmp_group.GetValue(to.c_str()));
 
-			if (jcs[j].next >= addr_max || jcs[j].next < addr_min || jcs[j].to >= addr_max) {
-				ok = false;
-				break;
-			}
-
 			LOG("from 0x%08X", jcs[j].next);
 			LOG("to 0x%08X", jcs[j].to);
 
 			if (jcs[j].next) {
+				if (jcs[j].next >= addr_max || jcs[j].next < addr_min || jcs[j].to >= addr_max) {
+					ok = false;
+					break;
+				}
+
 				unsigned addr_next = jcs[j].next;
 				byte* p = (byte*)addr_next;
 				constexpr int size = 6;
