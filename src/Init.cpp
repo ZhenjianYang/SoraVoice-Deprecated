@@ -164,6 +164,7 @@ static bool SearchGame(const char* iniName) {
 	const INI::Group *group = nullptr;
 	SVData::Jcs *jcs = (SVData::Jcs *)&SV.jcs;
 	const unsigned addr_max = (unsigned)mi_exe.lpBaseOfDll + mi_exe.SizeOfImage;
+	const unsigned addr_min = (unsigned)mi_exe.lpBaseOfDll;
 	for (int i = 1; i < ini.Num(); i++) {
 		auto& tmp_group = ini.GetGroup(i);
 		LOG("Check data: %s", tmp_group.Name());
@@ -182,7 +183,7 @@ static bool SearchGame(const char* iniName) {
 			jcs[j].next = GetUIntFromValue(tmp_group.GetValue(from.c_str()));
 			jcs[j].to = GetUIntFromValue(tmp_group.GetValue(to.c_str()));
 
-			if (jcs[j].next > addr_max || jcs[j].to > addr_max) {
+			if (jcs[j].next >= addr_max || jcs[j].next < addr_min || jcs[j].to >= addr_max) {
 				ok = false;
 				break;
 			}
