@@ -12,8 +12,16 @@ NACKED void ASM::text() {
 		cmp     dword ptr[SV.tits], 0;
 		je      text_start;
 
+	//text_tits:
+		mov     eax, dword ptr[esp + 4];
+		cmp     byte ptr[eax - 9], 0x0B;
+		jnz     text_tits23;
 		mov     eax, ebx;
 		jmp     short text_start;
+	text_tits23:
+		mov     eax, edi;
+		jmp     short text_start;
+
 	text_sora:
 		mov     eax, edx;
 

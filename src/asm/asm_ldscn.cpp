@@ -5,33 +5,27 @@
 
 NACKED void ASM::ldscn() {
 	INLINE_ASM{
-		sub     esp, 0x10;
-		push    ebx;
-		push    ebp;
-		push    esi;
-		mov     esi,[esp + 0x20];
-		push    edi;
-
-		push    eax;
-		push    ecx;
-		push    edx;
-
 		push    dword ptr[SV.addrs.addr_ppscn];
 		push    eax;
-		push    esi;
+		push    ebx;
 		call    ASM_LoadScns;
 		test    eax, eax;
-
-		pop     edx;
-		pop     ecx;
-		pop     eax;
 
 		jne     ldscn_iscn;
 
 	//ldscn_call_ori:
+		mov     ebp, 8
 		jmp     dword ptr[SV.jcs.ldscn.next];
 
 	ldscn_iscn:
+		mov     ecx, dword ptr[ebx];
+		mov     dword ptr[ebx - 0x18], ecx;
+		lea     eax, [esi + 0x2C];
+		sub     eax, ebx;
+		jnz     ldscn_to;
+		mov     dword ptr[ebx - 0x1C], ecx;
+
+	ldscn_to:
 		jmp     dword ptr[SV.addrs.addr_iscn];
 	}
 }

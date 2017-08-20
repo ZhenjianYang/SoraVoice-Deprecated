@@ -13,7 +13,7 @@ void SVCALL ASM_Stop();
 int SVCALL ASM_Init();
 
 int SVCALL ASM_LoadScn(const char* name, char* buff);
-int SVCALL ASM_LoadScns(void* p_PScns, int id, char **pp_t);
+int SVCALL ASM_LoadScns(char* buffs[], int id, char **pp_t);
 
 void SVCALL ASM_RdScnPath(char* path);
 
