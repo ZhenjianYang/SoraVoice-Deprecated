@@ -3,29 +3,29 @@
 #include <stdio.h>
 #include <memory.h>
 
+Wav Wav::_wav;
+Decoder* const Wav::wav = &_wav;
+
 static constexpr u32 tag_RIFF = 0x46464952;
 static constexpr u32 tag_WAVE = 0x45564157;
 static constexpr u32 tag_fmt  = 0x20746D66;
 static constexpr u32 tag_data = 0x61746164;
-
-struct WAVHead
-{
-	u32 tag_RIFF;
-	u32 size;
-	u32 tag_WAVE;
-	u32 tag_fmt;
-	u32 size_WAVEFORMAT;
-	Decoder::WAVEFORMAT waveFormat;
-	u32 tag_data;
-	s32 size_data;
-};
 
 bool Wav::Open(const char* fileName) {
 	file = fopen(fileName, "rb");
 	if (file == NULL) {
 		return false;
 	}
-	WAVHead head{};
+	struct WAVHead {
+		u32 tag_RIFF;
+		u32 size;
+		u32 tag_WAVE;
+		u32 tag_fmt;
+		u32 size_WAVEFORMAT;
+		WAVEFORMAT waveFormat;
+		u32 tag_data;
+		s32 size_data;
+	} head { };
 	if (fread(&head, 1, sizeof(head), (FILE*)file) != sizeof(head)) {
 		fclose((FILE*)file); file = NULL; return false;
 	}

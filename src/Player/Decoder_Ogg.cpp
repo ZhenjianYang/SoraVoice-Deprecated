@@ -3,6 +3,9 @@
 #include <vorbis\vorbisfile.h>
 #include <memory.h>
 
+Ogg Ogg::_ogg;
+Decoder* const Ogg::ogg = &_ogg;
+
 namespace OggApi {
 	static decltype(::ov_open_callbacks)* ov_open_callbacks;
 	static decltype(::ov_info)* ov_info;
@@ -73,7 +76,6 @@ void Ogg::Close() {
 
 void Ogg::destory()
 {
-	if(OggApi::ov_clear) Close();
 	delete (OggVorbis_File*)ovFile;
 	ovFile = nullptr;
 }

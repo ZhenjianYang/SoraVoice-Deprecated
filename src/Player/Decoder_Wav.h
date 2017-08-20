@@ -2,35 +2,28 @@
 
 #include "Decoder.h"
 
-class Wav : public Decoder {
+class Wav : private Decoder {
 public:
 	static constexpr char Attr[] = "wav";
-	Wav() = default;
-	virtual ~Wav() { destory(); }
+	static Decoder* const wav;
+
 	virtual bool Open(const char* fileName) override;
 	virtual int Read(void * buff, int bytes) override;
 	virtual void Close() override;
 
-protected:
+private:
+	static Wav _wav;
+
 	void *file = nullptr;
 	void destory();
 
-private:
+	Wav() = default;
+	virtual ~Wav() { destory(); }
+
 	Wav(const Wav&) = delete;
 	Wav& operator=(const Wav&) = delete;
-
-public:
-	Wav(Wav && _Right) : Decoder(_Right), file(_Right.file) {
-		_Right.file = nullptr;
-	}
-
-	Wav& operator=(Wav && _Right) {
-		destory();
-		Decoder::operator=(_Right);
-		file = _Right.file;
-		_Right.file = nullptr;
-		return *this;
-	}
+	Wav(Wav&&) = delete;
+	Wav& operator=(Wav&&) = delete;
 };
 
 

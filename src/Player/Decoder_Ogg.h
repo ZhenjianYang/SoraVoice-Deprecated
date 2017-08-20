@@ -2,19 +2,14 @@
 
 #include "Decoder.h"
 
-class Ogg : public Decoder {
+class Ogg : private Decoder {
 public:
 	static constexpr char Attr[] = "ogg";
+	static Decoder* const ogg;
 
-	Ogg();
-	virtual ~Ogg() { destory(); }
 	virtual bool Open(const char* fileName) override;
 	virtual int Read(void * buff, int bytes) override;
 	virtual void Close() override;
-
-protected:
-	void* ovFile = nullptr;
-	void destory();
 
 public:
 	static void SetOggApis(void * ov_open_callbacks,
@@ -22,21 +17,17 @@ public:
 		void * ov_time_total);
 
 private:
+	static Ogg _ogg;
+
+	void* ovFile = nullptr;
+	void destory();
+
+	virtual ~Ogg() { destory(); }
+	Ogg();
+
 	Ogg(const Ogg&) = delete;
 	Ogg& operator=(const Ogg&) = delete;
-
-public:
-	Ogg(Ogg && _Right) : Decoder(_Right),
-		ovFile(_Right.ovFile) {
-		_Right.ovFile = nullptr;
-	}
-
-	Ogg& operator=(Ogg && _Right) {
-		destory();
-		Decoder::operator=(_Right);
-		ovFile = _Right.ovFile;
-		_Right.ovFile = nullptr;
-		return *this;
-	}
+	Ogg(Ogg&&) = delete;
+	Ogg& operator=(Ogg&&) = delete;
 };
 

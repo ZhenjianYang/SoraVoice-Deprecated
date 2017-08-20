@@ -3,7 +3,7 @@
 #include <Utils/Type.h>
 
 class Decoder {
-public:
+protected:
 	struct WAVEFORMAT {
 		u16 wFormatTag;        /* format type */
 		u16 nChannels;         /* number of channels (i.e. mono, stereo, etc.) */
@@ -23,8 +23,6 @@ public:
 	
 	int SamplesTotal() const { return samples_total; }
 	int SamplesRead() const { return samples_read; }
-public:
-	virtual ~Decoder() {};
 
 protected:
 	WAVEFORMAT waveFormat{};
@@ -32,14 +30,11 @@ protected:
 	int samples_read = 0;
 
 	Decoder() { }
-	Decoder(const Decoder& _Other)
-		: waveFormat(_Other.waveFormat),
-		  samples_total(_Other.samples_total),
-		  samples_read(_Other.samples_read) { }
-	Decoder& operator=(const Decoder& _Other) {
-		waveFormat = _Other.waveFormat;
-		samples_read = _Other.samples_read;
-		samples_total = _Other.samples_total;
-		return *this;
-	}
+	virtual ~Decoder() {};
+
+private:
+	Decoder(const Decoder&) = delete;
+	Decoder& operator=(const Decoder&) = delete;
+	Decoder(Decoder&&) = delete;
+	Decoder& operator=(Decoder&&) = delete;
 };

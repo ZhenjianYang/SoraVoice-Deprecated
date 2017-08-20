@@ -73,17 +73,13 @@ static HANDLE PL_hEvent_End;
 static std::thread PL_th_playing;
 
 static struct {
-	Ogg ogg;
-	Wav wav;
-} _Decoders;
-static struct {
 	Decoder* const decoder;
 	std::string attr;
 } Decoders[] = {
-	{ &_Decoders.ogg, Ogg::Attr },
-	{ &_Decoders.wav, Wav::Attr }
+	{ Ogg::ogg, Ogg::Attr },
+	{ Wav::wav, Wav::Attr }
 };
-static Decoder *DFT_Decoder = &_Decoders.ogg;
+static Decoder* const DFT_Decoder = Wav::wav;
 
 static void thread_Playing();
 
@@ -278,7 +274,7 @@ void thread_Playing()
 
 bool openSoundFile(const std::string& fileName){
 	LOG("Open file %s ...", fileName.c_str());
-	LOG("%s File.", PL_decoder == &_Decoders.ogg ? "ogg" : "wav");
+	LOG("%s File.", PL_decoder == Ogg::ogg ? "ogg" : "wav");
 	if (!PL_decoder->Open(fileName.c_str())) {
 		LOG("Open file as sound file failed!");
 		return false;
