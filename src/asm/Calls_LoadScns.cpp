@@ -52,12 +52,10 @@ void SVCALL ASM_RdScnPath(char* path) {
 	constexpr int len_new = sizeof(PATH_SN) - 1;
 	static_assert(len_new == len_old, "len_new != len_old");
 
-	int i;
-	for (i = 0; i < len_old; i++) {
-		if (path[i] != OLD_PATH_SN[i]) {
-			break;
-		}
+	int i = 0;
+	while (OLD_PATH_SN[i] && path[i] == OLD_PATH_SN[i]) {
 		path[i] = PATH_SN[i];
+		i++;
 	}
 
 	if (i != len_old || -1 == _access(path, 4)) {
