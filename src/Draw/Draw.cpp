@@ -29,9 +29,6 @@ constexpr unsigned SHADOW_COLOR = 0x20202020;
 
 constexpr unsigned TIME_MAX = 0xFFFFFFFF;
 
-constexpr char STR_D3DXCreateFontIndirect[] = "D3DXCreateFontIndirect";
-constexpr char STR_D3DXCreateSprite[] = "D3DXCreateSprite";
-
 static constexpr const unsigned DftFormatList_Sora[] = {
 	DT_TOP | DT_LEFT   ,//Hello = 0,
 	DT_TOP | DT_LEFT   ,//InfoOnoff,

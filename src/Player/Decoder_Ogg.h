@@ -14,7 +14,7 @@ public:
 public:
 	static void SetOggApis(void * ov_open_callbacks,
 		void * ov_info, void * ov_read, void * ov_clear, 
-		void * ov_time_total);
+		void * ov_pcm_total);
 
 private:
 	static Ogg _ogg;
