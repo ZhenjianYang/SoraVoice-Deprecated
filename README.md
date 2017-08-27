@@ -51,8 +51,10 @@ For more details about these features, check the configuration file `ed_voice.in
 |Game Title                    |Publisher |Version       | Language 
 |------------------------------|----------|--------------|-------------------
 |*Zero no Kiseki*              |Joyoland  |1.1           |Chinese Simplified
+|                              |          |Cubejoy       |Chinese Simplified
 |                              |          |JOYO Platform |Chinese Simplified
 |*Ao no Kiseki*                |Joyoland  |1.0           |Chinese Simplified
+|                              |          |Cubejoy       |Chinese Simplified
 |                              |          |JOYO Platform |Chinese Simplified
 |*Sora no Kiseki FC*           |YLT       |Final         |Chinese Simplified
 |*Sora no Kiseki SC*           |YLT       |Final         |Chinese Simplified
@@ -122,8 +124,10 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁
 |游戏标题          |发行商    |版本       | 语言 
 |------------------|----------|---------- |---------
 |零之轨迹          |欢乐百世  |1.1        |简体中文
+|                  |          |方块平台版 |简体中文
 |                  |          |JOYO平台版 |简体中文
 |碧之轨迹          |欢乐百世  |1.0        |简体中文
+|                  |          |方块平台版 |简体中文
 |                  |          |JOYO平台版 |简体中文
 |空之轨迹 FC       |娱乐通    |最终版     |简体中文
 |空之轨迹 SC       |娱乐通    |最终版     |简体中文
