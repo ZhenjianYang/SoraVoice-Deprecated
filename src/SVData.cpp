@@ -34,7 +34,6 @@ static void* d3dd;
 static void* did;
 static HWND hWnd;
 static DSD* pDS;
-static unsigned fake_mute = 1;
 
 constexpr char STR_d3dx_dll_za[] = "d3dx9_42.dll";
 constexpr char STR_d3dx_dll_tits[] = "d3dx9_43.dll";
@@ -57,7 +56,7 @@ int InitSVData()
 	LOG("p->p_global = 0x%08X", (unsigned)SV.addrs.p_global);
 	LOG("p->p_rnd_vlst = 0x%08X", (unsigned)SV.p_rnd_vlst);
 
-	if (GAME_IS_ZA(SV.game) && SV.addrs.p_global) {
+	if (SV.series == SVData::SERIES_ZEROAO && SV.addrs.p_global) {
 		if (SV.addrs.p_d3dd) SV.addrs.p_d3dd = (void**)((char*)*SV.addrs.p_global + (int)SV.addrs.p_d3dd);
 		if (SV.addrs.p_did) SV.addrs.p_did = (void**)((char*)*SV.addrs.p_global + (int)SV.addrs.p_did);
 		if (SV.addrs.p_Hwnd) SV.addrs.p_Hwnd = (void**)((char*)*SV.addrs.p_global + (int)SV.addrs.p_Hwnd);
@@ -77,7 +76,7 @@ int InitSVData()
 	LOG("Hwnd = 0x%08X", (unsigned)hWnd);
 	LOG("pDS = 0x%08X", (unsigned)pDS);
 
-	if (!pDS && GAME_IS_ZA(SV.game)) {
+	if (!pDS && SV.series == SVData::SERIES_ZEROAO) {
 		LOG("pDS is nullptr, now going to creat DirectSoundDevice");
 		if (!hWnd) {
 			LOG("HWnd is nullptr, cound not DirectSoundDevice");
@@ -114,9 +113,9 @@ int InitSVData()
 
 	LOG("Now going to get d3dx Apis");
 
-	if (GAME_IS_DX9(SV.game)) {
+	if (SV.dxver == SVData::DX9) {
 		d3dx_dll = NULL;
-		d3dx_dll = LoadLibrary(GAME_IS_ZA(SV.game) ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
+		d3dx_dll = LoadLibrary(SV.series == SVData::SERIES_ZEROAO ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
 		if (d3dx_dll) {
 			for (auto api : STR_D3DX9_APIS) {
 				void* ptrApi = (void*)GetProcAddress(d3dx_dll, api[1]);
@@ -127,7 +126,7 @@ int InitSVData()
 			}
 		}//if (d3dx_dll) 
 		else {
-			LOG("Load %s failed.", GAME_IS_ZA(SV.game) ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
+			LOG("Load %s failed.", SV.series == SVData::SERIES_ZEROAO ? STR_d3dx_dll_za : STR_d3dx_dll_tits);
 		}
 	}
 
@@ -165,12 +164,9 @@ int InitSVData()
 
 		if (!ov_open_callbacks || !ov_info || !ov_read || !ov_clear || !ov_pcm_total) {
 			LOG("Load ogg apis failed.");
-			if (ogg_dll) {
+			if (ogg_dll && SV.series == SVData::SERIES_ZEROAO) {
 				FreeLibrary(ogg_dll);
-			}
-			if (d3dx_dll) {
-				FreeLibrary(d3dx_dll);
-				d3dx_dll = nullptr;
+				ogg_dll = nullptr;
 			}
 			if (dsd_dll) {
 				FreeLibrary(dsd_dll);

@@ -33,13 +33,13 @@ NACKED void ASM::scode() {
 	scode_return:
 		pop     eax;
 
-		cmp     dword ptr[SV.sora], 0;
-		jne     scode_sora_return;
+		cmp     dword ptr[SV.series], SVData::SERIES_SORA;
+		je      scode_sora_return;
 
-		cmp     dword ptr[SV.tits], 0;
-		jne     scode_tits_return;
+		cmp     dword ptr[SV.series], SVData::SERIES_TITS;
+		je      scode_tits_return;
 
-	//scode_zero_return:
+	//scode_za_return:
 		mov     esi, esp;
 		mov     eax, dword ptr[ebp + 8];
 		jmp     dword ptr[SV.jcs.scode.next];

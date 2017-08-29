@@ -670,7 +670,7 @@ void SoraVoice::Show()
 
 bool SoraVoice::Init() {
 	if (SV.status.startup || SV.status.ended) return false;
-	VC_isZa = GAME_IS_ZA(SV.game);
+	VC_isZa = SV.series == SVData::SERIES_ZEROAO;
 
 	if (VC_isZa) {
 		if (!InitSVData()) {
@@ -708,7 +708,7 @@ bool SoraVoice::Init() {
 
 	static_assert(CConfig::MAX_Volume == Player::MaxVolume, "Max Volume not same!");
 
-	if(GAME_IS_DX9(SV.game)) {
+	if(SV.dxver == SVData::DX9) {
 		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Mute);
 		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Volume);
 		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.OriginalVoice);
@@ -730,7 +730,7 @@ bool SoraVoice::Init() {
 		Draw::RemoveInfo(InfoType::All);
 	}
 
-	void* pPresent = Hook::Hook_D3D_Present(*SV.addrs.p_d3dd, GAME_IS_DX9(SV.game), SoraVoice::Show);
+	void* pPresent = Hook::Hook_D3D_Present(*SV.addrs.p_d3dd, SV.dxver == SVData::DX9, SoraVoice::Show);
 	if (pPresent) {
 		LOG("Present hooked, old Present = 0x%08X", (unsigned)pPresent);
 	}

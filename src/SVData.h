@@ -1,13 +1,5 @@
 #pragma once
 
-#define GAME_IS_SORA(game) ((game) == SVData::SORA)
-#define GAME_IS_TITS(game) ((game) == SVData::TITS_DX8 || (game) == SVData::TITS_DX9)
-#define GAME_IS_ED6(game) (GAME_IS_SORA(game) || GAME_IS_TITS(game))
-#define GAME_IS_ZA(game) ((game) == SVData::ZERO || (game) == SVData::AO)
-#define GAME_IS_DX8(game) ((game) == SVData::SORA || (game) == SVData::TITS_DX8)
-#define GAME_IS_DX9(game) ((game) == SVData::TITS_DX9 || (game) == SVData::ZERO || (game) == SVData::AO)
-#define GAME_IS_VALID(game) (GAME_IS_ED6(game) || GAME_IS_ZA(game))
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,19 +11,31 @@ struct SVData
 		unsigned next;
 		unsigned to;
 	} Jcs;
-	typedef enum Game {
-		NONE = 0,
-		SORA = 1,
-		TITS_DX8 = 2,
-		TITS_DX9 = 3,
-		ZERO = 11,
-		AO = 12,
-	} Game;
+	enum GAMES {
+		INVALID_GAME = 0,
+		SORA_FC = 1,
+		SORA_SC = 2,
+		SORA_3RD = 3,
+		ZERO = 4,
+		AO = 5,
+	};
+	enum SERIES {
+		SERIES_NONE = 0,
+		SERIES_SORA = 1,
+		SERIES_ZEROAO = 2,
+		SERIES_TITS = 3,
+	};
+	enum DX_VER {
+		DXDFT = 0,
+		DX8 = 1,
+		DX9 = 2
+	};
 
-	Game game;
-	int sora;
-	int tits;
-	int za;
+	int game;
+	int series;
+	int dxver;
+
+#define SERIES_IS_ED6(series) ((series) == SVData::SERIES_SORA  || (series) == SVData::SERIES_TITS)
 
 	struct Status {
 		unsigned startup;

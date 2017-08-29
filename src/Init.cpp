@@ -16,6 +16,7 @@
 #include <memory>
 #include <sstream>
 #include <cstring>
+#include <algorithm>
 
 constexpr char LOG_FILE_PATH[] = "voice/SoraVoice.log";
 
@@ -36,7 +37,7 @@ int StartSoraVoice(void* mh)
 	::moduleHandle = (HMODULE)mh;
 
 	if (!LoadRC() || !SearchGame()) return 0;
-	if (GAME_IS_ED6(SV.game) && !InitSVData()) return 0;
+	if (SERIES_IS_ED6(SV.series) && !InitSVData()) return 0;
 
 	if(ApplyMemoryPatch()) DoStart();
 	return 1;
@@ -82,6 +83,13 @@ const string str_FeatureValue = "FeatureValue";
 
 const string str_Comment = "Comment";
 const string str_Game = "Game";
+
+constexpr int valid_game_id[] = {
+	SVData::SORA_FC, SVData::SORA_SC, SVData::SORA_3RD,
+	SVData::ZERO, SVData::AO,
+	SVData::SORA_FC + SVData::DX8 * 10, SVData::SORA_SC + SVData::DX8 * 10, SVData::SORA_3RD + SVData::DX8 * 10,
+	SVData::SORA_FC + SVData::DX9 * 10, SVData::SORA_SC + SVData::DX9 * 10, SVData::SORA_3RD + SVData::DX9 * 10,
+};
 
 constexpr const char* addr_list[] = {
 	"p_d3dd",
@@ -171,7 +179,8 @@ static bool SearchGame(const char* iniName) {
 
 		game = GetUIntFromValue(tmp_group.GetValue(str_Game.c_str()));
 		LOG("game = %d", game);
-		if (!GAME_IS_VALID(game)) continue;
+
+		if (std::find(std::begin(valid_game_id), std::end(valid_game_id), game) == std::end(valid_game_id)) continue;
 
 		bool ok = true;
 		for (int j = 0; j < num_asm_codes; j++) {
@@ -245,12 +254,14 @@ static bool SearchGame(const char* iniName) {
 	}
 	LOG("Data found, num = %d, name = %s, game = %d", group->Num(), group->Name(), game);
 
-	SV.game = (SVData::Game)game;
-	SV.sora = GAME_IS_SORA(SV.game);
-	SV.za = GAME_IS_ZA(SV.game);
-	SV.tits = GAME_IS_TITS(SV.game);
+	SV.game = game % 10;
+	SV.dxver = game / 10;
+	SV.series = SV.game == SVData::ZERO || SV.game == SVData::AO ? SVData::SERIES_ZEROAO :
+						SV.dxver == SVData::DXDFT ? SVData::SERIES_SORA : SVData::SERIES_TITS;
+	if(SV.dxver == SVData::DXDFT)
+		SV.dxver = SV.series == SVData::SERIES_ZEROAO ? SVData::DX9 : SVData::DX8;
 
-	std::memcpy(&SV.scode, GAME_IS_ED6(SV.game) ? &scode_sora: &scode_za, sizeof(SV.scode));
+	std::memcpy(&SV.scode, SERIES_IS_ED6(SV.series) ? &scode_sora: &scode_za, sizeof(SV.scode));
 
 	unsigned * const addrs = (decltype(addrs))&SV.addrs;
 	for (int j = 0; j < num_addr; j++) {
@@ -356,7 +367,7 @@ bool ApplyMemoryPatch()
 
 bool DoStart()
 {
-	if (GAME_IS_ED6(SV.game)) {
+	if (SERIES_IS_ED6(SV.series)) {
 		return SoraVoice::Init();
 	}
 	else {

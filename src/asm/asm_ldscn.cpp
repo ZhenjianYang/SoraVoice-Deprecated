@@ -19,13 +19,14 @@ NACKED void ASM::ldscn() {
 
 	ldscn_iscn:
 		mov     ecx, dword ptr[ebx];
-		mov     dword ptr[ebx - 0x18], ecx;
-		lea     eax, [esi + 0x2C];
-		sub     eax, ebx;
-		jnz     ldscn_to;
+		cmp     dword ptr[SV.game], SVData::SORA_FC;
+		jne     ldscn_to_tits23:
+		
 		mov     dword ptr[ebx - 0x1C], ecx;
-
-	ldscn_to:
+		jmp     dword ptr[SV.addrs.addr_iscn];
+		
+	ldscn_to_tits23:
+		mov     dword ptr[ebx - 0x18], ecx;
 		jmp     dword ptr[SV.addrs.addr_iscn];
 	}
 }

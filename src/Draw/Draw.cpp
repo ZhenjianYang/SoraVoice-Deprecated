@@ -95,7 +95,7 @@ static int DR_shadow = 0;
 static int DR_fontSize = 0;
 
 bool Draw::Init() {
-	const bool isED6 = GAME_IS_ED6(SV.game);
+	const bool isED6 = SERIES_IS_ED6(SV.series);
 
 	DR_showing = &SV.status.showing;
 	DR_dftFormatList = isED6 ? DftFormatList_Sora : DftFormatList_ZA;
@@ -126,7 +126,7 @@ bool Draw::Init() {
 		return false;
 	}
 
-	DR_d3d = D3D::GetD3D(GAME_IS_DX9(SV.game), *SV.addrs.p_d3dd, Config.FontName, DR_fontSize);
+	DR_d3d = D3D::GetD3D(SV.dxver == SVData::DX9, *SV.addrs.p_d3dd, Config.FontName, DR_fontSize);
 	return DR_d3d;
 }
 bool Draw::End() {
