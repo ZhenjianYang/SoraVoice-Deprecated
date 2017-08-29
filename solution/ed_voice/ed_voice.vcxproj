@@ -90,6 +90,7 @@
     <ClInclude Include="..\..\src\RC\resource.h" />
     <ClInclude Include="..\..\src\SoraVoice.h" />
     <ClInclude Include="..\..\src\SVData.h" />
+    <ClInclude Include="..\..\src\SVEnum.h" />
     <ClInclude Include="..\..\src\Utils\ApiPack.h" />
     <ClInclude Include="..\..\src\Utils\build_date.h" />
     <ClInclude Include="..\..\src\Utils\Clock.h" />

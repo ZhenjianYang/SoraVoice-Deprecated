@@ -126,7 +126,7 @@ bool Draw::Init() {
 		return false;
 	}
 
-	DR_d3d = D3D::GetD3D(SV.dxver == SVData::DX9, *SV.addrs.p_d3dd, Config.FontName, DR_fontSize);
+	DR_d3d = D3D::GetD3D(SV.dxver == DX9, *SV.addrs.p_d3dd, Config.FontName, DR_fontSize);
 	return DR_d3d;
 }
 bool Draw::End() {

@@ -85,10 +85,10 @@ const string str_Comment = "Comment";
 const string str_Game = "Game";
 
 constexpr int valid_game_id[] = {
-	SVData::SORA_FC, SVData::SORA_SC, SVData::SORA_3RD,
-	SVData::ZERO, SVData::AO,
-	SVData::SORA_FC + SVData::DX8 * 10, SVData::SORA_SC + SVData::DX8 * 10, SVData::SORA_3RD + SVData::DX8 * 10,
-	SVData::SORA_FC + SVData::DX9 * 10, SVData::SORA_SC + SVData::DX9 * 10, SVData::SORA_3RD + SVData::DX9 * 10,
+	SORA_FC, SORA_SC, SORA_3RD,
+	ZERO, AO,
+	SORA_FC + DX8 * 10, SORA_SC + DX8 * 10, SORA_3RD + DX8 * 10,
+	SORA_FC + DX9 * 10, SORA_SC + DX9 * 10, SORA_3RD + DX9 * 10,
 };
 
 constexpr const char* addr_list[] = {
@@ -256,10 +256,10 @@ static bool SearchGame(const char* iniName) {
 
 	SV.game = game % 10;
 	SV.dxver = game / 10;
-	SV.series = SV.game == SVData::ZERO || SV.game == SVData::AO ? SVData::SERIES_ZEROAO :
-						SV.dxver == SVData::DXDFT ? SVData::SERIES_SORA : SVData::SERIES_TITS;
-	if(SV.dxver == SVData::DXDFT)
-		SV.dxver = SV.series == SVData::SERIES_ZEROAO ? SVData::DX9 : SVData::DX8;
+	SV.series = SV.game == ZERO || SV.game == AO ? SERIES_ZEROAO :
+						SV.dxver == DXDFT ? SERIES_SORA : SERIES_TITS;
+	if(SV.dxver == DXDFT)
+		SV.dxver = SV.series == SERIES_ZEROAO ? DX9 : DX8;
 
 	std::memcpy(&SV.scode, SERIES_IS_ED6(SV.series) ? &scode_sora: &scode_za, sizeof(SV.scode));
 
@@ -273,7 +273,7 @@ static bool SearchGame(const char* iniName) {
 		strncpy(SV.Comment, comment, sizeof(SV.Comment));
 	}
 
-	if (SV.game == SVData::AO) {
+	if (SV.game == AO) {
 		unique_ptr<RC> rc_vlist(RC::Get(rc_ao_vlist));
 		if (rc_vlist && rc_vlist->First()) {
 			int size = (int)rc_vlist->Size();

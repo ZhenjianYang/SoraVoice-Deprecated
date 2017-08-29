@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SVEnum.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -11,31 +13,10 @@ struct SVData
 		unsigned next;
 		unsigned to;
 	} Jcs;
-	enum GAMES {
-		INVALID_GAME = 0,
-		SORA_FC = 1,
-		SORA_SC = 2,
-		SORA_3RD = 3,
-		ZERO = 4,
-		AO = 5,
-	};
-	enum SERIES {
-		SERIES_NONE = 0,
-		SERIES_SORA = 1,
-		SERIES_ZEROAO = 2,
-		SERIES_TITS = 3,
-	};
-	enum DX_VER {
-		DXDFT = 0,
-		DX8 = 1,
-		DX9 = 2
-	};
 
 	int game;
 	int series;
 	int dxver;
-
-#define SERIES_IS_ED6(series) ((series) == SVData::SERIES_SORA  || (series) == SVData::SERIES_TITS)
 
 	struct Status {
 		unsigned startup;

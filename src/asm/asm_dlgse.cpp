@@ -15,9 +15,9 @@ NACKED void ASM::dlgse() {
 
 		pop     eax;
 
-		cmp     dword ptr[SV.series], SVData::SERIES_SORA;
+		cmp     dword ptr[SV.series], SERIES_SORA;
 		je      dlgse_sora;
-		cmp     dword ptr[SV.series], SVData::SERIES_TITS;
+		cmp     dword ptr[SV.series], SERIES_TITS;
 		je      dlgse_tits;
 
 

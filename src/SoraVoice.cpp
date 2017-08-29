@@ -307,7 +307,7 @@ void SoraVoice::Input()
 		info_time = INFINITY_TIME;
 		if (!last[KEY_ALLINFO]) {
 			Draw::RemoveInfo(InfoType::Volume);
-			if(SV.game == SVData::AO) {
+			if(SV.game == AO) {
 				Draw::RemoveInfo(InfoType::OriVolumePercent);
 				Draw::RemoveInfo(InfoType::OriginalVoice);
 			}
@@ -321,7 +321,7 @@ void SoraVoice::Input()
 			if(SV.status.mute) AddInfo(InfoType::Volume, INFINITY_TIME, Config.FontColor, Message.Mute);
 			else AddInfo(InfoType::Volume, INFINITY_TIME, Config.FontColor, Message.Volume, Config.Volume);
 
-			if(SV.game == SVData::AO) {
+			if(SV.game == AO) {
 				AddInfo(InfoType::OriVolumePercent, INFINITY_TIME, Config.FontColor, Message.OriVolumePercent, Config.OriVolumePercent, "%");
 				AddInfo(InfoType::OriginalVoice, INFINITY_TIME, Config.FontColor, Message.OriginalVoice, Message.OriginalVoiceSwitch[Config.OriginalVoice]);
 			}
@@ -334,7 +334,7 @@ void SoraVoice::Input()
 	}
 	else if (last[KEY_ALLINFO]) {
 		Draw::RemoveInfo(InfoType::Volume);
-		if(SV.game == SVData::AO) {
+		if(SV.game == AO) {
 			Draw::RemoveInfo(InfoType::OriVolumePercent);
 			Draw::RemoveInfo(InfoType::OriginalVoice);
 		}
@@ -368,7 +368,7 @@ void SoraVoice::Input()
 		if (Config.ShowInfo || info_time == INFINITY_TIME) {
 			//Draw::AddText(InfoType::ConfigReset, INFO_TIME, config.FontColor, Message.Reset);
 			AddInfo(InfoType::Volume, info_time, Config.FontColor, Message.Volume, Config.Volume);
-			if(SV.game == SVData::AO) {
+			if(SV.game == AO) {
 				AddInfo(InfoType::OriVolumePercent, info_time, Config.FontColor, Message.OriVolumePercent, Config.OriVolumePercent, "%");
 				AddInfo(InfoType::OriginalVoice, info_time, Config.FontColor, Message.OriginalVoice, Message.OriginalVoiceSwitch[Config.OriginalVoice]);
 			}
@@ -436,7 +436,7 @@ void SoraVoice::Input()
 			LOG("Set mute : %d", SV.status.mute);
 		}//keys[KEY_VOLUME_UP] && keys[KEY_VOLUME_DOWN]
 
-		if(SV.game == SVData::AO) {
+		if(SV.game == AO) {
 			if (keys[KEY_ORIVOLPCT_UP] && !last[KEY_ORIVOLPCT_UP] && !keys[KEY_ORIVOLPCT_DOWN]) {
 				needsetvolume = Config.OriVolumePercent != ORIVOLPCT_STEP;
 				needsave = needsetvolume;
@@ -670,7 +670,7 @@ void SoraVoice::Show()
 
 bool SoraVoice::Init() {
 	if (SV.status.startup || SV.status.ended) return false;
-	VC_isZa = SV.series == SVData::SERIES_ZEROAO;
+	VC_isZa = SV.series == SERIES_ZEROAO;
 
 	if (VC_isZa) {
 		if (!InitSVData()) {
@@ -708,7 +708,7 @@ bool SoraVoice::Init() {
 
 	static_assert(CConfig::MAX_Volume == Player::MaxVolume, "Max Volume not same!");
 
-	if(SV.dxver == SVData::DX9) {
+	if(SV.dxver == DX9) {
 		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Mute);
 		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Volume);
 		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.OriginalVoice);
@@ -730,7 +730,7 @@ bool SoraVoice::Init() {
 		Draw::RemoveInfo(InfoType::All);
 	}
 
-	void* pPresent = Hook::Hook_D3D_Present(*SV.addrs.p_d3dd, SV.dxver == SVData::DX9, SoraVoice::Show);
+	void* pPresent = Hook::Hook_D3D_Present(*SV.addrs.p_d3dd, SV.dxver == DX9, SoraVoice::Show);
 	if (pPresent) {
 		LOG("Present hooked, old Present = 0x%08X", (unsigned)pPresent);
 	}

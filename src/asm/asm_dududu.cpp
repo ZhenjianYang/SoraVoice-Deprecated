@@ -5,10 +5,10 @@
 
 NACKED void ASM::dududu() {
 	INLINE_ASM{
-		cmp     dword ptr[SV.series], SVData::SERIES_SORA;
+		cmp     dword ptr[SV.series], SERIES_SORA;
 		je      dududu_sora;
 
-		cmp     dword ptr[SV.series], SVData::SERIES_TITS;
+		cmp     dword ptr[SV.series], SERIES_TITS;
 		je      dududu_tits;
 
 

@@ -19,8 +19,8 @@ NACKED void ASM::ldscn() {
 
 	ldscn_iscn:
 		mov     ecx, dword ptr[ebx];
-		cmp     dword ptr[SV.game], SVData::SORA_FC;
-		jne     ldscn_to_tits23:
+		cmp     dword ptr[SV.game], SORA_FC;
+		jne     ldscn_to_tits23;
 		
 		mov     dword ptr[ebx - 0x1C], ecx;
 		jmp     dword ptr[SV.addrs.addr_iscn];

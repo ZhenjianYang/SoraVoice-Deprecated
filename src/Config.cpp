@@ -131,7 +131,7 @@ bool CConfig::SaveConfig(const char * configFn) const
 	OUTPUT_VALUE(Volume, ofs);
 	ofs << '\n';
 
-	if(SV.game == SVData::AO) {
+	if(SV.game == AO) {
 		OUTPUT_VALUE(OriginalVoice, ofs);
 		OUTPUT_VALUE(OriVolumePercent, ofs);
 		ofs << '\n';

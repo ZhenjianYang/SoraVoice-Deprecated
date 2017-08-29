@@ -5,7 +5,7 @@
 
 NACKED void ASM::aup() {
 	INLINE_ASM {
-		cmp     dword ptr[SV.series], SVData::SERIES_ZEROAO;
+		cmp     dword ptr[SV.series], SERIES_ZEROAO;
 		jne     aup_start;
 
 		cmp     dword ptr[SV.status.ended], 0;

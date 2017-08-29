@@ -7,14 +7,14 @@ NACKED void ASM::text() {
 	INLINE_ASM{
 		push    eax;
 
-		cmp     dword ptr[SV.series], SVData::SERIES_SORA;
+		cmp     dword ptr[SV.series], SERIES_SORA;
 		je      text_sora;
-		cmp     dword ptr[SV.series], SVData::SERIES_TITS;
+		cmp     dword ptr[SV.series], SERIES_TITS;
 		jne     text_start;
 
 	//text_tits:
 		mov     eax, dword ptr[esp + 4];
-		cmp     dword ptr[SV.game], SVData::SORA_FC;
+		cmp     dword ptr[SV.game], SORA_FC;
 		jnz     text_tits23;
 		mov     eax, ebx;
 		jmp     short text_start;

@@ -7,8 +7,8 @@ NACKED void ASM::scode() {
 	INLINE_ASM{
 		push    eax;
 
-		cmp     dword ptr[SV.tits], 0;
-		je      scode_start;
+		cmp     dword ptr[SV.series], SERIES_TITS;;
+		jne     scode_start;
 		mov     eax, edx;
 
 	scode_start:
@@ -33,10 +33,10 @@ NACKED void ASM::scode() {
 	scode_return:
 		pop     eax;
 
-		cmp     dword ptr[SV.series], SVData::SERIES_SORA;
+		cmp     dword ptr[SV.series], SERIES_SORA;
 		je      scode_sora_return;
 
-		cmp     dword ptr[SV.series], SVData::SERIES_TITS;
+		cmp     dword ptr[SV.series], SERIES_TITS;
 		je      scode_tits_return;
 
 	//scode_za_return:
