@@ -15,19 +15,16 @@ NACKED void ASM::ldscnB() {
 		jne     ldscnB_call_ori;
 	ldscnB_call:
 		mov     ecx, dword ptr[esp + 4];
+		movzx   edx, dx
+		push    dword ptr[SV.game];
+		push    edx;
 		push    ecx;
-		mov     dword ptr[ecx], 0;
-		and     edx, 0xFFFF;
-		mov     ecx, dword ptr[SV.addrs.addr_ppscn];
-		mov     ecx, dword ptr[eax * 4 + ecx];
-		lea     eax,[edx * 8 + edx];
-		lea     eax,[ecx + eax * 4];
-		push    eax;
 		call    ASM_LoadScn;
 		test    eax, eax;
 		jz      ldscnB_call_ori;
 
 	//ldscnB_return:
+		or      al, 1
 		ret;
 
 	ldscnB_call_ori:

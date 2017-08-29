@@ -76,10 +76,14 @@
     <ClInclude Include="..\..\src\Draw\Draw_D3D_DX8.h" />
     <ClInclude Include="..\..\src\Draw\Draw_D3D_DX9.h" />
     <ClInclude Include="..\..\src\ed_voice.h" />
+    <ClInclude Include="..\..\src\Hard\dir.h" />
+    <ClInclude Include="..\..\src\Hard\dir_3rd.h" />
+    <ClInclude Include="..\..\src\Hard\dir_fc.h" />
+    <ClInclude Include="..\..\src\Hard\dir_sc.h" />
+    <ClInclude Include="..\..\src\Hard\mapping.h" />
     <ClInclude Include="..\..\src\Hook\Hook.h" />
     <ClInclude Include="..\..\src\Hook\Hook_Apis.h" />
     <ClInclude Include="..\..\src\Init.h" />
-    <ClInclude Include="..\..\src\mapping.h" />
     <ClInclude Include="..\..\src\Message.h" />
     <ClInclude Include="..\..\src\Player\Decoder.h" />
     <ClInclude Include="..\..\src\Player\Decoder_Ogg.h" />

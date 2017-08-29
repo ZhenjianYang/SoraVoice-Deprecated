@@ -5,7 +5,8 @@
 
 NACKED void ASM::ldscn() {
 	INLINE_ASM{
-		push    dword ptr[SV.addrs.addr_ppscn];
+		push    dword ptr[SV.game];
+		movzx   eax, ax
 		push    eax;
 		push    ebx;
 		call    ASM_LoadScns;

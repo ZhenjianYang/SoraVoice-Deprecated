@@ -26,6 +26,9 @@
     <Filter Include="src\RC\files">
       <UniqueIdentifier>{ab129275-b9ee-490f-9484-31f56dc5bc7f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Hard">
+      <UniqueIdentifier>{65416d46-789b-49f2-9cb4-a4654e7e1046}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Hook\Hook.h">
@@ -97,9 +100,6 @@
     <ClInclude Include="..\..\src\Utils\Type.h">
       <Filter>src\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\mapping.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Message.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -120,6 +120,21 @@
     </ClInclude>
     <ClInclude Include="..\..\src\SVEnum.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hard\dir_3rd.h">
+      <Filter>src\Hard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hard\dir_fc.h">
+      <Filter>src\Hard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hard\dir_sc.h">
+      <Filter>src\Hard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hard\mapping.h">
+      <Filter>src\Hard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Hard\dir.h">
+      <Filter>src\Hard</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

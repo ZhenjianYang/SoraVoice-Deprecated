@@ -8,7 +8,7 @@
 #include <Utils/build_date.h>
 
 #include <Message.h>
-#include <Mapping.h>
+#include <Hard/Mapping.h>
 #include <Config.h>
 
 #include <Hook/Hook.h>

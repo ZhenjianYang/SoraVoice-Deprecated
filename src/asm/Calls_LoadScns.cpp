@@ -1,21 +1,23 @@
 #include "Calls.h"
 
+#include <Hard/dir.h>
+
 #include <stdio.h>
 #include <string.h>
 
 #define PATH_SN "voice//scena/"
 #define OLD_PATH_SN "./data/scena/"
-#define MAX_NAME_LEN 12
 
 #define BUFF_SIZE 0x10000
-
 #define SCN_NUM 8
 
-int SVCALL ASM_LoadScn(const char* name, char* buff) {
+int SVCALL ASM_LoadScn(char* buff, int idx, int game) {
+	if (idx >= DIRS[game].Num) return 0;
+
 	char path[sizeof(PATH_SN) + MAX_NAME_LEN] = PATH_SN;
 	path[sizeof(path) - 1] = '\0';
 
-	strncpy(path + sizeof(PATH_SN) - 1, name, MAX_NAME_LEN);
+	strncpy(path + sizeof(PATH_SN) - 1, DIRS[game].Dir[idx], MAX_NAME_LEN);
 
 	FILE* f = fopen(path, "rb");
 	if (!f) return 0;
@@ -26,19 +28,15 @@ int SVCALL ASM_LoadScn(const char* name, char* buff) {
 	return size;
 }
 
-int SVCALL ASM_LoadScns(char* buffs[], int id, char **pp_t) {
-	for (unsigned i = 0; i < SCN_NUM; i++) {
-		memset(buffs[i], 0, BUFF_SIZE);
-	}
-
-	char* sn_name = *(pp_t + (id >> 16)) + 36 * (id & 0xFFFF);
-	if (ASM_LoadScn(sn_name, buffs[0]) < 0x40) return 0;
+int SVCALL ASM_LoadScns(char* buffs[], int idx_main, int game) {
+	memset(buffs[0], 0, BUFF_SIZE);
+	if (ASM_LoadScn(buffs[0], idx_main, game) < 0x40) return 0;
 
 	for (unsigned i = 1; i < SCN_NUM; i++) {
+		memset(buffs[i], 0, BUFF_SIZE);
 		int id_tmp = *(int*)(buffs[0] + 0x20 + 4 * i);
 		if (id_tmp != -1) {
-			char* sn_name_tmp = *(pp_t + (id_tmp >> 16)) + 36 * (id_tmp & 0xFFFF);
-			if (!ASM_LoadScn(sn_name_tmp, buffs[i])) {
+			if (!ASM_LoadScn(buffs[i], id_tmp & 0xFFFF, game)) {
 				return 0;
 			};
 		}
