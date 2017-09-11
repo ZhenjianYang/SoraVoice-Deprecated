@@ -36,12 +36,16 @@ using byte = unsigned char;
 static const char DateVersion[] = BUILD_DATE;
 
 constexpr int ORIVOICEID_LEN = 4;
+constexpr int BGMVOICEID_LEN = 6;
+static_assert(BGMVOICEID_LEN > MAX_VOICEID_LEN_NEED_MAPPING, "BGMVOICEID_LEN <= MAX_VOICEID_LEN_NEED_MAPPING !!!");
 
 constexpr char ORIVOICEFILE_PREFIX[] = "data\\se\\ed7v";
 constexpr char ORIVOICEFILE_ATTR[] = ".wav";
 constexpr char CONFIG_FILE[] = "voice\\ed_voice.ini";
-constexpr char VOICEFILE_PREFIX_ZA[] = "voice\\ogg\\v";
-constexpr char VOICEFILE_PREFIX_ED6[] = "voice\\ogg\\ch";
+constexpr char VOICEFILE_DIR[] = "voice\\ogg\\";
+constexpr char VOICEFILE_PREFIX_ZA[] = "v";
+constexpr char VOICEFILE_PREFIX_ED6[] = "ch";
+constexpr char VOICEFILE_PREFIX_BGM[] = "ed";
 constexpr char VOICEFILE_ATTR[] = ".ogg";
 
 constexpr int VOLUME_STEP = 1;
@@ -224,8 +228,16 @@ void SoraVoice::Play(const char* t)
 			return;
 		}
 	}
+	
+	std::string oggFileName = VOICEFILE_DIR;
+	if (str_vid.length() == BGMVOICEID_LEN) {
+		oggFileName.append(VOICEFILE_PREFIX_BGM).append(str_vid.c_str() + sizeof(VOICEFILE_PREFIX_BGM) - 1);
+	}
+	else {
+		oggFileName.append(VOICEFILE_PREFIX).append(str_vid);
+	}
+	oggFileName.append(VOICEFILE_ATTR);
 
-	std::string oggFileName = VOICEFILE_PREFIX + str_vid + VOICEFILE_ATTR;
 	int volume = Config.Volume;
 
 	if(VC_isZa) {
