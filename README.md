@@ -118,6 +118,8 @@ Now you have your **BGMs** and **Voice Files**. The former are pretty straightfo
 5. (**For *Sora no Kiseki* Xseed version**) Copy [**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini) into `<Game Folder>\voice\`. 
 6. Launch your game.   
 
+- **NOTE**: To disable the patch, simply rename **dinput8.dll** to something else.
+
 ## About the configuration file   
 
 The voice patch's configuration file will be created after launching the game: `<Game Folder>\voice\ed_voice.ini`. This is what it looks like:
