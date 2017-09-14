@@ -26,7 +26,10 @@ or build them with VS2017 (Desktop development with C++).
 |*Sora no Kiseki the 3RD*      |YLT       |Final         |Chinese Simplified
 
 - **NOTE**: *Sora no Kiseki* series published by Xseed are supported by project
-[SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx). 
+[SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx).    
+- **NOTE**: This patch works in a strict way, versions not listed in the above 
+table or not mentioned in [SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx)
+are NOT supported.   
 - **NOTE**: Not all voice scripts for *Sora no Kiseki* series are finished.
 
 ## About the Voice Scripts   
@@ -34,13 +37,11 @@ or build them with VS2017 (Desktop development with C++).
 **Voice Scripts** are at the very core of the patch, as they call the needed **Voice Files** line by line. They contain all the dialogues, and because of that, obviously, each set of **Voice Scripts** is tied to a specific version of the games.
 
 [ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts) is a project about **Voice Scripts** for
-*Zero no Kiseki* & *Ao no Kiseki*. **Voice Scripts** for the Chinese PC versions are done. **Voice Scripts** for the English Patches will be done once the official team will release them.    
+*Zero no Kiseki* & *Ao no Kiseki*. **Voice Scripts** for the Chinese PC versions are done.   
 
 [SoraVoiceScripts](https://github.com/ZhenjianYang/SoraVoiceScripts) is a project about **Voice Scripts** for
 *Sora no Kiseki*/*Trails in the Sky* series. **Voice Scripts** for *Sora no Kiseki FC* (English, Steam/GOG/Humble)
 are done, but *SC* & *3rd*'s scripts are not finished yet.       
-
-- **NOTE**: This patch works in a strict way, based on **Timestamps**. EXE Files which are NOT listed in the [SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx#about-the-timestamp) page are NOT supported. Use the mentioned software to check your EXE's timestamp.
 
 ## About dsound.dll   
 
@@ -56,7 +57,7 @@ You may be wondering *Where am I supposed to find voice files?* Let me tell you 
 So first, here's what you're gonna need:
 1. Dumped *Sora*/*Zero*/*Ao no Kiseki Evolution*
 2. [PSArcTool](https://github.com/periander/PSArcTool)
-3. [at9Tool](http://s15.zetaboards.com/Amicitia/topic/8532372/1/) <-- See if you wanna download and upload it on Google Drive, to be on the safe side.
+3. at9Tool, it can be found in Sony's PS3 SDK, we dicide not to give the link here, so Google it.   
 4. Any GUI with [oggenc2](http://www.rarewares.org/ogg-oggenc.php), or the encoder itself from CLI. I used [Foobar2000 Portable](http://www.foobar2000.org/download) and its [Encoder Pack](http://www.foobar2000.org/encoderpack) for batch encoding. Pick your poison.
 
 Now, for the real deal:
@@ -91,7 +92,7 @@ for %%f in (*.at9) do (
 
 Place the `bat` file and `at9Tool.exe` inside the `bgm` and/or `talk` folder, then launch the former. The converted files will be in the newly created `wav_out` folder.
 
-- **NOTE**: In regard to *Sora no Kiseki FC* Xseed version, you'll also need `<Evolution Game Folder>\gamedata\data\bgm\arrange\ed6501.at9`, extracted as a **Voice File**.
+- **NOTE**: In regard to *Sora no Kiseki FC*, you'll also need `<Evolution Game Folder>\gamedata\data\bgm\arrange\ed6501.at9`, extracted as a **Voice File**.
 
 5. Encode them to **ogg** and do NOT rename them.
 
@@ -199,8 +200,6 @@ SaveChange = 1
 ###NOTE: Status of mute will not be saved.###
 
 ~~~~
-
-I don't think I need to explain how it works, as it's self explanatory enough, right?
 
 ## External libraries used in this project   
 -   [libVorbis & libOgg](https://www.xiph.org/), licensed under the [BSD-like license](https://www.xiph.org/licenses/bsd/).   
