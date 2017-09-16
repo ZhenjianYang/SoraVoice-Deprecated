@@ -650,8 +650,8 @@ void SoraVoice::Show()
 			SV.order.disableDududu = 0;
 		}
 
-		if ((aup->waitv && aup->time_autoplayv <= aup->now)
-			|| (!aup->waitv && aup->wait && aup->time_autoplay <= aup->now)) {
+		if (aup->wait && aup->time_autoplay <= aup->now 
+			&& (!aup->waitv || aup->time_autoplayv <= aup->now)) {
 			LOG("now = %d", aup->now);
 			LOG("waitv = %d", aup->waitv);
 			LOG("autoplayv = %d", aup->time_autoplayv);
