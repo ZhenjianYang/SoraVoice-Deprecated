@@ -30,7 +30,7 @@ or build them with VS2017 (Desktop development with C++).
 |*Sora no Kiseki SC*           |YLT       |Final         |Chinese Simplified
 |*Sora no Kiseki the 3RD*      |YLT       |Final         |Chinese Simplified
 
-- **NOTE**: *Trails in the Sky* series published by Xseed are supported by project
+**NOTE**: *Trails in the Sky* series published by Xseed are supported by project
 [SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx), check this project for
 its supported versions.   
 
@@ -65,7 +65,7 @@ Or if you have **psarc.exe** from Sony's PS3 SDK, use this command: `psarc.exe e
 
 Then you will get a folder `data` which contains the extracted data.
 
-- **NOTE**: If you find data0.psarc, data1.psarc, ... in the same folder with data.psarc, then extract them by same way.
+**NOTE**: If you find data0.psarc, data1.psarc, ... in the same folder with data.psarc, then extract them by same way.
 
 #### 2. Convert at9 files to ogg files.   
 
@@ -74,7 +74,7 @@ Then you will get a folder `data` which contains the extracted data.
   [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. Create a folder `at9`, and copy (or cut if you like) extracted folder `data/talk` into it.   
-   **NOTE**: For *Sora no Kiseki FC*/*Trails in the Sky FC*, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`.
+- **NOTE**: For *Sora no Kiseki FC*/*Trails in the Sky FC*, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`.
 
 2. Open notepad, copy these contents in it, and **Save as** > Select **All Files (format wise)** > Input **Convert.bat** > **Save**.   
 ~~~
@@ -87,10 +87,10 @@ at9tool.exe -d %%i wav/%%~ni.wav
 oggenc2.exe -Q -q 6.00 -n ogg/%%~ni.ogg wav/%%~ni.wav
 )
 ~~~
-   **NOTE**: `-q 6.00` is setting ogg's quality to 6.00, you can choose another value between 2 to 10 (higher value means higher quality). 
+- **NOTE**: `-q 6.00` is setting ogg's quality to 6.00, you can choose another value between 2 to 10 (higher value means higher quality). 
 
 3. Put **at9tool.exe**, **oggenc2.exe** and **Convert.bat** together with folder `at9`, then double click **Convert.bat**.   
-   **NOTE**: This step may take very long time, be patient.   
+- **NOTE**: This step may take very long time, be patient.   
 
 Then, you will get **Voice Files** in folder `ogg`. 
 
@@ -212,9 +212,9 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
   [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. 新建一个文件夹`at9`, 并复制(或者剪切)解包出来的`data/talk`文件夹到其中。   
-   **注意*: 对于《空之轨迹FC》, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
+- **注意**: 对于《空之轨迹FC》, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
 
-2. 打开记事本, 复制以下内容, 并且**另存为...** > 选择**所有文件** > 输入**Convert.bat** > **保存**    
+2. 打开记事本, 复制以下内容, 并且**另存为...** > 选择**所有文件** > 输入**Convert.bat** > **保存**    
 ~~~
 @echo off
 mkdir wav
@@ -225,10 +225,10 @@ at9tool.exe -d %%i wav/%%~ni.wav
 oggenc2.exe -Q -q 6.00 -n ogg/%%~ni.ogg wav/%%~ni.wav
 )
 ~~~
-   **注意**: `-q 6.00`设置ogg的质量为6.00, 您也可以选择2至10之间的其他值(值越高,质量越好)。
+- **注意**: `-q 6.00`设置ogg的质量为6.00, 您也可以选择2至10之间的其他值(值越高,质量越好)。
 
 3. 将**at9tool.exe**, **oggenc2.exe**, **Convert.bat**与文件夹`at9`放到一起, 然后双击运行**Convert.bat**。   
-   **注意**: 这一步可能会花较长时间, 请耐心等待。   
+- **注意**: 这一步可能会花较长时间, 请耐心等待。   
 
 这样, 您就可以在文件夹`ogg`中找到**语音文件**了。
 
@@ -246,7 +246,7 @@ oggenc2.exe -Q -q 6.00 -n ogg/%%~ni.ogg wav/%%~ni.wav
    **注意**: 对于《空之轨迹FC》, 不要遗漏**ed6501.ogg**。
 
 4. (**对于《零/碧之轨迹》**), 确保`<游戏目录>/voice/ogg`下存在**ogg.dll**, **vorbis.dll**以及**vorbisfile.dll**。   
-   **注意**: 对于《空之轨迹》系列,可用删除`dll`文件夹, 因为这个文件夹对于《空之轨迹》系列而言,没有任何用途。 
+   **注意**: 对于《空之轨迹》系列, 可以删除`dll`文件夹, 因为这个文件夹对于《空之轨迹》系列而言,没有任何用途。 
 
 5. (**对于Xseed发行的《空之轨迹》系列**), 复制[**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)到`<游戏根目录>/voice/`。
 
