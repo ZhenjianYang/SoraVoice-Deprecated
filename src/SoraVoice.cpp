@@ -691,7 +691,8 @@ bool SoraVoice::Init() {
 		}
 	}
 
-	Config.LoadConfig(CONFIG_FILE, true);
+	Config.LoadConfig(CONFIG_FILE);
+	Config.SaveConfig(CONFIG_FILE);
 
 	Clock::InitClock(SV.rcd.now, SV.rcd.recent);
 	Draw::Init();
