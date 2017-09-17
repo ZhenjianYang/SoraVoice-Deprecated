@@ -83,7 +83,7 @@ mkdir wav
 mkdir ogg
 for /f %%i in ('dir /s /b /a-d at9/*.at9') do (
 title converting %%~ni.at9
-at9tool.exe -d %%i wav/%%~ni.wav
+at9tool.exe -d -repeat 1 %%i wav/%%~ni.wav
 oggenc2.exe -Q -q 6.00 -n ogg/%%~ni.ogg wav/%%~ni.wav
 )
 ~~~
@@ -221,7 +221,7 @@ mkdir wav
 mkdir ogg
 for /f %%i in ('dir /s /b /a-d at9/*.at9') do (
 title converting %%~ni.at9
-at9tool.exe -d %%i wav/%%~ni.wav
+at9tool.exe -d -repeat 1 %%i wav/%%~ni.wav
 oggenc2.exe -Q -q 6.00 -n ogg/%%~ni.ogg wav/%%~ni.wav
 )
 ~~~
