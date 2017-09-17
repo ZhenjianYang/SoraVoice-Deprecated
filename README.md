@@ -69,12 +69,12 @@ Then you will get a folder `data` which contains the extracted data.
 
 #### 2. Convert at9 files to ogg files.   
 
-Tools needed:
-- **at9tool.exe**, it can only be find in Sony's PS3 SDK.   
-- [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
+- Tools needed:   
+  **at9tool.exe**, it can only be found in Sony's PS3 SDK.   
+  [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. Create a folder `at9`, and copy (or cut if you like) extracted folder `data/talk` into it.   
-- **NOTE**: For *Sora no Kiseki FC*/*Trails in the Sky FC*, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`.
+   **NOTE**: For *Sora no Kiseki FC*/*Trails in the Sky FC*, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`.
 
 2. Open notepad, copy these contents in it, and **Save as** > Select **All Files (format wise)** > Input **Convert.bat** > **Save**.   
 ~~~
@@ -87,16 +87,16 @@ at9tool.exe -d %%i wav/%%~ni.wav
 oggenc2.exe -Q -q 6.00 -n ogg/%%~ni.ogg wav/%%~ni.wav
 )
 ~~~
-- **NOTE**: `-q 6.00` is setting ogg's quality to 6.00, you can choose another value between 2 to 10 (higher value means higher quality). 
+   **NOTE**: `-q 6.00` is setting ogg's quality to 6.00, you can choose another value between 2 to 10 (higher value means higher quality). 
 
 3. Put **at9tool.exe**, **oggenc2.exe** and **Convert.bat** together with folder `at9`, then double click **Convert.bat**.   
-- **NOTE**: This step may take very long time, be patient.   
+   **NOTE**: This step may take very long time, be patient.   
 
 Then, you will get **Voice Files** in folder `ogg`. 
 
 ## Apply the patch
 
-- **NOTE**: No game files will be overwritten.
+**NOTE**: No game files will be overwritten.
 
 1. Extract the files from the [Release](https://github.com/ZhenjianYang/SoraVoice/releases), and copy the `voice` folder and
 **dinput8.dll** into `<Game Folder>` (where the game EXE is).   
@@ -105,19 +105,18 @@ Then, you will get **Voice Files** in folder `ogg`.
 inside `<Game Folder>/voice/`.   
 
 3. Copy all **Voice Files** into `<Game Folder>/voice/ogg/`   
-
-- **NOTE**: Remember that you also need **ed6501.ogg** inside this folder when it comes to *Sora no Kiseki FC*/*Trails in the Sky FC*.
+   **NOTE**: Remember that you also need **ed6501.ogg** inside this folder when it comes to *Sora no Kiseki FC*/*Trails in the Sky FC*.
 
 4. (**For *Zero/Ao no Kiseki***) Create the `dll` folder inside `<Game Folder>/voice/`, then copy **ogg.dll**, **vorbis.dll** and
 **vorbisfile.dll** into it.   
-- **NOTE**: *Sora no Kiseki*/*Trails in the Sky* versions do NOT need the `dll` folder, as they come with it already. 
+   **NOTE**: *Sora no Kiseki*/*Trails in the Sky* versions do NOT need the `dll` folder, as they come with it already. 
 
 5. (**For *Trails in the Sky* Xseed version**) Copy [**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)
 into `<Game Folder>/voice/`.   
 
 6. Launch your game.   
 
-- **NOTE**: To disable the patch, simply rename **dinput8.dll** to something else.
+**NOTE**: To disable the patch, simply rename **dinput8.dll** to something else.
 
 ### About dsound.dll   
 
@@ -173,7 +172,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
 |空之轨迹 SC       |娱乐通    |最终版     |简体中文
 |空之轨迹 the 3RD  |娱乐通    |最终版     |简体中文
 
-- **注意**: 由Xseed发行的《空之轨迹》系列通过项目[SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx)来获得支持。具体支持的游戏请查看项目的说明。
+**注意**: 由Xseed发行的《空之轨迹》系列通过项目[SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx)来获得支持。具体支持的游戏请查看项目的说明。
 
 ## 准备
 
@@ -204,16 +203,16 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
 
 然后您就可以在文件夹`data`中找到解包后的文件。
 
-- **注意**: 如果您在data.psarc同目录中找到了data0.psarc, data1.psarc, ... , 用同样的方法解包它们。
+**注意**: 如果您在data.psarc同目录中找到了data0.psarc, data1.psarc, ... , 用同样的方法解包它们。
 
 #### 2. 将at9文件转换为ogg文件   
 
-需要的工具:
-- **at9tool.exe**, 来自Sony的PS3 SDK.   
-- [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
+- 需要的工具:   
+  **at9tool.exe**, 来自Sony的PS3 SDK.   
+  [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. 新建一个文件夹`at9`, 并复制(或者剪切)解包出来的`data/talk`文件夹到其中。   
-- **注意*: 对于《空之轨迹FC》, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
+   **注意*: 对于《空之轨迹FC》, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
 
 2. 打开记事本, 复制以下内容, 并且**另存为...** > 选择**所有文件** > 输入**Convert.bat** > **保存**    
 ~~~
@@ -226,10 +225,10 @@ at9tool.exe -d %%i wav/%%~ni.wav
 oggenc2.exe -Q -q 6.00 -n ogg/%%~ni.ogg wav/%%~ni.wav
 )
 ~~~
-- **注意**: `-q 6.00`设置ogg的质量为6.00, 您也可以选择2至10之间的其他值(值越高,质量越好)。
+   **注意**: `-q 6.00`设置ogg的质量为6.00, 您也可以选择2至10之间的其他值(值越高,质量越好)。
 
 3. 将**at9tool.exe**, **oggenc2.exe**, **Convert.bat**与文件夹`at9`放到一起, 然后双击运行**Convert.bat**。   
-- **注意**: 这一步可能会花较长时间, 请耐心等待。   
+   **注意**: 这一步可能会花较长时间, 请耐心等待。   
 
 这样, 您就可以在文件夹`ogg`中找到**语音文件**了。
 
@@ -237,18 +236,17 @@ oggenc2.exe -Q -q 6.00 -n ogg/%%~ni.ogg wav/%%~ni.wav
 
 ## Apply the patch
 
-- **注意**: 语音补丁不会覆盖任何原有的游戏文件。
+**注意**: 语音补丁不会覆盖任何原有的游戏文件。
 
 1. 将[Release](https://github.com/ZhenjianYang/SoraVoice/releases)中的压缩包解压, 复制文件夹`voice`以及**dinput8.dll**到`<游戏目录>`(游戏的exe文件所在目录)。   
 
 2. 获取**语音脚本**, 将压缩包内的`scena`文件夹解压至`<游戏目录>/voice/`.   
 
 3. 复制所有的**语音文件**到`<游戏目录>/voice/ogg`.   
-
-- **注意**: 对于《空之轨迹FC》, 不要遗漏**ed6501.ogg**。
+   **注意**: 对于《空之轨迹FC》, 不要遗漏**ed6501.ogg**。
 
 4. (**对于《零/碧之轨迹》**), 确保`<游戏目录>/voice/ogg`下存在**ogg.dll**, **vorbis.dll**以及**vorbisfile.dll**。   
-- **注意**: 对于《空之轨迹》系列,可用删除`dll`文件夹, 因为这个文件夹对于《空之轨迹》系列而言,没有任何用途。 
+   **注意**: 对于《空之轨迹》系列,可用删除`dll`文件夹, 因为这个文件夹对于《空之轨迹》系列而言,没有任何用途。 
 
 5. (**对于Xseed发行的《空之轨迹》系列**), 复制[**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)到`<游戏根目录>/voice/`。
 
