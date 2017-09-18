@@ -234,8 +234,6 @@ oggenc2.exe -Q -q 6.00 -n ogg\%%~ni.ogg wav\%%~ni.wav
 
 ## 应用补丁
 
-## Apply the patch
-
 **注意**: 语音补丁不会覆盖任何原有的游戏文件。
 
 1. 将[Release](https://github.com/ZhenjianYang/SoraVoice/releases)中的压缩包解压, 复制文件夹`voice`以及**dinput8.dll**到`<游戏目录>`(游戏的exe文件所在目录)。   
