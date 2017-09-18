@@ -243,7 +243,7 @@ oggenc2.exe -Q -q 6.00 -n ogg\%%~ni.ogg wav\%%~ni.wav
 3. 复制所有的**语音文件**到`<游戏目录>/voice/ogg`.   
    **注意**: 对于《空之轨迹FC》, 不要遗漏**ed6501.ogg**。
 
-4. (**对于《零/碧之轨迹》**), 确保`<游戏目录>/voice/ogg`下存在**ogg.dll**, **vorbis.dll**以及**vorbisfile.dll**。   
+4. (**对于《零/碧之轨迹》**), 确保`<游戏目录>/voice/dll`下存在**ogg.dll**, **vorbis.dll**以及**vorbisfile.dll**。   
    **注意**: 对于《空之轨迹》系列, 可以删除`dll`文件夹, 因为这个文件夹对于《空之轨迹》系列而言,没有任何用途。 
 
 5. (**对于Xseed发行的《空之轨迹》系列**), 复制[**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)到`<游戏根目录>/voice/`。
