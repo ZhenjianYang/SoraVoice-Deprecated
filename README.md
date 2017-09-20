@@ -81,7 +81,7 @@ Then you will get a folder `data` which contains the extracted data.
 @echo off
 mkdir wav
 mkdir ogg
-for /f %%i in ('dir /s /b /a-d at9\*.at9') do (
+for /f "delims=" %%i in ('dir /s /b /a-d at9\*.at9') do (
 title converting %%~ni.at9
 at9tool.exe -d -repeat 1 "%%i" "wav\%%~ni.wav"
 oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" "wav\%%~ni.wav"
@@ -219,7 +219,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
 @echo off
 mkdir wav
 mkdir ogg
-for /f %%i in ('dir /s /b /a-d at9\*.at9') do (
+for /f "delims=" %%i in ('dir /s /b /a-d at9\*.at9') do (
 title converting %%~ni.at9
 at9tool.exe -d -repeat 1 "%%i" "wav\%%~ni.wav"
 oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" "wav\%%~ni.wav"
