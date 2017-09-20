@@ -83,8 +83,8 @@ mkdir wav
 mkdir ogg
 for /f %%i in ('dir /s /b /a-d at9\*.at9') do (
 title converting %%~ni.at9
-at9tool.exe -d -repeat 1 %%i wav\%%~ni.wav
-oggenc2.exe -Q -q 6.00 -n ogg\%%~ni.ogg wav\%%~ni.wav
+at9tool.exe -d -repeat 1 "%%i" "wav\%%~ni.wav"
+oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" wav\%%~ni.wav"
 )
 ~~~
 - **NOTE**: `-q 6.00` is setting ogg's quality to 6.00, you can choose another value between 2 to 10 (higher value means higher quality). 
@@ -221,8 +221,8 @@ mkdir wav
 mkdir ogg
 for /f %%i in ('dir /s /b /a-d at9\*.at9') do (
 title converting %%~ni.at9
-at9tool.exe -d -repeat 1 %%i wav\%%~ni.wav
-oggenc2.exe -Q -q 6.00 -n ogg\%%~ni.ogg wav\%%~ni.wav
+at9tool.exe -d -repeat 1 "%%i" "wav\%%~ni.wav"
+oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" wav\%%~ni.wav"
 )
 ~~~
 - **注意**: `-q 6.00`设置ogg的质量为6.00, 您也可以选择2至10之间的其他值(值越高,质量越好)。
