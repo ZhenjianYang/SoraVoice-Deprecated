@@ -9,4 +9,5 @@ namespace ASM {
 	void ldscn();
 	void ldscnB();
 	void scnp();
+	void prst();
 }

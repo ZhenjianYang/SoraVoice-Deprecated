@@ -17,6 +17,8 @@ int SVCALL ASM_LoadScns(char* buffs[], int idx_main, int game);
 
 void SVCALL ASM_RdScnPath(char* path);
 
+void SVCALL ASM_Show(void* pD3DD);
+
 #ifdef __cplusplus
 }
 #endif

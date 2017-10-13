@@ -9,7 +9,7 @@ namespace SoraVoice
 	void Play(const char* v);
 	void Stop();
 	void Input();
-	void Show();
+	void Show(void* pD3DD);
 
 	bool Init();
 	bool End();

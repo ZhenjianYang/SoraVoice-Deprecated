@@ -27,7 +27,7 @@ namespace Draw {
 	bool Init();
 	bool End();
 
-	void DrawInfos();
+	void DrawInfos(void* pD3DD);
 
 	void AddInfo(InfoType type, unsigned time, unsigned color, const char* text);
 	void RemoveInfo(InfoType type);

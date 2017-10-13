@@ -69,6 +69,9 @@ struct SVData
 		Jcs ldscnB;
 		Jcs ldscnB2;
 		Jcs scnp;
+		Jcs prst;
+		Jcs prst2;
+		Jcs prst3;
 	} jcs;
 
 	struct Scode {

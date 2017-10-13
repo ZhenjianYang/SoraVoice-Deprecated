@@ -79,7 +79,7 @@ using PtrInfo = std::unique_ptr<Info>;
 using PtrInfoList = std::list<PtrInfo>;
 
 static unsigned* DR_showing;
-static const unsigned* DR_dftFormatList;
+static const unsigned* DR_dftFormatList = DftFormatList_ZA;
 
 static D3D* DR_d3d = nullptr;
 static PtrInfoList DR_infoList;
@@ -126,9 +126,10 @@ bool Draw::Init() {
 		return false;
 	}
 
-	DR_d3d = D3D::GetD3D(SV.dxver == DX9, *SV.addrs.p_d3dd, Config.FontName, DR_fontSize);
+	DR_d3d = D3D::GetD3D(SV.dxver == DX9, Config.FontName, DR_fontSize);
 	return DR_d3d;
 }
+
 bool Draw::End() {
 	delete DR_d3d;
 	DR_d3d = nullptr;
@@ -221,29 +222,30 @@ void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* tex
 	*DR_showing = DR_infoList.size() > 0;
 }
 
-void Draw::DrawInfos() {
+void Draw::DrawInfos(void* pD3DD) {
 	if (!DR_d3d) return;
 
-	DR_d3d->BeginScene();
+	if (DR_d3d->BeginDraw(pD3DD)) {
 
-	RECT rect_shadow;
-	for (const auto& info : DR_infoList) {
-		rect_shadow = info->rect;
-		if (info->format & DT_RIGHT) rect_shadow.right += DR_shadow;
-		else rect_shadow.left += DR_shadow;
-		if (info->format & DT_BOTTOM) rect_shadow.bottom += DR_shadow;
-		else rect_shadow.top += DR_shadow;
+		RECT rect_shadow;
+		for (const auto& info : DR_infoList) {
+			rect_shadow = info->rect;
+			if (info->format & DT_RIGHT) rect_shadow.right += DR_shadow;
+			else rect_shadow.left += DR_shadow;
+			if (info->format & DT_BOTTOM) rect_shadow.bottom += DR_shadow;
+			else rect_shadow.top += DR_shadow;
 
-		unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (0xFF000000 & info->color);
+			unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (0xFF000000 & info->color);
 
-		DR_d3d->DrawString(info->text, -1, &rect_shadow, info->format, color_shadow);
+			DR_d3d->DrawString(info->text, -1, &rect_shadow, info->format, color_shadow);
+		}
+
+		for (const auto& info : DR_infoList) {
+			DR_d3d->DrawString(info->text, -1, &info->rect, info->format, info->color);
+		}
+
+		DR_d3d->EndDraw();
 	}
-
-	for (const auto& info : DR_infoList) {
-		DR_d3d->DrawString(info->text, -1, &info->rect, info->format, info->color);
-	}
-
-	DR_d3d->EndScene();
 }
 
 void Draw::RemoveInfo(InfoType type) {

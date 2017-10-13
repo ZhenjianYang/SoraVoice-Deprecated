@@ -123,6 +123,9 @@ const AsmCode asm_codes[] = {
 	{ "ldscnB",	(unsigned)ASM::ldscnB,	AsmCode::NotForce },
 	{ "ldscnB2",(unsigned)ASM::ldscnB,	AsmCode::NotForce },
 	{ "scnp",	(unsigned)ASM::scnp,	AsmCode::NotForce | AsmCode::Jmp },
+	{ "prst",	(unsigned)ASM::prst,	AsmCode::NotForce },
+	{ "prst2",	(unsigned)ASM::prst,	AsmCode::NotForce },
+	{ "prst3",	(unsigned)ASM::prst,	AsmCode::NotForce },
 };
 constexpr int num_asm_codes = sizeof(asm_codes) / sizeof(*asm_codes);
 

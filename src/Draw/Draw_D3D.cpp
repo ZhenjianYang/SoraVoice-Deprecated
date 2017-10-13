@@ -4,14 +4,14 @@
 
 using namespace Draw;
 
-D3D * Draw::D3D::GetD3D(int dx9, void* pD3DD, const char* fontName, int fontSize)
+D3D * Draw::D3D::GetD3D(int dx9, const char* fontName, int fontSize)
 {
 	D3D * res;
 	if (dx9) {
-		res = new D3D_DX9(pD3DD, fontName, fontSize);
+		res = new D3D_DX9(fontName, fontSize);
 	}
 	else {
-		res = new D3D_DX8(pD3DD, fontName, fontSize);
+		res = new D3D_DX8(fontName, fontSize);
 	}
 	if (!res->Valid()) {
 		delete res;

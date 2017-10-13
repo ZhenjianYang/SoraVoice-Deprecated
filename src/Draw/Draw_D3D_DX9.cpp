@@ -13,31 +13,44 @@ constexpr char STR_D3DXCreateFontIndirect[] = "D3DXCreateFontIndirect";
 constexpr char STR_D3DXCreateSprite[] = "D3DXCreateSprite";
 
 struct DX9_DATA {
-	IDirect3DDevice9* const d3dd;
+	IDirect3DDevice9* d3dd;
 	D3DXFONT_DESCW desca;
 	ID3DXFont *pFont;
 	ID3DXSprite *pSprite;
+
+	CallCreateFont pD3DXCreateFontIndirect;
 };
 
-void Draw::D3D_DX9::BeginScene()
+bool Draw::D3D_DX9::BeginDraw(void* pD3DD)
 {
-	pd->d3dd->BeginScene();
-	if (pd->pSprite) {
-		pd->pSprite->Begin(D3DXSPRITE_ALPHABLEND);
+	if (!pd) return false;
+	pd->d3dd = (decltype(pd->d3dd))pD3DD;
+
+	if (!pd->d3dd || D3D_OK != pd->d3dd->BeginScene()) {
+		return false;
 	}
+	if (!pd->pD3DXCreateFontIndirect || D3D_OK != pd->pD3DXCreateFontIndirect(pd->d3dd, &pd->desca, &pd->pFont)) {
+		pd->d3dd->EndScene();
+		return false;
+	}
+
+	return true;
 }
 
-void Draw::D3D_DX9::EndScene()
+void Draw::D3D_DX9::EndDraw()
 {
-	if (pd->pSprite) {
-		pd->pSprite->End();
+	if (!pd) return;
+
+	if (pd->pFont) {
+		pd->pFont->Release();
+		pd->pFont = nullptr;
 	}
-	pd->d3dd->EndScene();
+	if(pd->d3dd) pd->d3dd->EndScene();
 }
 
 void Draw::D3D_DX9::DrawString(const WChar * text, int count, void * rect, unsigned format, unsigned color)
 {
-	pd->pFont->DrawTextW(pd->pSprite, text, count, (RECT*)rect, format, color);
+	if (pd->pFont) pd->pFont->DrawTextW(pd->pSprite, text, count, (RECT*)rect, format, color);
 }
 
 Draw::D3D_DX9::~D3D_DX9()
@@ -45,11 +58,13 @@ Draw::D3D_DX9::~D3D_DX9()
 	if (pd && pd->pFont) pd->pFont->Release();
 	if (pd && pd->pSprite) pd->pSprite->Release();
 	delete pd;
+
+	this->dx9_data = nullptr;
 }
 
-Draw::D3D_DX9::D3D_DX9(void * pD3DD, const char * fontName, int fontSize)
+Draw::D3D_DX9::D3D_DX9(const char * fontName, int fontSize)
 {
-	this->dx9_data = new DX9_DATA{ (IDirect3DDevice9*)pD3DD,{}, nullptr, nullptr };
+	this->dx9_data = new DX9_DATA{ };
 
 	ConvertUtf8toUtf16(pd->desca.FaceName, fontName);
 
@@ -59,16 +74,7 @@ Draw::D3D_DX9::D3D_DX9(void * pD3DD, const char * fontName, int fontSize)
 	pd->desca.OutputPrecision = OUT_OUTLINE_PRECIS;
 	pd->desca.Quality = CLEARTYPE_QUALITY;
 
-	CallCreateFont pD3DXCreateFontIndirect = (CallCreateFont)ApiPack::GetApi(STR_D3DXCreateFontIndirect);
-	if(pD3DXCreateFontIndirect) pD3DXCreateFontIndirect(pd->d3dd, &pd->desca, &pd->pFont);
-	if (!pd->pFont) {
-		delete pd;
-		this->dx9_data = nullptr;
-		this->valid = false;
-		return;
-	}
+	pd->pD3DXCreateFontIndirect = (CallCreateFont)ApiPack::GetApi(STR_D3DXCreateFontIndirect);
 
-	CallCreateSprite pD3DXCreateSprite = (CallCreateSprite)ApiPack::GetApi(STR_D3DXCreateSprite);;
-	if(pD3DXCreateSprite) pD3DXCreateSprite(pd->d3dd, &pd->pSprite);
-	this->valid = true;
+	this->valid = pd->pD3DXCreateFontIndirect;
 }

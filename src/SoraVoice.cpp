@@ -608,7 +608,7 @@ void SoraVoice::Input()
 	std::memcpy(last, keys, KEYS_NUM);
 }
 
-void SoraVoice::Show()
+void SoraVoice::Show(void* pD3DD)
 {
 	if (!SV.status.startup) return;
 
@@ -618,7 +618,7 @@ void SoraVoice::Show()
 	if(!VC_isZa) SoraVoice::Input();
 
 	if (SV.status.showing) {
-		Draw::DrawInfos();
+		Draw::DrawInfos(pD3DD);
 		Draw::RemoveInfo(InfoType::Dead);
 	}
 
@@ -720,36 +720,6 @@ bool SoraVoice::Init() {
 	LOG("config.SaveChange = %d", Config.SaveChange);
 
 	static_assert(CConfig::MAX_Volume == Player::MaxVolume, "Max Volume not same!");
-
-	if(SV.dxver == DX9) {
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Mute);
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Volume);
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.OriginalVoice);
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.AutoPlay);
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.SkipVoice);
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.DisableDialogSE);
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.DisableDududu);
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.ShowInfo);
-		for(unsigned i = 0; i < std::extent_v<decltype(Message.Switch)>; i++)
-			AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.Switch[i]);
-		for (unsigned i = 0; i < std::extent_v<decltype(Message.AutoPlaySwitch)>; i++)
-			AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.AutoPlaySwitch[i]);
-		for (unsigned i = 0; i < std::extent_v<decltype(Message.OriginalVoiceSwitch)>; i++)
-			AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.OriginalVoiceSwitch[i]);
-		for (unsigned i = 0; i < std::extent_v<decltype(Message.ShowInfoSwitch)>; i++)
-			AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.ShowInfoSwitch[i]);
-		AddInfo(InfoType::Hello, INFINITY_TIME, 0, Message.AutoPlayMark);
-		Draw::DrawInfos();
-		Draw::RemoveInfo(InfoType::All);
-	}
-
-	void* pPresent = Hook::Hook_D3D_Present(*SV.addrs.p_d3dd, SV.dxver == DX9, SoraVoice::Show);
-	if (pPresent) {
-		LOG("Present hooked, old Present = 0x%08X", (unsigned)pPresent);
-	}
-	else {
-		LOG("Hook Present failed.");
-	}
 
 	if(VC_isZa) {
 		if (Config.EnableKeys) {

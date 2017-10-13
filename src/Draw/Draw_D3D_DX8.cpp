@@ -6,36 +6,59 @@
 
 #define pd ((DX8_DATA*)dx8_data)
 
+using CallCreateFont = decltype(D3DXCreateFontIndirect)*;
+
 struct DX8_DATA {
-	IDirect3DDevice8* const d3dd;
+	IDirect3DDevice8* d3dd;
 	LOGFONTA lf;
 	ID3DXFont *pFont;
+
+	CallCreateFont pD3DXCreateFontIndirect;
 };
 
-void Draw::D3D_DX8::BeginScene()
+bool Draw::D3D_DX8::BeginDraw(void* pD3DD)
 {
-	pd->d3dd->BeginScene();
+	if (!pd) return false;
+	pd->d3dd = (decltype(pd->d3dd))pD3DD;
+
+	if (!pd->d3dd || D3D_OK != pd->d3dd->BeginScene()) {
+		return false;
+	}
+	if (!pd->pD3DXCreateFontIndirect || D3D_OK != pd->pD3DXCreateFontIndirect(pd->d3dd, &pd->lf, &pd->pFont)) {
+		pd->d3dd->EndScene();
+		return false;
+	}
+
+	return true;
 }
 
-void Draw::D3D_DX8::EndScene()
+void Draw::D3D_DX8::EndDraw()
 {
-	pd->d3dd->EndScene();
+	if (!pd) return;
+
+	if (pd->pFont) {
+		pd->pFont->Release();
+		pd->pFont = nullptr;
+	}
+	if(pd->d3dd) pd->d3dd->EndScene();
 }
 
 void Draw::D3D_DX8::DrawString(const WChar * text, int count, void * rect, unsigned format, unsigned color)
 {
-	pd->pFont->DrawTextW(text, count, (RECT*)rect, format, color);
+	if (pd->pFont) pd->pFont->DrawTextW(text, count, (RECT*)rect, format, color);
 }
 
 Draw::D3D_DX8::~D3D_DX8()
 {
 	if(pd && pd->pFont) pd->pFont->Release();
 	delete pd;
+
+	this->dx8_data = nullptr;
 }
 
-Draw::D3D_DX8::D3D_DX8(void * pD3DD, const char * fontName, int fontSize)
+Draw::D3D_DX8::D3D_DX8(const char * fontName, int fontSize)
 {
-	this->dx8_data = new DX8_DATA{ (IDirect3DDevice8*)pD3DD,{ }, nullptr };
+	this->dx8_data = new DX8_DATA{ };
 
 	WChar buff[sizeof(pd->lf.lfFaceName)];
 	ConvertUtf8toUtf16(buff, fontName);
@@ -47,14 +70,7 @@ Draw::D3D_DX8::D3D_DX8(void * pD3DD, const char * fontName, int fontSize)
 	pd->lf.lfOutPrecision = OUT_OUTLINE_PRECIS;
 	pd->lf.lfQuality = CLEARTYPE_QUALITY;
 
-	D3DXCreateFontIndirect(pd->d3dd, &pd->lf, &pd->pFont);
+	pd->pD3DXCreateFontIndirect = D3DXCreateFontIndirect;
 
-	if (!pd->pFont) {
-		delete pd;
-		this->dx8_data = nullptr;
-		this->valid = false;
-	}
-	else {
-		this->valid = true;
-	}
+	this->valid = true;
 }
