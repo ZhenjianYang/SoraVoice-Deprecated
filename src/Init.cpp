@@ -30,16 +30,21 @@ static MODULEINFO mi_exe;
 
 int StartSoraVoice(void* mh)
 {
+	LOG("Starting SoraVoice...");
+
 	if (!GetModuleInformation(GetCurrentProcess(), GetModuleHandleA(NULL), &mi_exe, sizeof(mi_exe))) {
 		return 0;
 	}
 
+	LOG("module info: base = 0x%08X, size = 0x%08X", (unsigned)mi_exe.lpBaseOfDll, (unsigned)mi_exe.SizeOfImage);
 	::moduleHandle = (HMODULE)mh;
 
 	if (!LoadRC() || !SearchGame()) return 0;
 	if (SERIES_IS_ED6(SV.series) && !InitSVData()) return 0;
 
 	if(ApplyMemoryPatch()) DoStart();
+
+	LOG("SoraVoice Started.");
 	return 1;
 }
 
@@ -354,6 +359,7 @@ bool ApplyMemoryPatch()
 		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &dwProtect)) {
 			if (!SV.addrs.p_mute && add_pmute) {
 				SV.addrs.p_mute = *(void**)(from + add_pmute);
+				LOG("Set p_mute = 0x%08X", (unsigned)SV.addrs.p_mute);
 			}
 			std::memcpy(from, buff, len_op);
 			VirtualProtect(from, len_op, dwProtect, &dwProtect2);
@@ -364,7 +370,12 @@ bool ApplyMemoryPatch()
 	}
 
 	static unsigned fake_mute = 1;
-	if (!SV.addrs.p_mute) SV.addrs.p_mute = &fake_mute;
+	if (!SV.addrs.p_mute) {
+		SV.addrs.p_mute = &fake_mute;
+		fake_mute = SV.series == SERIES_ZEROAO ? 1 : 0;
+
+		LOG("Set p_mute to fake_mute : 0x%08X", (unsigned)SV.addrs.p_mute);
+	}
 	return true;
 }
 
