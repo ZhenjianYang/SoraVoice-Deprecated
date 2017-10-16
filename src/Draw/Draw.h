@@ -29,8 +29,8 @@ namespace Draw {
 
 	void DrawInfos(void* pD3DD);
 
-	void AddInfo(InfoType type, unsigned time, unsigned color, const char* text);
-	void RemoveInfo(InfoType type);
+	unsigned AddInfo(InfoType type, unsigned time, unsigned color, const char* text);
+	unsigned RemoveInfo(InfoType type);
 
 	const unsigned& Showing();
 };

@@ -137,7 +137,7 @@ bool Draw::End() {
 	return false;
 }
 
-void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* text) {
+unsigned Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* text) {
 	unsigned dead = time == ShowTimeInfinity ? TIME_MAX : Clock::Now() + time;
 	constexpr auto NumValidType = InfoType::All;
 	const unsigned format = type < NumValidType ? DR_dftFormatList[(int)type] : DR_dftFormatList[(int)InfoType::All];
@@ -219,7 +219,7 @@ void Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char* tex
 
 	LOG("top = %ld, bottom = %ld, left = %ld, right = %ld", rect.top, rect.bottom, rect.left, rect.right);
 
-	*DR_showing = DR_infoList.size() > 0;
+	return *DR_showing = DR_infoList.size();
 }
 
 void Draw::DrawInfos(void* pD3DD) {
@@ -248,7 +248,7 @@ void Draw::DrawInfos(void* pD3DD) {
 	}
 }
 
-void Draw::RemoveInfo(InfoType type) {
+unsigned Draw::RemoveInfo(InfoType type) {
 	switch (type)
 	{
 	case InfoType::All:
@@ -261,7 +261,7 @@ void Draw::RemoveInfo(InfoType type) {
 		DR_infoList.remove_if([&type](const PtrInfo& t) { return t->type == type; });
 		break;
 	}
-	*DR_showing = DR_infoList.size();
+	return *DR_showing = DR_infoList.size();
 }
 
 const unsigned& Draw::Showing() {

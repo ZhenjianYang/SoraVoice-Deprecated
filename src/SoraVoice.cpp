@@ -172,7 +172,7 @@ inline static std::string GetStr(First first, Remain... remains) {
 }
 
 template<typename... Texts>
-inline static void AddInfo(InfoType type, unsigned time, unsigned color, Texts... texts) {
+inline static unsigned AddInfo(InfoType type, unsigned time, unsigned color, Texts... texts) {
 	return Draw::AddInfo(type, time, color, GetStr(texts...).c_str());
 }
 
@@ -625,9 +625,8 @@ void SoraVoice::Show(void* pD3DD)
 
 	if(!VC_isZa) SoraVoice::Input();
 
-	if (SV.status.showing) {
+	if (SV.status.showing && Draw::RemoveInfo(InfoType::Dead)) {
 		Draw::DrawInfos(pD3DD);
-		Draw::RemoveInfo(InfoType::Dead);
 	}
 
 	if (SV.status.first_text) {
