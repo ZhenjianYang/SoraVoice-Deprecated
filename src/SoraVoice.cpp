@@ -33,7 +33,15 @@ using Player::PlayID;
 using Player::StopType;
 using byte = unsigned char;
 
-static const char DateVersion[] = BUILD_DATE;
+#ifdef TEST_VER
+#define STR_VERSION { 'T', 'E', 'S', 'T', ' ', BUILD_DATE, '\0' }
+#elif defined(DBG_VER)
+#define STR_VERSION { 'D', 'E', 'B', 'U', 'G', ' ', BUILD_DATE, '\0' }
+#else
+#define STR_VERSION { BUILD_DATE, '\0' }
+#endif // TEST_VER
+
+static const char DateVersion[] = STR_VERSION;
 
 constexpr int ORIVOICEID_LEN = 4;
 constexpr int BGMVOICEID_LEN = 6;
