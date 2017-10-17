@@ -34,14 +34,14 @@ NACKED void ASM::dlgse() {
 		je      short dlgse_sora_over;
 
 		mov     eax, dword ptr[SV.addrs.p_mute];
-		cmp     dword ptr[eax], 0;
+		cmp     byte ptr[eax], 0;
 		jne     short dlgse_sora_over;
 
-		mov     dword ptr[eax], 1;
+		mov     byte ptr[eax], 1;
 		add     esp, 4;
 		call    dword ptr[SV.jcs.dlgse.to];
 		mov     eax, dword ptr[SV.addrs.p_mute];
-		mov     dword ptr[eax], 0;
+		mov     byte ptr[eax], 0;
 		jmp     dword ptr[SV.jcs.dlgse.next];
 	dlgse_sora_over:
 		jmp     dword ptr[SV.jcs.dlgse.to];
@@ -52,7 +52,7 @@ NACKED void ASM::dlgse() {
 		jne     dlgse_tits_to;
 
 		mov     eax, dword ptr[SV.addrs.p_mute];
-		cmp     dword ptr[eax], 0;
+		cmp     byte ptr[eax], 0;
 		jne     short dlgse_tits_to;
 
 		ret;

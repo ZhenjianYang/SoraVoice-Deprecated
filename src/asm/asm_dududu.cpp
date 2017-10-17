@@ -25,14 +25,14 @@ NACKED void ASM::dududu() {
 		je      short dududu_sora_over;
 
 		mov     eax, dword ptr[SV.addrs.p_mute];
-		cmp     dword ptr[eax], 0;
+		cmp     byte ptr[eax], 0;
 		jne     short dududu_sora_over;
 
-		mov     dword ptr[eax], 1;
+		mov     byte ptr[eax], 1;
 		add     esp, 4;
 		call    dword ptr[SV.jcs.dududu.to];
 		mov     eax, dword ptr[SV.addrs.p_mute];
-		mov     dword ptr[eax], 0;
+		mov     byte ptr[eax], 0;
 		jmp     dword ptr[SV.jcs.dududu.next];
 	dududu_sora_over:
 		jmp     dword ptr[SV.jcs.dududu.to];
@@ -43,7 +43,7 @@ NACKED void ASM::dududu() {
 		jne     short dududu_tits_to;
 
 		mov     eax, dword ptr[SV.addrs.p_mute];
-		cmp     dword ptr[eax], 0;
+		cmp     byte ptr[eax], 0;
 		jne     short dududu_tits_to;
 
 		ret;

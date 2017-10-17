@@ -360,6 +360,7 @@ bool ApplyMemoryPatch()
 			if (!SV.addrs.p_mute && add_pmute) {
 				SV.addrs.p_mute = *(void**)(from + add_pmute);
 				LOG("Set p_mute = 0x%08X", (unsigned)SV.addrs.p_mute);
+				LOG("*p_mute = 0x%08X", SV.addrs.p_mute ? *(unsigned*)SV.addrs.p_mute : 0);
 			}
 			std::memcpy(from, buff, len_op);
 			VirtualProtect(from, len_op, dwProtect, &dwProtect2);
@@ -375,6 +376,7 @@ bool ApplyMemoryPatch()
 		fake_mute = SV.series == SERIES_ZEROAO ? 1 : 0;
 
 		LOG("Set p_mute to fake_mute : 0x%08X", (unsigned)SV.addrs.p_mute);
+		LOG("*p_mute = 0x%08X", SV.addrs.p_mute ? *(unsigned*)SV.addrs.p_mute : 0);
 	}
 	return true;
 }
