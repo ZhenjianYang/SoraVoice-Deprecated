@@ -136,6 +136,7 @@
     <ClCompile Include="..\..\src\asm\asm_dlgse.cpp" />
     <ClCompile Include="..\..\src\asm\asm_dududu.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldquiz.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_ldquizB.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldscn.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldscnB.cpp" />
     <ClCompile Include="..\..\src\asm\asm_prst.cpp" />

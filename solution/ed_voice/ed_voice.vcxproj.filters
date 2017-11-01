@@ -240,6 +240,9 @@
     <ClCompile Include="..\..\src\asm\asm_ldquiz.cpp">
       <Filter>src\asm</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_ldquizB.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\RC\files\SoraData.ini">
