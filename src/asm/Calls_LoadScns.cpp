@@ -11,13 +11,13 @@
 #define BUFF_SIZE 0x10000
 #define SCN_NUM 8
 
-int SVCALL ASM_LoadScn(char* buff, int idx, int game) {
-	if (idx >= DIRS[game].Num) return 0;
+int SVCALL ASM_LoadScn(char* buff, int idx, int dir_group) {
+	if (idx >= DIRS[dir_group].Num) return 0;
 
 	char path[sizeof(PATH_SN) + MAX_NAME_LEN] = PATH_SN;
 	path[sizeof(path) - 1] = '\0';
 
-	strncpy(path + sizeof(PATH_SN) - 1, DIRS[game].Dir[idx], MAX_NAME_LEN);
+	strncpy(path + sizeof(PATH_SN) - 1, DIRS[dir_group].Dir[idx], MAX_NAME_LEN);
 
 	FILE* f = fopen(path, "rb");
 	if (!f) return 0;

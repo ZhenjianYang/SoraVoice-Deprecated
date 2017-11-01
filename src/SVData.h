@@ -68,6 +68,8 @@ struct SVData
 		Jcs ldscn;
 		Jcs ldscnB;
 		Jcs ldscnB2;
+		Jcs ldquiz;
+		Jcs ldquizB;
 		Jcs scnp;
 		Jcs prst;
 		Jcs prst2;
