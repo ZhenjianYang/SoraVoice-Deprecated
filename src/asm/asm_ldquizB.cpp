@@ -9,7 +9,7 @@ NACKED void ASM::ldquizB() {
 		shr     ecx, 16;
 		cmp     ecx, 0x22;
 		pop     ecx;
-		jne     dword ptr[SV.jcs.ldquizB.to];
+		jne     ldquizB_call_ori;
 
 		push    eax;
 		push    ecx;
@@ -26,8 +26,8 @@ NACKED void ASM::ldquizB() {
 		pop     ecx;
 		jne     short ldquizB_ret;
 
-	ldquizB_call_ori:
 		pop     eax;
+	ldquizB_call_ori:
 		jmp     dword ptr[SV.jcs.ldquizB.to];
 
 	ldquizB_ret:
