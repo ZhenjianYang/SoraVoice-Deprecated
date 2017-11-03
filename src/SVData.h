@@ -74,6 +74,8 @@ struct SVData
 		Jcs prst;
 		Jcs prst2;
 		Jcs prst3;
+		Jcs prst4;
+		Jcs prst5;
 	} jcs;
 
 	struct Scode {
