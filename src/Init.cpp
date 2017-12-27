@@ -24,6 +24,7 @@ constexpr char LOG_FILE_PATH[] = "voice/SoraVoice.log";
 static bool LoadRC();
 static bool SearchGame();
 static bool ApplyMemoryPatch();
+static bool ApplyMemoryPatch2();
 static bool DoStart();
 
 static HMODULE moduleHandle;
@@ -160,6 +161,12 @@ const AsmCode asm_codes[] = {
 constexpr int num_asm_codes = sizeof(asm_codes) / sizeof(*asm_codes);
 
 static char buff_ao_vlist[1024];
+
+const string str_memPatch_offset = "memPatch_offset_";
+const string str_memPatch_type = "memPatch_type_";
+const string str_memPatch_old = "memPatch_old_";
+const string str_memPatch_new = "memPatch_new_";
+constexpr int MaxMemPatchNum = 50;
 
 bool LoadRC()
 {
@@ -403,7 +410,22 @@ bool ApplyMemoryPatch()
 		LOG("Set p_mute to fake_mute : 0x%08X", (unsigned)SV.addrs.p_mute);
 		LOG("*p_mute = 0x%08X", SV.addrs.p_mute ? *(unsigned*)SV.addrs.p_mute : 0);
 	}
+
+	ApplyMemoryPatch2();
+
+	LOG("ApplyMemoryPatch Finished.")
 	return true;
+}
+
+
+bool ApplyMemoryPatch2()
+{
+	for (int i = 0; i < MaxMemPatchNum; i++) {
+		string str_i = std::to_string(i);
+
+		unsigned offset = 
+	}
+	return false;
 }
 
 bool DoStart()
