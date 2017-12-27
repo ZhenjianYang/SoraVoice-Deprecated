@@ -9,6 +9,7 @@
 #include <SVData.h>
 #include <Message.h>
 #include <SoraVoice.h>
+#include <Config.h>
 
 #include <Windows.h>
 #include <Psapi.h>
@@ -38,6 +39,27 @@ int StartSoraVoice(void* mh)
 
 	LOG("module info: base = 0x%08X, size = 0x%08X", (unsigned)mi_exe.lpBaseOfDll, (unsigned)mi_exe.SizeOfImage);
 	::moduleHandle = (HMODULE)mh;
+
+	LOG("Loading Config...");
+
+	Config.LoadConfig(DFT_CONFIG_FILE);
+
+	LOG("Config loaded");
+	LOG("config.Volume = %d", Config.Volume);
+	LOG("config.OriginalVoice = %d", Config.OriginalVoice);
+	LOG("config.AutoPlay = %d", Config.AutoPlay);
+	LOG("config.WaitTimePerChar = %d", Config.WaitTimePerChar);
+	LOG("config.WaitTimeDialog = %d", Config.WaitTimeDialog);
+	LOG("config.WaitTimeDialogVoice = %d", Config.WaitTimeDialogVoice);
+	LOG("config.SkipVoice = %d", Config.SkipVoice);
+	LOG("config.DisableDududu = %d", Config.DisableDududu);
+	LOG("config.DisableDialogSE = %d", Config.DisableDialogSE);
+	LOG("config.ShowInfo = %d", Config.ShowInfo);
+	LOG("config.FontName = %s", Config.FontName);
+	LOG("config.FontColor = 0x%08X", Config.FontColor);
+
+	LOG("config.EnableKeys = %d", Config.EnableKeys);
+	LOG("config.SaveChange = %d", Config.SaveChange);
 
 	if (!LoadRC() || !SearchGame()) return 0;
 	if (SERIES_IS_ED6(SV.series) && !InitSVData()) return 0;
