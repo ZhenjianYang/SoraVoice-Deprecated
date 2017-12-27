@@ -8,6 +8,8 @@ namespace ASM {
 	void scode();
 	void ldscn();
 	void ldscnB();
+	void ldquiz();
+	void ldquizB();
 	void scnp();
 	void prst();
 }

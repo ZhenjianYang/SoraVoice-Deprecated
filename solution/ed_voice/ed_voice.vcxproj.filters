@@ -136,6 +136,9 @@
     <ClInclude Include="..\..\src\Hard\dir.h">
       <Filter>src\Hard</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Hard\dir_3rd_quiz.h">
+      <Filter>src\Hard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hook\Hook.cpp">
@@ -232,6 +235,12 @@
       <Filter>src\asm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\asm\asm_prst.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_ldquiz.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_ldquizB.cpp">
       <Filter>src\asm</Filter>
     </ClCompile>
   </ItemGroup>

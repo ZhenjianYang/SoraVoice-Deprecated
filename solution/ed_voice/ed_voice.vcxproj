@@ -105,6 +105,7 @@
     <ClInclude Include="..\..\src\ed_voice.h" />
     <ClInclude Include="..\..\src\Hard\dir.h" />
     <ClInclude Include="..\..\src\Hard\dir_3rd.h" />
+    <ClInclude Include="..\..\src\Hard\dir_3rd_quiz.h" />
     <ClInclude Include="..\..\src\Hard\dir_fc.h" />
     <ClInclude Include="..\..\src\Hard\dir_sc.h" />
     <ClInclude Include="..\..\src\Hard\mapping.h" />
@@ -134,6 +135,8 @@
     <ClCompile Include="..\..\src\asm\asm_aup.cpp" />
     <ClCompile Include="..\..\src\asm\asm_dlgse.cpp" />
     <ClCompile Include="..\..\src\asm\asm_dududu.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_ldquiz.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_ldquizB.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldscn.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldscnB.cpp" />
     <ClCompile Include="..\..\src\asm\asm_prst.cpp" />
