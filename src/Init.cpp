@@ -3,6 +3,7 @@
 #include <Utils/Log.h>
 #include <Utils/INI.h>
 #include <Utils/ApiPack.h>
+#include <Utils/MemPatch.h>
 #include <RC/RC.h>
 #include <RC/RC_SoraRC.h>
 #include <asm/asm.h>
@@ -18,12 +19,14 @@
 #include <sstream>
 #include <cstring>
 #include <algorithm>
+#include <vector>
 
 constexpr char LOG_FILE_PATH[] = "voice/SoraVoice.log";
 
 static bool LoadRC();
 static bool SearchGame();
 static bool ApplyMemoryPatch();
+static bool GetMemPatchInfos(const INI::Group* group);
 static bool ApplyMemoryPatch2();
 static bool DoStart();
 
@@ -167,6 +170,9 @@ const string str_memPatch_type = "memPatch_type_";
 const string str_memPatch_old = "memPatch_old_";
 const string str_memPatch_new = "memPatch_new_";
 constexpr int MaxMemPatchNum = 50;
+static std::vector<MemPatch> mps;
+constexpr int MemPatchType_Int = 0;
+constexpr int MemPatchType_Str = 1;
 
 bool LoadRC()
 {
@@ -333,6 +339,8 @@ static bool SearchGame(const char* iniName) {
 		}
 	}
 
+	GetMemPatchInfos(group);
+
 	return true;
 }
 
@@ -417,14 +425,83 @@ bool ApplyMemoryPatch()
 	return true;
 }
 
-
-bool ApplyMemoryPatch2()
+bool GetMemPatchInfos(const INI::Group * group)
 {
+	mps.clear();
+
 	for (int i = 0; i < MaxMemPatchNum; i++) {
 		string str_i = std::to_string(i);
 
-		unsigned offset = 
+		unsigned offset = GetUIntFromValue(group->GetValue((str_memPatch_offset + str_i).c_str()));
+		if (!offset) break;
+
+		MemPatch mp;
+		mp.SetOffset(offset);
+
+		int type = GetUIntFromValue(group->GetValue((str_memPatch_type + str_i).c_str()));
+		const char* old_data = group->GetValue((str_memPatch_old + str_i).c_str());
+		const char* new_data = group->GetValue((str_memPatch_new + str_i).c_str());
+
+		switch (type)
+		{
+		case MemPatchType_Int:
+			mp.SetOld(GetUIntFromValue(old_data));
+			mp.SetNew(GetUIntFromValue(new_data));
+			break;
+		case MemPatchType_Str:
+			mp.SetOld(old_data);
+			mp.SetNew(new_data);
+			break;
+		default:
+			mp.SetOffset(0);
+			break;
+		}
+
+		mps.push_back(std::move(mp));
 	}
+
+	return true;
+}
+
+
+bool ApplyMemoryPatch2()
+{
+	if (!mps.empty()) {
+		LOG("ApplyMemoryPatch2...")
+	}
+
+	for (const auto& mp : mps) {
+		LOG("MemPatch, offset=0x%08X, len_old=0x%04X, , len_new=0x%04X",
+			mp.GetOffset(), mp.GetOldDataLen(), mp.GetNewDataLen());
+
+		if (!mp.GetOffset() || !mp.GetNewDataBuff() || !mp.GetNewDataLen()) continue;
+
+		char* p = (char*)mp.GetOffset();
+		if (!mp.GetOldDataBuff() || !mp.GetOldDataLen()) {
+			continue;
+		}
+
+		if (!std::equal(p, p + mp.GetOldDataLen(), mp.GetOldDataBuff())) {
+			LOG("Old data not matched!");
+			continue;
+		}
+
+		DWORD dwProtect, dwProtect2;
+		if (VirtualProtect(p, mp.GetNewDataLen(), PAGE_EXECUTE_READWRITE, &dwProtect)) {
+			std::memcpy(p, mp.GetNewDataBuff(), mp.GetNewDataLen());
+			VirtualProtect(p, mp.GetNewDataLen(), dwProtect, &dwProtect2);
+
+			LOG("Changed mem data at 0x%08X", mp.GetOffset());
+		}
+		else {
+			LOG("Changed mem data at 0x%08X failed!", mp.GetOffset());
+		}
+	}
+
+	if (!mps.empty()) {
+		LOG("ApplyMemoryPatch2, End.")
+	}
+
 	return false;
 }
 

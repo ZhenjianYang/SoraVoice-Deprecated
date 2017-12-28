@@ -30,7 +30,7 @@ public:
 
 public:
 	unsigned GetOffset() const { return offset; };
-	void SetOffset(unsigned offset) { this->offset = offset; };
+	void SetOffset(unsigned new_offset) { this->offset = new_offset; };
 
 	unsigned GetOldDataLen() const { return len_old; };
 	unsigned GetNewDataLen() const { return len_new; };
