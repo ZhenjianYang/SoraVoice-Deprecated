@@ -24,12 +24,12 @@ or build them with VS2017 (Desktop development with C++).
 |*Ao no Kiseki*                |Joyoland  |Chinese Simplified|1.0, JOYO or Cubejoy
 |*Sora no Kiseki FC*           |YLT       |Chinese Simplified|Final version
 |*Sora no Kiseki SC*           |YLT       |Chinese Simplified|Final version
-|*Sora no Kiseki the 3RD*      |YLT       |Chinese Simplified|Final version
+|*Sora no Kiseki the 3rd*      |YLT       |Chinese Simplified|Final version
 |*Zero no Kiseki*              |Falcom    |Japanese          |
-|*Sora no Kiseki FC*           |Xseed     |Chinese Simplified|[ED6-FC-Steam-CN](https://github.com/Ouroboros/ED6-FC-Steam-CN)
-|*Sora no Kiseki FC*           |Xseed     |English           |Steam/GOG/Humble, with latest update
-|*Sora no Kiseki SC*           |Xseed     |English           |Steam/GOG/Humble, with latest update
-|*Sora no Kiseki the 3RD*      |Xseed     |English           |Steam/GOG/Humble, with latest update
+|*Trails in the Sky FC*        |Xseed     |Chinese Simplified|[ED6-FC-Steam-CN](https://github.com/Ouroboros/ED6-FC-Steam-CN)
+|*Trails in the Sky FC*        |Xseed     |English           |Steam/GOG/Humble, with latest update
+|*Trails in the Sky SC*        |Xseed     |English           |Steam/GOG/Humble, with latest update
+|*Trails in the Sky the 3rd*   |Xseed     |English           |Steam/GOG/Humble, with latest update
 
 ## Preparation
 
