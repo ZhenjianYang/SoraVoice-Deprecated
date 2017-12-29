@@ -13,6 +13,8 @@
 										static constexpr const char* DFT_##name = dft;\
 										DEFINE_CONFIG_COMMON(name);
 
+#define DFT_CONFIG_FILE "voice\\ed_voice.ini"
+
 struct CConfig
 {
 	static constexpr int ShowInfo_Off = 0;

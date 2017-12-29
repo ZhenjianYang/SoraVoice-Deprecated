@@ -49,7 +49,7 @@ static_assert(BGMVOICEID_LEN > MAX_VOICEID_LEN_NEED_MAPPING, "BGMVOICEID_LEN <= 
 
 constexpr char ORIVOICEFILE_PREFIX[] = "data\\se\\ed7v";
 constexpr char ORIVOICEFILE_ATTR[] = ".wav";
-constexpr char CONFIG_FILE[] = "voice\\ed_voice.ini";
+constexpr char CONFIG_FILE[] = DFT_CONFIG_FILE;
 constexpr char VOICEFILE_DIR[] = "voice\\ogg\\";
 constexpr char VOICEFILE_PREFIX_ZA[] = "v";
 constexpr char VOICEFILE_PREFIX_ED6[] = "ch";
@@ -698,7 +698,6 @@ bool SoraVoice::Init() {
 		}
 	}
 
-	Config.LoadConfig(CONFIG_FILE);
 	Config.SaveConfig(CONFIG_FILE);
 
 	Clock::InitClock(SV.rcd.now, SV.rcd.recent);
@@ -708,23 +707,6 @@ bool SoraVoice::Init() {
 	VC_keys = new Keys(SV.addrs.p_keys, *SV.addrs.p_did);
 	VC_aup = new AutoPlay(SV.rcd.now, SV.rcd.count_ch, SV.status.wait,
 						SV.rcd.time_textbeg, SV.status.waitv);
-
-	LOG("Config loaded");
-	LOG("config.Volume = %d", Config.Volume);
-	LOG("config.OriginalVoice = %d", Config.OriginalVoice);
-	LOG("config.AutoPlay = %d", Config.AutoPlay);
-	LOG("config.WaitTimePerChar = %d", Config.WaitTimePerChar);
-	LOG("config.WaitTimeDialog = %d", Config.WaitTimeDialog);
-	LOG("config.WaitTimeDialogVoice = %d", Config.WaitTimeDialogVoice);
-	LOG("config.SkipVoice = %d", Config.SkipVoice);
-	LOG("config.DisableDududu = %d", Config.DisableDududu);
-	LOG("config.DisableDialogSE = %d", Config.DisableDialogSE);
-	LOG("config.ShowInfo = %d", Config.ShowInfo);
-	LOG("config.FontName = %s", Config.FontName);
-	LOG("config.FontColor = 0x%08X", Config.FontColor);
-
-	LOG("config.EnableKeys = %d", Config.EnableKeys);
-	LOG("config.SaveChange = %d", Config.SaveChange);
 
 	static_assert(CConfig::MAX_Volume == Player::MaxVolume, "Max Volume not same!");
 
