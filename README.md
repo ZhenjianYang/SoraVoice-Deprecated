@@ -47,7 +47,7 @@ specific version of the games.
 
 [SoraVoiceScripts](https://github.com/ZhenjianYang/SoraVoiceScripts) is a project about **Voice Scripts** for
 *Sora no Kiseki*/*Trails in the Sky* series.   
-**NOTE**: **Voice Scripts** for some games listed above are still WIP.   
+**NOTE**: **Voice Scripts** for some games listed above are not finished yet.   
 
 ### Voice Files
 
@@ -204,7 +204,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
   [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. 新建一个文件夹`at9`, 并复制(或者剪切)解包出来的`data/talk`文件夹到其中。   
-- **注意**: 对于**《空之轨迹FC / the 3rd》**, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
+- **注意**: 对于 **《空之轨迹FC / the 3rd》**, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
 
 2. 打开记事本, 复制以下内容, 并且**另存为...** > 选择**所有文件** > 输入**Convert.bat** > **保存**    
 ~~~
@@ -233,7 +233,7 @@ oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" "wav\%%~ni.wav"
 2. 获取**语音脚本**, 将压缩包内的`scena`文件夹解压至`<游戏目录>/voice/`.   
 
 3. 复制所有的**语音文件**到`<游戏目录>/voice/ogg`.   
-   **注意**: 对于**《空之轨迹FC / the 3rd》**, 不要遗漏**ed6501.ogg**。
+   **注意**: 对于 **《空之轨迹FC / the 3rd》**, 不要遗漏**ed6501.ogg**。
 
 4. (**对于《零/碧之轨迹》**), 确保`<游戏目录>/voice/dll`下存在**ogg.dll**, **vorbis.dll**以及**vorbisfile.dll**。   
    **注意**: 对于《空之轨迹》系列, 可以删除`dll`文件夹, 因为这个文件夹对于《空之轨迹》系列而言,没有任何用途。 
@@ -247,7 +247,7 @@ oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" "wav\%%~ni.wav"
 
 ## 关于配置文件   
 
-语音补丁的配置文件为`<游戏根目录>/voice/ed_voice.ini`。配置文件会在游戏启动的时候自动创建。   
+语音补丁的配置文件为`<游戏目录>/voice/ed_voice.ini`。配置文件会在游戏启动的时候自动创建。   
 由于配置文件夹已对每一个配置项作了详细的说明, 这里便不再重复, 请自行查看配置文件中的说明。   
 仅在此**提示**:   
 1. 音量**Volume**的默认配置为100(最大)。由于《空》的语音音量要比《零/碧》高出不少, 默认音量对于《空》而言可能过高。   
