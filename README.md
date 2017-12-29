@@ -5,7 +5,7 @@ This project's objective is to bring Full Voice acting to the PC versions of *So
 Be aware that the *Evolution* version of these games feature new lines which do NOT appear in the
 originals, meaning those WON'T BE in game.
 
-All infomation about this project can be found at [SoraVoice](https://github.com/ZhenjianYang/SoraVoice).
+All information about this project can be found at [SoraVoice](https://github.com/ZhenjianYang/SoraVoice).
 
 **NOTE**: This project is licensed under the GPLv3. You MUST copy, distribute and/or modify any code or
 binaries from this project under this license. See [LICENSE](https://github.com/ZhenjianYang/SoraVoice/blob/master/LICENSE)
@@ -39,7 +39,7 @@ They are not included in this project, so we will describe how to get them.
 ### Voice Scripts   
 
 **Voice Scripts** are at the very core of the patch, as they call the needed **Voice Files** line by line.
-They contain all the dialogues, and because of that, obviously, each set of **Voice Scripts** is tied to a
+They contain all the dialogs, and because of that, obviously, each set of **Voice Scripts** is tied to a
 specific version of the games.
 
 [ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts) is a project about **Voice Scripts** for
@@ -123,7 +123,7 @@ The voice patch's configuration file will be created after launching the game: `
 It contains every setting' description. So we don't repeat it here, please check the configuration file for details.   
 Just **NOTE**:   
 1. The default **Volume** is 100(maximum), maybe too loud for *Sora*, because *Sora*'s voices are much louder than *Zero*/*Ao*'s.   
-2. With default setting, all dialogues will be auto scrolled. You can disable this feature or let it scroll voiced dialogues only.
+2. With default setting, all dialogs will be auto scrolled. You can disable this feature or let it scroll voiced dialogs only.
    And the default timing settings for auto-scroll are designed for Chinese/Japanese versions, they may not be suitable for English versions. 
 
 ## External libraries used in this project   
