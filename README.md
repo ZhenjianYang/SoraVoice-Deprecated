@@ -16,23 +16,20 @@ for details.
 You can get built files in [Release](https://github.com/ZhenjianYang/SoraVoice/releases),
 or build them with VS2017 (Desktop development with C++).   
 
-## Supported Versions
+## Supported games
 
-|Game Title                    |Publisher |Version       | Language 
-|------------------------------|----------|--------------|-------------------
-|*Zero no Kiseki*              |Joyoland  |1.1           |Chinese Simplified
-|                              |          |Cubejoy       |Chinese Simplified
-|                              |          |JOYO Platform |Chinese Simplified
-|*Ao no Kiseki*                |Joyoland  |1.0           |Chinese Simplified
-|                              |          |Cubejoy       |Chinese Simplified
-|                              |          |JOYO Platform |Chinese Simplified
-|*Sora no Kiseki FC*           |YLT       |Final         |Chinese Simplified
-|*Sora no Kiseki SC*           |YLT       |Final         |Chinese Simplified
-|*Sora no Kiseki the 3RD*      |YLT       |Final         |Chinese Simplified
-
-**NOTE**: *Trails in the Sky* series published by Xseed are supported by project
-[SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx), check this project for
-its supported versions.   
+|Game Title                    |Publisher | Language         |NOTE
+|------------------------------|----------|------------------|----
+|*Zero no Kiseki*              |Joyoland  |Chinese Simplified|1.1, JOYO or Cubejoy
+|*Ao no Kiseki*                |Joyoland  |Chinese Simplified|1.0, JOYO or Cubejoy
+|*Sora no Kiseki FC*           |YLT       |Chinese Simplified|Final version
+|*Sora no Kiseki SC*           |YLT       |Chinese Simplified|Final version
+|*Sora no Kiseki the 3RD*      |YLT       |Chinese Simplified|Final version
+|*Zero no Kiseki*              |Falcom    |Japanese          |
+|*Sora no Kiseki FC*           |Xseed     |Chinese Simplified|[ED6-FC-Steam-CN](https://github.com/Ouroboros/ED6-FC-Steam-CN)
+|*Sora no Kiseki FC*           |Xseed     |English           |Steam/GOG/Humble, with latest update
+|*Sora no Kiseki SC*           |Xseed     |English           |Steam/GOG/Humble, with latest update
+|*Sora no Kiseki the 3RD*      |Xseed     |English           |Steam/GOG/Humble, with latest update
 
 ## Preparation
 
@@ -46,11 +43,11 @@ They contain all the dialogues, and because of that, obviously, each set of **Vo
 specific version of the games.
 
 [ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts) is a project about **Voice Scripts** for
-*Zero no Kiseki* & *Ao no Kiseki*. **Voice Scripts** for the Chinese PC versions are done.   
+*Zero no Kiseki* & *Ao no Kiseki*.    
 
 [SoraVoiceScripts](https://github.com/ZhenjianYang/SoraVoiceScripts) is a project about **Voice Scripts** for
-*Sora no Kiseki*/*Trails in the Sky* series. **Voice Scripts** for *Sora no Kiseki FC* (Steam/GOG/Humble)
-are done, but *SC* & *3rd*'s scripts are not finished yet.
+*Sora no Kiseki*/*Trails in the Sky* series.   
+**NOTE**: **Voice Scripts** for some games listed above are still WIP.   
 
 ### Voice Files
 
@@ -74,7 +71,7 @@ Then you will get a folder `data` which contains the extracted data.
   [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. Create a folder `at9`, and copy (or cut if you like) extracted folder `data/talk` into it.   
-- **NOTE**: For *Sora no Kiseki FC*/*Trails in the Sky FC*, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`.
+- **NOTE**: For ***Sora FC & the 3rd***, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`.
 
 2. Open notepad, copy these contents in it, and **Save as** > Select **All Files (format wise)** > Input **Convert.bat** > **Save**.   
 ~~~
@@ -87,12 +84,12 @@ at9tool.exe -d -repeat 1 "%%i" "wav\%%~ni.wav"
 oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" "wav\%%~ni.wav"
 )
 ~~~
-- **NOTE**: `-q 6.00` is setting ogg's quality to 6.00, you can choose another value between 2 to 10 (higher value means higher quality). 
+- **NOTE**: `-q 6.00` is setting ogg files' quality to 6.00, you can choose another value between 2 to 10 (higher value means higher quality). 
 
-3. Put **at9tool.exe**, **oggenc2.exe** and **Convert.bat** together with folder `at9`, then double click **Convert.bat**.   
+3. Put **at9tool.exe**, **oggenc2.exe** and **Convert.bat** together with the folder `at9`, then double click **Convert.bat**.   
 - **NOTE**: This step may take very long time, be patient.   
 
-Then, you will get **Voice Files** in folder `ogg`. 
+Then, you will get **Voice Files** in the folder `ogg`. 
 
 ## Apply the patch
 
@@ -105,16 +102,13 @@ Then, you will get **Voice Files** in folder `ogg`.
 inside `<Game Folder>/voice/`.   
 
 3. Copy all **Voice Files** into `<Game Folder>/voice/ogg/`   
-   **NOTE**: Remember that you also need **ed6501.ogg** inside this folder when it comes to *Sora no Kiseki FC*/*Trails in the Sky FC*.
+   **NOTE**: Remember that you also need **ed6501.ogg** inside this folder when it comes to ***Sora FC / the 3rd***.
 
 4. (**For *Zero/Ao no Kiseki***) Create the `dll` folder inside `<Game Folder>/voice/`, then copy **ogg.dll**, **vorbis.dll** and
 **vorbisfile.dll** into it.   
    **NOTE**: *Sora no Kiseki*/*Trails in the Sky* versions do NOT need the `dll` folder, as they come with it already. 
 
-5. (**For *Trails in the Sky* Xseed version**) Copy [**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)
-into `<Game Folder>/voice/`.   
-
-6. Launch your game.   
+5. Launch your game.   
 
 **NOTE**: To disable the patch, simply rename **dinput8.dll** to something else.
 
@@ -160,19 +154,18 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
 
 ## 支持的游戏
 
-|游戏标题          |发行商    |版本       | 语言 
-|------------------|----------|---------- |---------
-|零之轨迹          |欢乐百世  |1.1        |简体中文
-|                  |          |方块平台版 |简体中文
-|                  |          |JOYO平台版 |简体中文
-|碧之轨迹          |欢乐百世  |1.0        |简体中文
-|                  |          |方块平台版 |简体中文
-|                  |          |JOYO平台版 |简体中文
-|空之轨迹 FC       |娱乐通    |最终版     |简体中文
-|空之轨迹 SC       |娱乐通    |最终版     |简体中文
-|空之轨迹 the 3RD  |娱乐通    |最终版     |简体中文
-
-**注意**: 由Xseed发行的《空之轨迹》系列通过项目[SoraDataEx](https://github.com/ZhenjianYang/SoraDataEx)来获得支持。具体支持的游戏请查看项目的说明。
+|游戏标题          |发行商  |语言    |备注
+|------------------|--------|--------|---------------------------
+|零之轨迹          |欢乐百世|简体中文|1.1, JOYO平台版, 方块游戏
+|碧之轨迹          |欢乐百世|简体中文|1.0, JOYO平台版, 方块游戏
+|空之轨迹 FC       |娱乐通  |简体中文|最终版
+|空之轨迹 SC       |娱乐通  |简体中文|最终版
+|空之轨迹 the 3RD  |娱乐通  |简体中文|最终版
+|零之轨迹          |Falcom  |日文    |
+|空之轨迹 FC       |Xseed   |简体中文|[ED6-FC-Steam-CN](https://github.com/Ouroboros/ED6-FC-Steam-CN)
+|空之轨迹 FC       |Xseed   |英文    |Steam/GOG/Humble, 需安装最新升级
+|空之轨迹 SC       |Xseed   |英文    |Steam/GOG/Humble, 需安装最新升级
+|空之轨迹 the 3RD  |Xseed   |英文    |Steam/GOG/Humble, 需安装最新升级
 
 ## 准备
 
@@ -183,11 +176,10 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
 
 **语音脚本**的目的是为了能够让语音补丁知道对白需要的**语音文件**是哪一个。每一个游戏都需要各自的语音脚本。
 
-[ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts)是一个关于《零之轨迹》和《碧之轨迹》的**语音脚本**的项目。
-用于简体中文PC版的语音脚本已经完成。   
+[ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts)是一个关于《零之轨迹》和《碧之轨迹》的**语音脚本**的项目。    
 
 [SoraVoiceScripts](https://github.com/ZhenjianYang/SoraVoiceScripts)是一个关于《空之轨迹》系列的**语音脚本**的项目。
-用于《空之轨迹FC》(Steam/GOG/Humble)的语音脚本已经完成。但SC和3rd的语音脚本尚未完成。   
+**注意**: 部分列表中的游戏的语音脚本尚未完成。   
 
 
 ### 语音文件
@@ -212,7 +204,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
   [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. 新建一个文件夹`at9`, 并复制(或者剪切)解包出来的`data/talk`文件夹到其中。   
-- **注意**: 对于《空之轨迹FC》, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
+- **注意**: 对于**《空之轨迹FC / the 3rd》**, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
 
 2. 打开记事本, 复制以下内容, 并且**另存为...** > 选择**所有文件** > 输入**Convert.bat** > **保存**    
 ~~~
@@ -241,14 +233,12 @@ oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" "wav\%%~ni.wav"
 2. 获取**语音脚本**, 将压缩包内的`scena`文件夹解压至`<游戏目录>/voice/`.   
 
 3. 复制所有的**语音文件**到`<游戏目录>/voice/ogg`.   
-   **注意**: 对于《空之轨迹FC》, 不要遗漏**ed6501.ogg**。
+   **注意**: 对于**《空之轨迹FC / the 3rd》**, 不要遗漏**ed6501.ogg**。
 
 4. (**对于《零/碧之轨迹》**), 确保`<游戏目录>/voice/dll`下存在**ogg.dll**, **vorbis.dll**以及**vorbisfile.dll**。   
    **注意**: 对于《空之轨迹》系列, 可以删除`dll`文件夹, 因为这个文件夹对于《空之轨迹》系列而言,没有任何用途。 
 
-5. (**对于Xseed发行的《空之轨迹》系列**), 复制[**SoraDataEx.ini**](https://github.com/ZhenjianYang/SoraDataEx/blob/master/SoraDataEx/SoraDataEx.ini)到`<游戏根目录>/voice/`。
-
-6. 运行游戏。   
+5. 运行游戏。   
 
 **注意**: 如果您想临时禁用语音补丁, 只需重命名**dinput8.dll**。
 
