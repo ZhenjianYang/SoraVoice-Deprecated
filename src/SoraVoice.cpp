@@ -212,7 +212,7 @@ void SoraVoice::Play(const char* t)
 	}
 	if (*t != 'v' || str_vid.empty()) return;
 
-	LOG("iptut Voice ID is \"%s\"", str_vid.c_str());
+	LOG("input Voice ID is \"%s\"", str_vid.c_str());
 	LOG("The max length of voice id need mapping is %d", MAX_VOICEID_LEN_NEED_MAPPING);
 
 	if (str_vid.length() <= MAX_VOICEID_LEN_NEED_MAPPING) {
