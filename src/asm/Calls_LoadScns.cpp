@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define PATH_SN "voice//scena/"
-#define OLD_PATH_SN "./data/scena/"
+#define PATH_SN "voice/scena"
+#define STR_ATTR ".bin"
+#define OLD_PATH_SN "./data/scena"
 
 #define BUFF_SIZE 0x10000
 #define SCN_NUM 8
@@ -45,20 +46,31 @@ int SVCALL ASM_LoadScns(char* buffs[], int idx_main, int game) {
 }
 
 #include <io.h>
-void SVCALL ASM_RdScnPath(char* path) {
+int CCALL ASM_RdScnPath(void* /*ret*/, char* buff, const char* /*format*/, char* dir, const char* scn) {
 	constexpr int len_old = sizeof(OLD_PATH_SN) - 1;
 	constexpr int len_new = sizeof(PATH_SN) - 1;
-	static_assert(len_new == len_old, "len_new != len_old");
+	static_assert(len_new <= len_old, "len_new > len_old");
+
+	if (strcmp(dir, OLD_PATH_SN)) return 0;
 
 	int i = 0;
-	while (OLD_PATH_SN[i] && path[i] == OLD_PATH_SN[i]) {
-		path[i] = PATH_SN[i];
-		i++;
+	for (; i < len_new; i++) {
+		buff[i] = PATH_SN[i];
+	}
+	buff[i++] = '/';
+	for (unsigned j = 0; scn[j]; j++, i++) {
+		buff[i] = scn[j];
+	}
+	for (unsigned j = 0; j < sizeof(STR_ATTR); j++, i++) {
+		buff[i] = STR_ATTR[j];
 	}
 
-	if (i != len_old || -1 == _access(path, 4)) {
-		while (--i >= 0) path[i] = OLD_PATH_SN[i];
+	if (-1 == _access(buff, 4)) return 0;
+
+	for (i = 0; i <= len_new; i++) {
+		dir[i] = PATH_SN[i];
 	}
+	return 1;
 }
 
 
