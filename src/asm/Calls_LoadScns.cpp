@@ -15,10 +15,12 @@
 int SVCALL ASM_LoadScn(char* buff, int idx, int dir_group) {
 	if (idx >= DIRS[dir_group].Num) return 0;
 
-	char path[sizeof(PATH_SN) + MAX_NAME_LEN] = PATH_SN;
+#define PATH_SN2 PATH_SN "/"
+
+	char path[sizeof(PATH_SN2) + MAX_NAME_LEN] = PATH_SN2;
 	path[sizeof(path) - 1] = '\0';
 
-	strncpy(path + sizeof(PATH_SN) - 1, DIRS[dir_group].Dir[idx], MAX_NAME_LEN);
+	strncpy(path + sizeof(PATH_SN2) - 1, DIRS[dir_group].Dir[idx], MAX_NAME_LEN);
 
 	FILE* f = fopen(path, "rb");
 	if (!f) return 0;
