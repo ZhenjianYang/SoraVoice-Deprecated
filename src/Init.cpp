@@ -96,8 +96,9 @@ constexpr byte opjmp = 0xE9;
 constexpr byte opcall = 0xE8;
 constexpr byte opnop = 0x90;
 
-const SVData::Scode scode_sora = { 0x54, 0x5B, 0x5C, 0x5D, 0x5E };
-const SVData::Scode scode_za = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F };
+const SVData::Scode scode_sora = { 0x54, 0x5B, 0x5C, 0x5D, 0x5E, 0x5E };
+const SVData::Scode scode_zero = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F, 0x5F };
+const SVData::Scode scode_ao = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F, 0xC5 };
 
 constexpr const char * const rc_SoraData[] = {
 	"voice/SoraData.ini",
@@ -307,7 +308,11 @@ static bool SearchGame(const char* iniName) {
 	if(SV.dxver == DXDFT)
 		SV.dxver = SV.series == SERIES_ZEROAO ? DX9 : DX8;
 
-	std::memcpy(&SV.scode, SERIES_IS_ED6(SV.series) ? &scode_sora: &scode_za, sizeof(SV.scode));
+	std::memcpy(&SV.scode, 
+		SV.game == GAMES::ZERO ? &scode_zero
+		: SV.game == GAMES::AO ? &scode_ao
+		: &scode_sora,
+		sizeof(SV.scode));
 
 	unsigned * const addrs = (decltype(addrs))&SV.addrs;
 	for (int j = 0; j < num_addr; j++) {

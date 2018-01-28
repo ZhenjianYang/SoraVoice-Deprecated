@@ -21,6 +21,8 @@ NACKED void ASM::scode() {
 		cmp     byte ptr[SV.scode.MENU], al;
 		je      record_code;
 		cmp     byte ptr[SV.scode.MENUEND], al;
+		je      record_code;
+		cmp     byte ptr[SV.scode.MINIGAME], al;
 		jne     scode_return;
 
 	record_code:

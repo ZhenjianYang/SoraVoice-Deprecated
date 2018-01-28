@@ -84,6 +84,7 @@ struct SVData
 		unsigned TALK;
 		unsigned MENU;
 		unsigned MENUEND;
+		unsigned MINIGAME;
 	} scode;
 
 	const char *p_rnd_vlst;
