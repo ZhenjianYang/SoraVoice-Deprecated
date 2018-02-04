@@ -2,8 +2,9 @@
 #include <SVData.h>
 #include <Message.h>
 
+#include <string>
 #include <fstream>
-#include <map>
+#include <unordered_map>
 #include <iomanip>
 #include <cstring>
 
@@ -11,16 +12,19 @@ using namespace std;
 
 #define MAXCH_ONELINE 1024
 
-using KeyValue = map<string, string>;
+using KeyValue = unordered_map<string, string>;
 
-#define GET_VALUE(name, kv) _getValue(name, kv, STR_##name)
+#define REMOVE_VALUE(name, kv) kv.erase(#name)
+#define GET_VALUE(name, kv) { _getValue(name, kv, STR_##name); REMOVE_VALUE(name, kv); }
 #define GET_VALUE_MAXFIX(name, kv) {_getValue(name, kv, STR_##name);\
 				if(name < 0) name = 0; \
-				if(name > MAX_##name) name = MAX_##name;}
-#define GET_VALUE_BOOLFIX(name, kv) {_getValue(name, kv, STR_##name); if(name) name = 1;}
+				if(name > MAX_##name) name = MAX_##name; \
+				REMOVE_VALUE(name, kv);}
+#define GET_VALUE_BOOLFIX(name, kv) {_getValue(name, kv, STR_##name); if(name) name = 1; REMOVE_VALUE(name, kv);}
 
 #define OUTPUT_VALUE(name, ofs) ofs << STR_##name << " = " << name << '\n' << Message.CMT.name << '\n' << '\n'
 #define OUTPUT_VALUE_WFMT(name, ofs, format) ofs<< STR_##name << " = " << format << name << '\n'  << Message.CMT.name << '\n' << '\n'
+#define OUTPUT_EXTRA(p, ofs) { if(p) for(auto& __kv : *(p)) ofs << __kv.first << " = " << __kv.second << '\n' << '\n'; }
 
 #define SET_DEFAULT(name) name = DFT_##name
 #define SET_DEFAULT_STR(name) strcpy(name, DFT_##name)
@@ -54,6 +58,17 @@ static bool _getValue(ArrayType &var, const KeyValue& kv, const char* name) {
 	return true;
 }
 
+const char * CConfig::ExtraConfig(const char * configNm) const
+{
+	if (!configNm || !pextra_data) return nullptr;
+	KeyValue& kv = *(KeyValue*)pextra_data;
+
+	auto it = kv.find(configNm);
+	if (it == kv.end()) return nullptr;
+
+	return it->second.c_str();
+}
+
 bool CConfig::LoadConfig(const char * configFn, bool create)
 {
 	load_default();
@@ -66,7 +81,8 @@ bool CConfig::LoadConfig(const char * configFn, bool create)
 		}
 		return false;
 	}
-	KeyValue kv;
+	KeyValue& kv = *(KeyValue*)pextra_data;
+	kv.clear();
 
 	char buff[MAXCH_ONELINE];
 	bool first = true;
@@ -156,8 +172,19 @@ bool CConfig::SaveConfig(const char * configFn) const
 	OUTPUT_VALUE(EnableKeys, ofs);
 	OUTPUT_VALUE(SaveChange, ofs);
 
+	OUTPUT_EXTRA(((KeyValue*)pextra_data), ofs);
+
 	ofs.close();
 	return true;
+}
+
+CConfig::~CConfig()
+{
+	delete (KeyValue*)pextra_data;
+}
+
+CConfig::CConfig() : pextra_data(new KeyValue())
+{
 }
 
 void CConfig::load_default(bool all)
