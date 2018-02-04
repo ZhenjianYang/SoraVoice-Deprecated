@@ -170,6 +170,8 @@ const string str_memPatch_offset = "memPatch_offset_";
 const string str_memPatch_type = "memPatch_type_";
 const string str_memPatch_old = "memPatch_old_";
 const string str_memPatch_new = "memPatch_new_";
+const string str_memPatch_con = "memPatch_con_";
+const string memPatch_con_enable = "1";
 constexpr int MaxMemPatchNum = 50;
 static std::vector<MemPatch> mps;
 constexpr int MemPatchType_Int = 0;
@@ -439,6 +441,14 @@ bool GetMemPatchInfos(const INI::Group * group)
 
 		unsigned offset = GetUIntFromValue(group->GetValue((str_memPatch_offset + str_i).c_str()));
 		if (!offset) break;
+
+		const char* condition = group->GetValue((str_memPatch_con + str_i).c_str());
+		if (condition) {
+			auto con_value = Config.ExtraConfig(condition);
+			if (!con_value || strcmp(con_value, memPatch_con_enable.c_str())) {
+				continue;
+			}
+		}
 
 		MemPatch mp;
 		mp.SetOffset(offset);
