@@ -131,7 +131,6 @@
     <ClInclude Include="..\..\src\Utils\Log.h" />
     <ClInclude Include="..\..\src\Utils\MemPatch.h" />
     <ClInclude Include="..\..\src\Utils\Type.h" />
-    <ClInclude Include="MemPatch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\asm\asm_aup.cpp" />
