@@ -93,6 +93,8 @@ NACKED void ASM::text() {
 		cmp     dword ptr[SV.rcd.count_ch], 0;
 		je      short text_returnb;
 		mov     dword ptr[SV.status.wait], 1;
+		mov     eax, dword ptr[SV.rcd.now];
+		mov     dword ptr[SV.rcd.time_textend], eax;
 
 	text_returnb:
 		pop     eax;

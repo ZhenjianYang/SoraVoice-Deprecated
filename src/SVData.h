@@ -43,6 +43,7 @@ struct SVData
 		unsigned recent;
 		unsigned now;
 		unsigned time_textbeg;
+		unsigned time_textend;
 		unsigned count_ch;
 	} rcd;
 

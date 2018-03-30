@@ -1,4 +1,6 @@
 
+#define NOMINMAX
+
 #include "SoraVoice.h"
 
 #include <SVData.h>
@@ -102,16 +104,17 @@ struct AutoPlay {
 	unsigned &count_ch;
 	unsigned &wait;
 	unsigned &time_textbeg;
+	unsigned &time_textend;
 	unsigned time_autoplay = 0;
 
 	unsigned &waitv;
 	unsigned time_autoplayv = 0;
 
 	AutoPlay(unsigned& now, unsigned &count_ch,
-			unsigned &wait, unsigned &time_textbeg,
+			unsigned &wait, unsigned &time_textbeg, unsigned &time_textend,
 			unsigned &waitv)
 	:now(now),
-	count_ch(count_ch), wait(wait), time_textbeg(time_textbeg),
+	count_ch(count_ch), wait(wait), time_textbeg(time_textbeg), time_textend(time_textend),
 	waitv(waitv) {
 	}
 };
@@ -651,8 +654,8 @@ void SoraVoice::Show(void* pD3DD)
 			SV.order.disableDududu = 0;
 		}
 		else if (aup->wait && !aup->time_autoplay) {
-			aup->time_autoplay = aup->time_textbeg
-				+ aup->count_ch * Config.WaitTimePerChar + Config.WaitTimeDialog - TIME_PREC / 2;
+			aup->time_autoplay = std::max(aup->time_textbeg + aup->count_ch * Config.WaitTimePerChar, aup->time_textend)
+				+ Config.WaitTimeDialog - TIME_PREC / 2;
 
 			SV.order.disableDududu = 0;
 		}
@@ -665,6 +668,7 @@ void SoraVoice::Show(void* pD3DD)
 
 			LOG("wait = %d", aup->wait);
 			LOG("time_textbeg = %d", aup->time_textbeg);
+			LOG("time_textend = %d", aup->time_textend);
 			LOG("cnt = %d", aup->count_ch - 1);
 			LOG("autoplay = %d", aup->time_autoplay);
 
@@ -706,7 +710,7 @@ bool SoraVoice::Init() {
 
 	VC_keys = new Keys(SV.addrs.p_keys, *SV.addrs.p_did);
 	VC_aup = new AutoPlay(SV.rcd.now, SV.rcd.count_ch, SV.status.wait,
-						SV.rcd.time_textbeg, SV.status.waitv);
+						SV.rcd.time_textbeg, SV.rcd.time_textend, SV.status.waitv);
 
 	static_assert(CConfig::MAX_Volume == Player::MaxVolume, "Max Volume not same!");
 
