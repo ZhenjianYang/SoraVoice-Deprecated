@@ -50,16 +50,17 @@ struct CConfig
 	DEFINE_CONFIG(EnableKeys, 1);
 	DEFINE_CONFIG(SaveChange, 1);
 
+	const char* ExtraConfig(const char* configNm) const;
+
 	bool LoadConfig(const char* configFn, bool create = false);
 	bool SaveConfig(const char* configFn) const;
 
 	void Reset(bool all = false) { load_default(all); }
-	CConfig() { load_default(); }
-	CConfig(const char* configFn, bool create = false) { 
-		LoadConfig(configFn, create);
-	}
+	~CConfig();
+	CConfig();
 private:
 	void load_default(bool all = true);
+	void *pextra_data = nullptr;
 };
 
 extern CConfig Config;
