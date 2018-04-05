@@ -175,6 +175,7 @@ const char memPatch_con_enable[] = "1";
 static std::vector<MemPatch> mps;
 constexpr int MemPatchType_Int = 0;
 constexpr int MemPatchType_Str = 1;
+constexpr int MemPatchType_Hex = 2;
 
 bool LoadRC()
 {
@@ -460,6 +461,41 @@ bool GetMemPatchInfos(const INI::Group * group)
 		const char* old_data = group->GetValue((str_memPatch_old + str_i).c_str());
 		const char* new_data = group->GetValue((str_memPatch_new + str_i).c_str());
 
+		auto GetHexArrayFromValue = [](const char* data) -> string {
+			int count = 0;
+			string rst;
+			char tmp = 0;
+			for (; *data; data++) {
+				if (*data >= '0' && *data <= '9') {
+					tmp <<= 4;
+					tmp |= (char)(*data - '0');
+					count++;
+				}
+				else if (*data >= 'A' && *data <= 'F') {
+					tmp <<= 4;
+					tmp |= (char)(*data - 'A' + 10);
+					count++;
+				}
+				else if (*data >= 'a' && *data <= 'f') {
+					tmp <<= 4;
+					tmp |= (char)(*data - 'a' + 10);
+					count++;
+				}
+				else if (*data == ' ') {
+					continue;
+				}
+				else {
+					return "";
+				}
+
+				if (count % 2 == 0) {
+					rst.push_back(tmp);
+					tmp = 0;
+				}
+			}
+			return rst;
+		};
+
 		switch (type)
 		{
 		case MemPatchType_Int:
@@ -469,6 +505,14 @@ bool GetMemPatchInfos(const INI::Group * group)
 		case MemPatchType_Str:
 			mp.SetOld(old_data);
 			mp.SetNew(new_data);
+			break;
+		case MemPatchType_Hex:
+			{
+				string old_hex = GetHexArrayFromValue(old_data);
+				string new_hex = GetHexArrayFromValue(new_data);
+				mp.SetOld(old_hex.c_str(), old_hex.length());
+				mp.SetNew(new_hex.c_str(), new_hex.length());
+			}
 			break;
 		default:
 			mp.SetOffset(0);
