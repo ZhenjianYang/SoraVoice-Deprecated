@@ -166,13 +166,12 @@ constexpr int num_asm_codes = sizeof(asm_codes) / sizeof(*asm_codes);
 
 static char buff_ao_vlist[1024];
 
-const string str_memPatch_offset = "memPatch_offset_";
-const string str_memPatch_type = "memPatch_type_";
-const string str_memPatch_old = "memPatch_old_";
-const string str_memPatch_new = "memPatch_new_";
-const string str_memPatch_con = "memPatch_con_";
-const string memPatch_con_enable = "1";
-constexpr int MaxMemPatchNum = 50;
+const char str_memPatch_offset[] = "memPatch_offset_";
+const char str_memPatch_type[] = "memPatch_type_";
+const char str_memPatch_old[] = "memPatch_old_";
+const char str_memPatch_new[] = "memPatch_new_";
+const char str_memPatch_con[] = "memPatch_con_";
+const char memPatch_con_enable[] = "1";
 static std::vector<MemPatch> mps;
 constexpr int MemPatchType_Int = 0;
 constexpr int MemPatchType_Str = 1;
@@ -436,16 +435,20 @@ bool GetMemPatchInfos(const INI::Group * group)
 {
 	mps.clear();
 
-	for (int i = 0; i < MaxMemPatchNum; i++) {
-		string str_i = std::to_string(i);
+	for (int i = 0; i < group->Num(); i++) {
+		if (!group->GetKey(i) || !std::equal(std::begin(str_memPatch_offset), std::end(str_memPatch_offset) - 1, group->GetKey(i))) {
+			continue;
+		}
 
-		unsigned offset = GetUIntFromValue(group->GetValue((str_memPatch_offset + str_i).c_str()));
+		string str_i = group->GetKey(i) + std::extent<decltype(str_memPatch_offset)>::value - 1;
+
+		unsigned offset = GetUIntFromValue(group->GetValue(i));
 		if (!offset) break;
 
 		const char* condition = group->GetValue((str_memPatch_con + str_i).c_str());
 		if (condition) {
 			auto con_value = Config.ExtraConfig(condition);
-			if (!con_value || strcmp(con_value, memPatch_con_enable.c_str())) {
+			if (!con_value || strcmp(con_value, memPatch_con_enable)) {
 				continue;
 			}
 		}
@@ -492,11 +495,7 @@ bool ApplyMemoryPatch2()
 		if (!mp.GetOffset() || !mp.GetNewDataBuff() || !mp.GetNewDataLen()) continue;
 
 		char* p = (char*)mp.GetOffset();
-		if (!mp.GetOldDataBuff() || !mp.GetOldDataLen()) {
-			continue;
-		}
-
-		if (!std::equal(p, p + mp.GetOldDataLen(), mp.GetOldDataBuff())) {
+		if (mp.GetOldDataBuff() && mp.GetOldDataLen() && !std::equal(p, p + mp.GetOldDataLen(), mp.GetOldDataBuff())) {
 			LOG("Old data not matched!");
 			continue;
 		}
