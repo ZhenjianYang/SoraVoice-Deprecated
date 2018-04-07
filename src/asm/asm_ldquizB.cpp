@@ -28,6 +28,9 @@ NACKED void ASM::ldquizB() {
 
 		pop     eax;
 	ldquizB_call_ori:
+		push    ecx;
+		mov     edx, dword ptr[SV.addrs.addr_quizp];
+		mov     edx, dword ptr[edx];
 		jmp     dword ptr[SV.jcs.ldquizB.to];
 
 	ldquizB_ret:

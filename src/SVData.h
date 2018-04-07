@@ -58,6 +58,7 @@ struct SVData
 
 		void* addr_ppscn;
 		void* addr_iscn;
+		void* addr_quizp;
 	} addrs;
 
 	struct {
