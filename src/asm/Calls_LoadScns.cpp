@@ -13,7 +13,7 @@
 #define SCN_NUM 8
 
 int SVCALL ASM_LoadScn(char* buff, int idx, int dir_group) {
-	if (idx >= DIRS[dir_group].Num) return 0;
+	if (idx >= DIRS[dir_group].Num || DIRS[dir_group].Dir[idx][0] == '_') return 0;
 
 #define PATH_SN2 PATH_SN "/"
 
