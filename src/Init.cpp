@@ -154,7 +154,7 @@ const AsmCode asm_codes[] = {
 	{ "ldscn",	(unsigned)ASM::ldscn,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "ldscnB",	(unsigned)ASM::ldscnB,	AsmCode::NotForce },
 	{ "ldscnB2",(unsigned)ASM::ldscnB,	AsmCode::NotForce },
-	{ "ldquiz",	(unsigned)ASM::ldquiz,	AsmCode::NotForce },
+	{ "ldquiz",	(unsigned)ASM::ldquiz,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "ldquizB",(unsigned)ASM::ldquizB,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "scnp",	(unsigned)ASM::scnp,	AsmCode::NotForce },
 	{ "prst",	(unsigned)ASM::prst,	AsmCode::NotForce },
