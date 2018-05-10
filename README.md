@@ -102,7 +102,7 @@ Then, you will get **Voice Files** in the folder `ogg`.
 inside `<Game Folder>/voice/`.   
 
 3. Copy all **Voice Files** into `<Game Folder>/voice/ogg/`   
-   **NOTE**: Remember that you also need **ed6501.ogg** inside this folder when it comes to ***Sora FC / the 3rd***.
+   **NOTE**: Remember that you also need **ed6501.ogg** inside this folder when it comes to ***Sora FC / SC / the 3rd***.
 
 4. (**For *Zero/Ao no Kiseki***) Create the `dll` folder inside `<Game Folder>/voice/`, then copy **ogg.dll**, **vorbis.dll** and
 **vorbisfile.dll** into it.   
