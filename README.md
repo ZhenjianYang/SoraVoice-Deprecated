@@ -71,7 +71,7 @@ Then you will get a folder `data` which contains the extracted data.
   [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. Create a folder `at9`, and copy (or cut if you like) extracted folder `data/talk` into it.   
-- **NOTE**: For ***Sora FC & the 3rd***, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`.
+- **NOTE**: For ***Sora FC, SC, and the 3rd***, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`. Keep in mind though that ***Sora FC and the 3rd*** share the same file, while ***Sora SC*** features its own `ed6501.at9`.
 
 2. Open notepad, copy these contents in it, and **Save as** > Select **All Files (format wise)** > Input **Convert.bat** > **Save**.   
 ~~~
