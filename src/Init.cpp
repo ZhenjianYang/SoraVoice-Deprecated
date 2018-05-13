@@ -37,8 +37,6 @@ static MODULEINFO mi_exe;
 
 using Byte = uint8_t;
 
-constexpr int max_size = 0x1000000;
-
 int StartSoraVoice(void* mh)
 {
 	LOG("Starting SoraVoice...");
@@ -49,9 +47,6 @@ int StartSoraVoice(void* mh)
 
 	LOG("module info: base = 0x%08X, size = 0x%08X", (unsigned)mi_exe.lpBaseOfDll, (unsigned)mi_exe.SizeOfImage);
 	::moduleHandle = (HMODULE)mh;
-	if (mi_exe.SizeOfImage > max_size) {
-		mi_exe.SizeOfImage = max_size;
-	}
 
 	LOG("Loading Config...");
 
@@ -211,8 +206,8 @@ static unsigned GetUIntFromValue(const char* str) {
 
 static void EditInt(void* offset, int val) {
 	LOG("Change value at:0x%08X, oldval=0x%08X, newval=0x%08X", (unsigned)offset, *(unsigned*)offset, val);
-	LOG("OldStr=%s", (char*)(*(unsigned*)offset));
-	LOG("NewStr=%s", (char*)val);
+	LOG("OldStr=\n%s", (char*)(*(unsigned*)offset));
+	LOG("NewStr=\n%s", (char*)val);
 	DWORD dwProtect, dwProtect2;
 	if (VirtualProtect(offset, sizeof(val), PAGE_EXECUTE_READWRITE, &dwProtect)) {
 		std::memcpy(offset, &val, sizeof(val));

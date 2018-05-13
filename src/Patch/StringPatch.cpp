@@ -15,6 +15,8 @@ static MapOffStrType mOffStr;
 static string cPattern;
 static StringPatch::EditFun* pEditFun = nullptr;
 
+static constexpr int MaxSize = 0x220000;
+
 inline static int getHex(const char* p) {
 	if (p[0] != '\\' || p[1] != 'x') return -1;
 	int hex = 0;
@@ -98,10 +100,12 @@ int StringPatch::Apply(void * start, int size, const char * pattern)
 	if (mOffStr.empty()) return 0;
 	if (!pattern && cPattern.empty() || !pEditFun) return 0;
 
+	if (size > MaxSize) size = MaxSize;
+
 	LOG("StringPatch::Apply, Start=0x%08X, Size=%d, Pattern=%s", (unsigned)start, size, pattern);
 
 	const Pattern pt(pattern ? pattern : cPattern.c_str());
-	
+
 	int cnt = 0;
 	for (unsigned char* p = (unsigned char*)start;
 		p < (unsigned char*)start + size - pt.Legnth() - sizeof(int);
@@ -115,9 +119,9 @@ int StringPatch::Apply(void * start, int size, const char * pattern)
 			if (it != mOffStr.end()) {
 				pEditFun(p, (int)it->second.c_str());
 				cnt++;
-			}
 
-			p += sizeof(int);
+				p += sizeof(int);
+			}
 		}
 	}
 
