@@ -2,7 +2,9 @@
 
 namespace StringPatch {
 
-	bool LoadStrings(const char* fileNmae);
+	bool LoadStrings(const char* fileName);
 
-	bool Apply(void* start, int size, const char* pattern);
+	void SetPattern(const char* pattern);
+
+	int Apply(void* start, int size, const char* pattern = nullptr);
 }

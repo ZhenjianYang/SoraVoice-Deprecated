@@ -33,7 +33,6 @@ using LockGuard = std::lock_guard<std::mutex>;
 using Draw::InfoType;
 using Player::PlayID;
 using Player::StopType;
-using byte = unsigned char;
 
 #ifdef TEST_VER
 #define STR_VERSION { 'T', 'E', 'S', 'T', ' ', BUILD_DATE, '\0' }
@@ -90,10 +89,10 @@ constexpr unsigned TIME_PREC = 16;
 constexpr int KEYS_NUM = 256;
 
 struct Keys {
-	const byte* const &keys;
+	const char* const &keys;
 	DID* const pDID;
-	byte last[KEYS_NUM]{};
-	Keys(const byte* &keys, void* pDID)
+	char last[KEYS_NUM]{};
+	Keys(const char* &keys, void* pDID)
 		:keys(keys), pDID((decltype(this->pDID))pDID) {
 	}
 };

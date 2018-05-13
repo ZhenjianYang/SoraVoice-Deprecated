@@ -148,6 +148,9 @@
     <ClInclude Include="..\..\src\Utils\Encoding.h">
       <Filter>src\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Patch\Pattern.h">
+      <Filter>src\Patch</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hook\Hook.cpp">
