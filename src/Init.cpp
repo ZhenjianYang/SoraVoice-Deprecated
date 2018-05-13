@@ -3,7 +3,8 @@
 #include <Utils/Log.h>
 #include <Utils/INI.h>
 #include <Utils/ApiPack.h>
-#include <Utils/MemPatch.h>
+#include <Patch/MemPatch.h>
+#include <Patch/StringPatch.h>
 #include <RC/RC.h>
 #include <RC/RC_SoraRC.h>
 #include <asm/asm.h>
@@ -15,6 +16,7 @@
 #include <Windows.h>
 #include <Psapi.h>
 
+#include <cstddef>
 #include <memory>
 #include <sstream>
 #include <cstring>
@@ -32,6 +34,8 @@ static bool DoStart();
 
 static HMODULE moduleHandle;
 static MODULEINFO mi_exe;
+
+using Byte = uint8_t;
 
 int StartSoraVoice(void* mh)
 {
@@ -82,8 +86,6 @@ int EndSoraVoice()
 
 using namespace std;
 
-using byte = unsigned char;
-
 #define GET_INT(ptr) *(int*)(ptr)
 #define GET_SHORT(ptr) *(short*)(ptr)
 
@@ -92,9 +94,9 @@ using byte = unsigned char;
 
 constexpr int min_legal_to = 0x100000;
 
-constexpr byte opjmp = 0xE9;
-constexpr byte opcall = 0xE8;
-constexpr byte opnop = 0x90;
+constexpr Byte opjmp = 0xE9;
+constexpr Byte opcall = 0xE8;
+constexpr Byte opnop = 0x90;
 
 const SVData::Scode scode_sora = { 0x54, 0x5B, 0x5C, 0x5D, 0x5E, 0x5E };
 const SVData::Scode scode_zero = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F, 0x5F };
@@ -104,6 +106,8 @@ constexpr const char * const rc_SoraData[] = {
 	"voice/SoraData.ini",
 };
 constexpr char rc_ao_vlist[] = "voice/ao_rnd_vlst.txt";
+
+constexpr char scena_folder_path[] = "voice/scena/";
 
 const string str_jcs = "jcs_";
 const string str_from = "_from";
@@ -178,6 +182,9 @@ constexpr int MemPatchType_Int = 0;
 constexpr int MemPatchType_Str = 1;
 constexpr int MemPatchType_Hex = 2;
 
+const char str_StrPatchFile[] = "StrPatchFile";
+const char str_StrPatchPattern[] = "StrPatchPattern";
+
 bool LoadRC()
 {
 	RC::SetModuleHandle(moduleHandle);
@@ -195,6 +202,21 @@ static unsigned GetUIntFromValue(const char* str) {
 	}
 	char *p;
 	return std::strtoul(str, &p, rad);
+}
+
+static void EditInt(void* offset, int val) {
+	LOG("Change value at:0x%08X, oldval=0x%08X, newval=0x%08X", (unsigned)offset, *(unsigned*)offset, val);
+	LOG("OldStr=\n%s", (char*)(*(unsigned*)offset));
+	LOG("NewStr=\n%s", (char*)val);
+	DWORD dwProtect, dwProtect2;
+	if (VirtualProtect(offset, sizeof(val), PAGE_EXECUTE_READWRITE, &dwProtect)) {
+		std::memcpy(offset, &val, sizeof(val));
+		VirtualProtect(offset, sizeof(val), dwProtect, &dwProtect2);
+		LOG("Changed.");
+	}
+	else {
+		LOG("Change val failed.");
+	}
 }
 
 static bool SearchGame(const char* iniName) {
@@ -252,7 +274,7 @@ static bool SearchGame(const char* iniName) {
 				}
 
 				unsigned addr_next = jcs[j].next;
-				byte* p = (byte*)addr_next;
+				Byte* p = (Byte*)addr_next;
 				constexpr int size = 6;
 				if (IsBadReadPtr(p, size)) { ok = false; break; };
 
@@ -349,6 +371,16 @@ static bool SearchGame(const char* iniName) {
 
 	GetMemPatchInfos(group);
 
+	auto strPatchFile = group->GetValue(str_StrPatchFile);
+	auto strPatchPattern = group->GetValue(str_StrPatchPattern);
+	if (strPatchFile && strPatchPattern) {
+		string path = scena_folder_path;
+		path.append(strPatchFile);
+
+		StringPatch::SetEditFun(EditInt);
+		StringPatch::LoadStrings(path.c_str());
+		StringPatch::SetPattern(strPatchPattern);
+	}
 	return true;
 }
 
@@ -360,7 +392,6 @@ bool SearchGame()
 	return false;
 }
 
-
 bool ApplyMemoryPatch()
 {
 	SVData::Jcs *jcs = (SVData::Jcs *)&SV.jcs;
@@ -368,7 +399,7 @@ bool ApplyMemoryPatch()
 		unsigned addr_next = jcs[j].next;
 		unsigned addr_type = asm_codes[j].flags;
 
-		byte* from = (byte*)addr_next;
+		Byte* from = (Byte*)addr_next;
 		if (!from) continue;
 
 		int len_op;
@@ -392,13 +423,13 @@ bool ApplyMemoryPatch()
 		}
 		jcs[j].next = addr_next + len_op;
 
-		byte* vs_to = (byte*)asm_codes[j].addr;
+		Byte* vs_to = (Byte*)asm_codes[j].addr;
 		int jc_len = vs_to - from - 5;
 
 		char buff[256];
 		std::memset(buff, opnop, sizeof(buff));
 
-		const byte op = (addr_type & AsmCode::Jmp) ? opjmp : opcall;
+		const Byte op = (addr_type & AsmCode::Jmp) ? opjmp : opcall;
 		PUT(op, buff);
 		PUT(jc_len, buff + 1);
 
@@ -428,6 +459,8 @@ bool ApplyMemoryPatch()
 	}
 
 	ApplyMemoryPatch2();
+
+	StringPatch::Apply(mi_exe.lpBaseOfDll, mi_exe.SizeOfImage);
 
 	LOG("ApplyMemoryPatch Finished.")
 	return true;

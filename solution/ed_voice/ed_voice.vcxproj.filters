@@ -29,6 +29,9 @@
     <Filter Include="src\Hard">
       <UniqueIdentifier>{65416d46-789b-49f2-9cb4-a4654e7e1046}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Patch">
+      <UniqueIdentifier>{b90338af-5608-4ac9-b645-8284f80f7712}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Hook\Hook.h">
@@ -47,9 +50,6 @@
       <Filter>src\Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Utils\Log.h">
-      <Filter>src\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Utils\EncodeHelper.h">
       <Filter>src\Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Draw\Draw_D3D.h">
@@ -139,8 +139,17 @@
     <ClInclude Include="..\..\src\Hard\dir_3rd_quiz.h">
       <Filter>src\Hard</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Utils\MemPatch.h">
+    <ClInclude Include="..\..\src\Patch\MemPatch.h">
+      <Filter>src\Patch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Patch\StringPatch.h">
+      <Filter>src\Patch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Utils\Encoding.h">
       <Filter>src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Patch\Pattern.h">
+      <Filter>src\Patch</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -246,7 +255,13 @@
     <ClCompile Include="..\..\src\asm\asm_ldquizB.cpp">
       <Filter>src\asm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Utils\MemPatch.cpp">
+    <ClCompile Include="..\..\src\Patch\MemPatch.cpp">
+      <Filter>src\Patch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Patch\StringPatch.cpp">
+      <Filter>src\Patch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Utils\Encoding.cpp">
       <Filter>src\Utils</Filter>
     </ClCompile>
   </ItemGroup>
