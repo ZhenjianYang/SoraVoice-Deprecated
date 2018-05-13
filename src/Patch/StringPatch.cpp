@@ -104,11 +104,8 @@ int StringPatch::Apply(void * start, int size, const char * pattern)
 	
 	int cnt = 0;
 	for (unsigned char* p = (unsigned char*)start;
-		p < (unsigned char*)start + size - pt.Legnth();
+		p < (unsigned char*)start + size - pt.Legnth() - sizeof(int);
 		/*empty*/) {
-		if (unsigned(p) == 0x53850E) {
-			p = p;
-		}
 
 		if (!pt.Check(p)) p++;
 		else {
