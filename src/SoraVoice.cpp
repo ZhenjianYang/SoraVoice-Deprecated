@@ -33,7 +33,6 @@ using LockGuard = std::lock_guard<std::mutex>;
 using Draw::InfoType;
 using Player::PlayID;
 using Player::StopType;
-using byte = unsigned char;
 
 #ifdef TEST_VER
 #define STR_VERSION { 'T', 'E', 'S', 'T', ' ', BUILD_DATE, '\0' }
@@ -90,10 +89,10 @@ constexpr unsigned TIME_PREC = 16;
 constexpr int KEYS_NUM = 256;
 
 struct Keys {
-	const byte* const &keys;
+	const char* const &keys;
 	DID* const pDID;
-	byte last[KEYS_NUM]{};
-	Keys(const byte* &keys, void* pDID)
+	char last[KEYS_NUM]{};
+	Keys(const char* &keys, void* pDID)
 		:keys(keys), pDID((decltype(this->pDID))pDID) {
 	}
 };
@@ -156,27 +155,30 @@ inline static bool isAutoPlaying() {
 			|| Config.AutoPlay == CConfig::AutoPlay_ALL);
 }
 
-inline static std::string GetStr(const char* first) {
-	return first;
+inline static void AppendStr(std::string& s, const char* first) {
+	s.append(first);
 }
 
-inline static std::string GetStr(char* first) {
-	return first;
+inline static void AppendStr(std::string& s, char* first) {
+	s.append(first);
 }
 
 template<typename First, typename = std::enable_if_t<std::is_integral_v<First>>>
-inline static std::string GetStr(First first) {
-	return std::to_string(first);
+inline static void AppendStr(std::string& s, First first) {
+	s.append(std::to_string(first));
 }
 
 template<typename First, typename... Remain>
-inline static std::string GetStr(First first, Remain... remains) {
-	return GetStr(first) + GetStr(remains...);
+inline static void AppendStr(std::string& s, First first, Remain... remains) {
+	AppendStr(s, first);
+	AppendStr(s, remains...);
 }
 
 template<typename... Texts>
 inline static unsigned AddInfo(InfoType type, unsigned time, unsigned color, Texts... texts) {
-	return Draw::AddInfo(type, time, color, GetStr(texts...).c_str());
+	std::string s;
+	AppendStr(s, texts...);
+	return Draw::AddInfo(type, time, color, s.c_str());
 }
 
 static void stopCallBack(PlayID playID, StopType stopType)

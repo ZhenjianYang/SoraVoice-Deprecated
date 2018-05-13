@@ -8,7 +8,6 @@ extern "C" {
 
 struct SVData
 {
-	typedef unsigned char byte;
 	typedef struct Jcs {
 		unsigned next;
 		unsigned to;
@@ -53,7 +52,7 @@ struct SVData
 		void** p_Hwnd;
 		void** p_pDS;
 		void** p_global;
-		const byte* p_keys;
+		const char* p_keys;
 		void* p_mute;
 
 		void* addr_ppscn;

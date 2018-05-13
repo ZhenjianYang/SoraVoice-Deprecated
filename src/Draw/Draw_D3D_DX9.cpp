@@ -1,7 +1,7 @@
 #include "Draw_D3D_DX9.h"
 
 #include <Utils/ApiPack.h>
-#include <Utils/EncodeHelper.h>
+#include <Utils/Encoding.h>
 
 #include <d3d9/d3dx9.h>
 
@@ -48,9 +48,9 @@ void Draw::D3D_DX9::EndDraw()
 	if(pd->d3dd) pd->d3dd->EndScene();
 }
 
-void Draw::D3D_DX9::DrawString(const WChar * text, int count, void * rect, unsigned format, unsigned color)
+void Draw::D3D_DX9::DrawString(const WString& text, int count, const void * rect, unsigned format, unsigned color)
 {
-	if (pd->pFont) pd->pFont->DrawTextW(pd->pSprite, text, count, (RECT*)rect, format, color);
+	if (pd->pFont) pd->pFont->DrawTextW(pd->pSprite, text.c_str(), count, (RECT*)rect, format, color);
 }
 
 Draw::D3D_DX9::~D3D_DX9()
@@ -66,7 +66,9 @@ Draw::D3D_DX9::D3D_DX9(const char * fontName, int fontSize)
 {
 	this->dx9_data = new DX9_DATA{ };
 
-	ConvertUtf8toUtf16(pd->desca.FaceName, fontName);
+	auto wFontName = Encoding::Utf8ToUtf16(fontName);
+	memcpy(pd->desca.FaceName, wFontName.c_str(), min(sizeof(pd->desca.FaceName), (wFontName.length() + 1) * 2));
+	pd->desca.FaceName[sizeof(pd->desca.FaceName) - 1] = 0;
 
 	pd->desca.Height = -fontSize;
 	pd->desca.Weight = FW_NORMAL;
