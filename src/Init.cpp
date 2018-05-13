@@ -37,6 +37,8 @@ static MODULEINFO mi_exe;
 
 using Byte = uint8_t;
 
+constexpr int max_size = 0x1000000;
+
 int StartSoraVoice(void* mh)
 {
 	LOG("Starting SoraVoice...");
@@ -47,6 +49,9 @@ int StartSoraVoice(void* mh)
 
 	LOG("module info: base = 0x%08X, size = 0x%08X", (unsigned)mi_exe.lpBaseOfDll, (unsigned)mi_exe.SizeOfImage);
 	::moduleHandle = (HMODULE)mh;
+	if (mi_exe.SizeOfImage > max_size) {
+		mi_exe.SizeOfImage = max_size;
+	}
 
 	LOG("Loading Config...");
 
