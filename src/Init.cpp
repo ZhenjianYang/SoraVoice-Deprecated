@@ -211,6 +211,8 @@ static unsigned GetUIntFromValue(const char* str) {
 
 static void EditInt(void* offset, int val) {
 	LOG("Change value at:0x%08X, oldval=0x%08X, newval=0x%08X", (unsigned)offset, *(unsigned*)offset, val);
+	LOG("OldStr=%s", (char*)(*(unsigned*)offset));
+	LOG("NewStr=%s", (char*)val);
 	DWORD dwProtect, dwProtect2;
 	if (VirtualProtect(offset, sizeof(val), PAGE_EXECUTE_READWRITE, &dwProtect)) {
 		std::memcpy(offset, &val, sizeof(val));
