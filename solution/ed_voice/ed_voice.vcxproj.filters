@@ -52,9 +52,6 @@
     <ClInclude Include="..\..\src\Utils\Log.h">
       <Filter>src\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Utils\EncodeHelper.h">
-      <Filter>src\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Draw\Draw_D3D.h">
       <Filter>src\Draw</Filter>
     </ClInclude>
@@ -144,6 +141,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Patch\MemPatch.h">
       <Filter>src\Patch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Patch\StringPatch.h">
+      <Filter>src\Patch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Utils\Encoding.h">
+      <Filter>src\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -251,6 +254,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Patch\MemPatch.cpp">
       <Filter>src\Patch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Patch\StringPatch.cpp">
+      <Filter>src\Patch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Utils\Encoding.cpp">
+      <Filter>src\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -10,7 +10,7 @@ namespace Draw {
 		virtual bool BeginDraw(void* pD3DD) override;
 		virtual void EndDraw() override;
 
-		virtual void DrawString(const WChar* text, int count, void* rect, unsigned format, unsigned color) override;
+		virtual void DrawString(const WString& text, int count, const void* rect, unsigned format, unsigned color) override;
 
 		virtual ~D3D_DX8();
 

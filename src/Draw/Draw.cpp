@@ -7,7 +7,7 @@
 
 #include <Utils/Log.h>
 #include <Utils/Clock.h>
-#include <Utils/EncodeHelper.h>
+#include <Utils/Encoding.h>
 
 #include <Windows.h>
 
@@ -67,7 +67,7 @@ using namespace Draw;
 
 struct Info
 {
-	WChar text[MAX_TEXT_LEN + 1];
+	WString text;
 	RECT rect;
 	unsigned color;
 	unsigned format;
@@ -75,14 +75,13 @@ struct Info
 
 	unsigned deadTime;
 };
-using PtrInfo = std::unique_ptr<Info>;
-using PtrInfoList = std::list<PtrInfo>;
+using InfoList = std::list<Info>;
 
 static unsigned* DR_showing;
 static const unsigned* DR_dftFormatList = DftFormatList_ZA;
 
 static D3D* DR_d3d = nullptr;
-static PtrInfoList DR_infoList;
+static InfoList DR_infoList;
 
 static int DR_width = 0;
 static int DR_height = 0;
@@ -150,7 +149,7 @@ unsigned Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 	bool creatNew = true;
 	if (type != InfoType::Hello) {
 		for (it = DR_infoList.begin(); it != DR_infoList.end(); ++it) {
-			if ((*it)->type == type) {
+			if (it->type == type) {
 				creatNew = false;
 				break;
 			}
@@ -159,35 +158,41 @@ unsigned Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 
 	if (creatNew) {
 		LOG("Create new Text.");
-		DR_infoList.push_back(PtrInfo(new Info));
+		DR_infoList.push_back({});
 		it = --DR_infoList.end();
 	}
 	else {
 		LOG("No need to create new Text.");
 	}
-	(*it)->type = type;
-	(*it)->color = color;
-	(*it)->deadTime = dead;
-	(*it)->format = format;
+	it->type = type;
+	it->color = color;
+	it->deadTime = dead;
+	it->format = format;
 
-	auto conRst = ConvertUtf8toUtf16((*it)->text, text);
+	it->text = Encoding::Utf8ToUtf16(text);
+	int cnt_ascii = 0;
+	int cnt_nonasc = 0;
+	for (auto p = text; *p; ++p) {
+		if (*p >= 0 && *p < 0x80) cnt_ascii++;
+		else cnt_nonasc++;
+	}
 
-	int text_width = (int)((conRst.cnt1 * 0.8 + conRst.cnt2 * 1.2 + conRst.cnt4 * 1.2) * h);
+	int text_width = (int)((3 + cnt_ascii * 0.52 + cnt_nonasc * 1.05) * h);
 	LOG("Text is %s", text);
 	LOG("Text width is %d", text_width);
 
-	auto& rect = (*it)->rect;
+	auto& rect = it->rect;
 
 	if (creatNew) {
 		memset(&rect, 0, sizeof(rect));
 		std::set<int> invalid_bottom, invalid_top;
 		for (auto it2 = DR_infoList.begin(); it2 != DR_infoList.end(); ++it2) {
-			if (it == it2 || (((*it)->format & DT_RIGHT) != ((*it2)->format & DT_RIGHT))) continue;
-			invalid_top.insert((*it2)->rect.top);
-			invalid_bottom.insert((*it2)->rect.bottom);
+			if (it == it2 || ((it->format & DT_RIGHT) != (it2->format & DT_RIGHT))) continue;
+			invalid_top.insert(it2->rect.top);
+			invalid_bottom.insert(it2->rect.bottom);
 		}
 
-		if ((*it)->format & DT_BOTTOM) {
+		if (it->format & DT_BOTTOM) {
 			for (int bottom = DR_height - DR_vbound - DR_vfix; ; bottom -= h + DR_linespace) {
 				if (invalid_bottom.find(bottom) == invalid_bottom.end()) {
 					rect.bottom = bottom;
@@ -208,7 +213,7 @@ unsigned Draw::AddInfo(InfoType type, unsigned time, unsigned color, const char*
 		}
 	} //if (creatNew)
 
-	if ((*it)->format & DT_RIGHT) {
+	if (it->format & DT_RIGHT) {
 		rect.right = DR_width - DR_hbound;
 		rect.left = rect.right - text_width;
 	}
@@ -229,19 +234,19 @@ void Draw::DrawInfos(void* pD3DD) {
 
 		RECT rect_shadow;
 		for (const auto& info : DR_infoList) {
-			rect_shadow = info->rect;
-			if (info->format & DT_RIGHT) rect_shadow.right += DR_shadow;
+			rect_shadow = info.rect;
+			if (info.format & DT_RIGHT) rect_shadow.right += DR_shadow;
 			else rect_shadow.left += DR_shadow;
-			if (info->format & DT_BOTTOM) rect_shadow.bottom += DR_shadow;
+			if (info.format & DT_BOTTOM) rect_shadow.bottom += DR_shadow;
 			else rect_shadow.top += DR_shadow;
 
-			unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (0xFF000000 & info->color);
+			unsigned color_shadow = (0xFFFFFF & SHADOW_COLOR) | (0xFF000000 & info.color);
 
-			DR_d3d->DrawString(info->text, -1, &rect_shadow, info->format, color_shadow);
+			DR_d3d->DrawString(info.text, -1, &rect_shadow, info.format, color_shadow);
 		}
 
 		for (const auto& info : DR_infoList) {
-			DR_d3d->DrawString(info->text, -1, &info->rect, info->format, info->color);
+			DR_d3d->DrawString(info.text, -1, &info.rect, info.format, info.color);
 		}
 
 		DR_d3d->EndDraw();
@@ -255,10 +260,10 @@ unsigned Draw::RemoveInfo(InfoType type) {
 		DR_infoList.clear();
 		break;
 	case InfoType::Dead:
-		DR_infoList.remove_if([](const PtrInfo& t) { return t->deadTime < Clock::Now(); });
+		DR_infoList.remove_if([](const Info& t) { return t.deadTime < Clock::Now(); });
 		break;
 	default:
-		DR_infoList.remove_if([&type](const PtrInfo& t) { return t->type == type; });
+		DR_infoList.remove_if([&type](const Info& t) { return t.type == type; });
 		break;
 	}
 	return *DR_showing = DR_infoList.size();
