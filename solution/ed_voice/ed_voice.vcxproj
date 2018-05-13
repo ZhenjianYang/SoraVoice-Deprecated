@@ -129,7 +129,7 @@
     <ClInclude Include="..\..\src\Utils\EncodeHelper.h" />
     <ClInclude Include="..\..\src\Utils\INI.h" />
     <ClInclude Include="..\..\src\Utils\Log.h" />
-    <ClInclude Include="..\..\src\Utils\MemPatch.h" />
+    <ClInclude Include="..\..\src\Patch\MemPatch.h" />
     <ClInclude Include="..\..\src\Utils\Type.h" />
   </ItemGroup>
   <ItemGroup>
@@ -167,7 +167,7 @@
     <ClCompile Include="..\..\src\Utils\ApiPack.cpp" />
     <ClCompile Include="..\..\src\Utils\Clock.cpp" />
     <ClCompile Include="..\..\src\Utils\INI.cpp" />
-    <ClCompile Include="..\..\src\Utils\MemPatch.cpp" />
+    <ClCompile Include="..\..\src\Patch\MemPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\RC\ed_voice.rc" />

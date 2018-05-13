@@ -3,7 +3,7 @@
 #include <Utils/Log.h>
 #include <Utils/INI.h>
 #include <Utils/ApiPack.h>
-#include <Utils/MemPatch.h>
+#include <Patch/MemPatch.h>
 #include <RC/RC.h>
 #include <RC/RC_SoraRC.h>
 #include <asm/asm.h>
