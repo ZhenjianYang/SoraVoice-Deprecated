@@ -107,6 +107,8 @@ constexpr const char * const rc_SoraData[] = {
 };
 constexpr char rc_ao_vlist[] = "voice/ao_rnd_vlst.txt";
 
+constexpr char scena_folder_path[] = "voice/scena/";
+
 const string str_jcs = "jcs_";
 const string str_from = "_from";
 const string str_to = "_to";
@@ -200,6 +202,19 @@ static unsigned GetUIntFromValue(const char* str) {
 	}
 	char *p;
 	return std::strtoul(str, &p, rad);
+}
+
+static void EditInt(void* offset, int val) {
+	LOG("Change value at:0x%08X, oldval=0x%08X, newval=0x%08X", (unsigned)offset, *(unsigned*)offset, val);
+	DWORD dwProtect, dwProtect2;
+	if (VirtualProtect(offset, sizeof(val), PAGE_EXECUTE_READWRITE, &dwProtect)) {
+		std::memcpy(offset, &val, sizeof(val));
+		VirtualProtect(offset, sizeof(val), dwProtect, &dwProtect2);
+		LOG("Changed.");
+	}
+	else {
+		LOG("Change val failed.");
+	}
 }
 
 static bool SearchGame(const char* iniName) {
@@ -357,7 +372,11 @@ static bool SearchGame(const char* iniName) {
 	auto strPatchFile = group->GetValue(str_StrPatchFile);
 	auto strPatchPattern = group->GetValue(str_StrPatchPattern);
 	if (strPatchFile && strPatchPattern) {
-		StringPatch::LoadStrings(strPatchFile);
+		string path = scena_folder_path;
+		path.append(strPatchFile);
+
+		StringPatch::SetEditFun(EditInt);
+		StringPatch::LoadStrings(path.c_str());
 		StringPatch::SetPattern(strPatchPattern);
 	}
 	return true;
@@ -370,7 +389,6 @@ bool SearchGame()
 	}
 	return false;
 }
-
 
 bool ApplyMemoryPatch()
 {

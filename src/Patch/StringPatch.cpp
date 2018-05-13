@@ -12,7 +12,8 @@ using namespace std;
 
 using MapOffStrType = unordered_map<int, string>;
 static MapOffStrType mOffStr;
-static const char* cPattern;
+static string cPattern;
+static StringPatch::EditFun* pEditFun = nullptr;
 
 inline static int getHex(const char* p) {
 	if (p[0] != '\\' || p[1] != 'x') return -1;
@@ -41,35 +42,46 @@ bool StringPatch::LoadStrings(const char * fileName)
 
 	int cnt = 0;
 	while (getline(ifs, s)) {
-		if (s.empty() || s[0] == '#' || s[0] == ';') continue;
+		if (s.empty() || s[0] == ';') {
+			if (offset) {
+				mOffStr[offset] = Encoding::Utf8ToStr(str, codename.c_str());
+			}
 
-		if (cnt % 3 == 0) {
+			offset = 0;
+			codename.clear();
+			str.clear();
+			cnt = 0;
+
+			continue;
+		}
+
+		if (cnt == 0) {
 			char * es;
 			offset = strtol(s.c_str(), &es, 16);
 		}
-		else if (cnt % 3 == 1) {
+		else if (cnt == 1) {
 			codename = s;
 		}
 		else {
 			auto es = s.c_str();
 			while (*es) {
-				if (*es == '\\') {
-					if (es[1] == 'n') {
-						str.push_back('\n');
-						es += 2;
-					}
-					else if (int ch = getHex(es); ch >= 0) {
-						es += 4;
-						str.push_back(char(ch));
-					}
-					else {
-						str.push_back(*es);
-						es += 1;
-					}
+				if (*es == '\\' && es[1] == 'n') {
+					str.push_back('\n');
+					es += 2;
 				}
+				else if (int ch = getHex(es); ch >= 0) {
+					es += 4;
+					str.push_back(char(ch));
+				}
+				else {
+					str.push_back(*es);
+					es += 1;
+				}
+
 			}
-			mOffStr[offset] = Encoding::Utf8ToStr(str, codename.c_str());
 		}
+
+		cnt++;
 	}
 
 	ifs.close();
@@ -84,24 +96,27 @@ void StringPatch::SetPattern(const char * pattern)
 int StringPatch::Apply(void * start, int size, const char * pattern)
 {
 	if (mOffStr.empty()) return 0;
-	if (!pattern && !cPattern) return 0;
+	if (!pattern && cPattern.empty() || !pEditFun) return 0;
 
 	LOG("StringPatch::Apply, Start=0x%08X, Size=%d, Pattern=%s", (unsigned)start, size, pattern);
 
-	const Pattern pt(pattern ? pattern : cPattern);
+	const Pattern pt(pattern ? pattern : cPattern.c_str());
 	
 	int cnt = 0;
 	for (unsigned char* p = (unsigned char*)start;
 		p < (unsigned char*)start + size - pt.Legnth();
 		/*empty*/) {
+		if (unsigned(p) == 0x53850E) {
+			p = p;
+		}
+
 		if (!pt.Check(p)) p++;
 		else {
 			p += pt.Legnth();
 			int off = *(int*)p;
 			auto it = mOffStr.find(off);
 			if (it != mOffStr.end()) {
-				LOG("StringPatch::Apply 0x%08X, old=%s, new=%s", (unsigned)p,(char*)off ,it->second.c_str());
-				*(int*)p = (int)it->second.c_str();
+				pEditFun(p, (int)it->second.c_str());
 				cnt++;
 			}
 
@@ -109,5 +124,11 @@ int StringPatch::Apply(void * start, int size, const char * pattern)
 		}
 	}
 
+	LOG("StringPatch::Apply, total changed: %d", cnt);
 	return cnt;
+}
+
+void StringPatch::SetEditFun(EditFun * editFun)
+{
+	pEditFun = editFun;
 }

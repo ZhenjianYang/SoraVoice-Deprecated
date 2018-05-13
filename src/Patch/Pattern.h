@@ -15,20 +15,19 @@ public:
 			}
 			else {
 				data[length] = 0;
-				for (int i = 0; i < 2; i++) {
+				for (int i = 0; i < 2; i++, pattern++) {
 					if (*pattern >= '0' && *pattern <= '9') (data[length] *= 16) += *pattern - '0';
 					else if (*pattern >= 'a' && *pattern <= 'f') (data[length] *= 16) += 10 + *pattern - 'a';
-					else if (*pattern >= 'A' && *pattern <= 'F') (data[length] *= 16) += 10 + *pattern - 'f';
-					else data[length] = -1;
+					else if (*pattern >= 'A' && *pattern <= 'F') (data[length] *= 16) += 10 + *pattern - 'A';
+					else data[length] = 0x100;
 				}
-				if (data[length] < 0) data[length] = -1;
 				length++;
 			}
 		}
 	}
 	bool Check(void* buff) const {
 		unsigned char* p = (unsigned char*)buff;
-		for (int i = 0; i < length; i++, p++) {
+		for (int i = 0; i < length; i++) {
 			if (this->data[i] < 0) continue;
 			else if (this->data[i] != p[i]) return false;
 		}
