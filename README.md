@@ -71,7 +71,7 @@ Then you will get a folder `data` which contains the extracted data.
   [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. Create a folder `at9`, and copy (or cut if you like) extracted folder `data/talk` into it.   
-- **NOTE**: For ***Sora FC, SC, and the 3rd***, you also need copy `data/bgm/arrange/ed6501.at9` into `at9`. Keep in mind though that ***Sora FC and the 3rd*** share the same file, while ***Sora SC*** features its own `ed6501.at9`.
+- **NOTE**: For ***Sora FC, SC, and the 3rd***, you also need copy `data/bgm/arrange/ed6501.at9`(or `data/bgm/ed6501.at9`) into `at9`. Keep in mind though that ***Sora FC and the 3rd*** share the same file, while ***Sora SC*** features its own `ed6501.at9`.
 
 2. Open notepad, copy these contents in it, and **Save as** > Select **All Files (format wise)** > Input **Convert.bat** > **Save**.   
 ~~~
@@ -204,7 +204,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
   [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
 
 1. 新建一个文件夹`at9`, 并复制(或者剪切)解包出来的`data/talk`文件夹到其中。   
-- **注意**: 对于 **《空之轨迹FC / the 3rd》**, 您还需复制`data/bgm/arrange/ed6501.at9`到`at9`。
+- **注意**: 对于 **《空之轨迹》系列**, 您还需复制`data/bgm/arrange/ed6501.at9`(或者`data/bgm/ed6501.at9`)到`at9`。(请特别注意：三作的`ed6501.at9`并不是完全相同的，请务必使用各自的`ed6501.at9`)
 
 2. 打开记事本, 复制以下内容, 并且**另存为...** > 选择**所有文件** > 输入**Convert.bat** > **保存**    
 ~~~
@@ -233,7 +233,7 @@ oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" "wav\%%~ni.wav"
 2. 获取**语音脚本**, 将压缩包内的`scena`文件夹解压至`<游戏目录>/voice/`.   
 
 3. 复制所有的**语音文件**到`<游戏目录>/voice/ogg`.   
-   **注意**: 对于 **《空之轨迹FC / the 3rd》**, 不要遗漏**ed6501.ogg**。
+   **注意**: 对于 **《空之轨迹》系列**, 不要遗漏**ed6501.ogg**。
 
 4. (**对于《零/碧之轨迹》**), 确保`<游戏目录>/voice/dll`下存在**ogg.dll**, **vorbis.dll**以及**vorbisfile.dll**。   
    **注意**: 对于《空之轨迹》系列, 可以删除`dll`文件夹, 因为这个文件夹对于《空之轨迹》系列而言,没有任何用途。 
