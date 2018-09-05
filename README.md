@@ -2,19 +2,11 @@ SoraVoice
 =========
 
 This project's objective is to bring Full Voice acting to the PC versions of *Sora/Zero/Ao no Kiseki*.
-Be aware that the *Evolution* version of these games feature new lines which do NOT appear in the
-originals, meaning those WON'T BE in game.
+Be aware that the *Evolution* version of these games feature new events. They may or may not have been dubbed, and in the former case, those **WON'T BE** in game.
 
 All information about this project can be found at [SoraVoice](https://github.com/ZhenjianYang/SoraVoice).
 
-**NOTE**: This project is licensed under the GPLv3. You MUST copy, distribute and/or modify any code or
-binaries from this project under this license. See [LICENSE](https://github.com/ZhenjianYang/SoraVoice/blob/master/LICENSE)
-for details.
-
-## Build
-
-You can get built files in [Release](https://github.com/ZhenjianYang/SoraVoice/releases),
-or build them with VS2017 (Desktop development with C++).   
+**NOTE**: This project is licensed under the GPLv3. You MUST copy, distribute and/or modify any code or binaries from this project under this license. See [LICENSE](https://github.com/ZhenjianYang/SoraVoice/blob/master/LICENSE) for details.
 
 ## Supported games
 
@@ -31,100 +23,83 @@ or build them with VS2017 (Desktop development with C++).
 |*Trails in the Sky SC*        |Xseed     |English           |Steam/GOG/Humble, with latest update
 |*Trails in the Sky the 3rd*   |Xseed     |English           |Steam/GOG/Humble, with latest update
 
+## Build
+
+You can download built files in [Release](https://github.com/ZhenjianYang/SoraVoice/releases),
+or build them with VS2017 (Desktop development with C++).   
+
 ## Preparation
 
-To let the voice patch work, you need **Voice scripts** and **Voice Files** for your game.
-They are not included in this project, so we will describe how to get them.
+What you need to grab in **Release** is the archive *SoraVoice_YYYYMMDD.7z*. This zip contains the pre-made folder structure and all the needed DLLs.
+
+![Pic1](doc/res/pic1.jpg)
+
+![Pic2](doc/res/pic2.jpg)
+This is the content of the *voice* folder in the first picture.
+
+To make the Voice Patch work, you need **Voice Scripts** and **Voice Files** for your game.
+As ***Voice Scripts*** are a completely different project, they're stored in another page we'll point you at soon.
+
+***Voice Files*** are protected material, so you'll have to make them yourselves by extracting them from a copy of your game, or could *probably* find them somewhere.
+
+**NOTE 1**: If you plan on making them yourselves, you'll usually find what you need in `<Evolution Game Folder>/gamedata/data/talk`.
+
+**NOTE 2**: For ***Sora FC, SC, and the 3rd***, you also need to extract `data/bgm/arrange/ed6501.at9`(or `data/bgm/ed6501.at9`). Keep in mind though that ***Sora FC and the 3rd*** share the same file, while ***Sora SC*** features its own `ed6501.at9`. For those wondering, this is Olivier singing *Kohaku no Ai*.
 
 ### Voice Scripts   
 
-**Voice Scripts** are at the very core of the patch, as they call the needed **Voice Files** line by line.
-They contain all the dialogs, and because of that, obviously, each set of **Voice Scripts** is tied to a
-specific version of the games.
+**Voice Scripts** are at the very core of the patch, as they call the needed **Voice Files** line by line. They contain all the dialogues, and because of that, obviously, each set of **Voice Scripts** is tied to a specific version of the games.
 
-[ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts) is a project about **Voice Scripts** for
-*Zero no Kiseki* & *Ao no Kiseki*.    
+[ZeroAoVoiceScripts](https://github.com/ZhenjianYang/ZeroAoVoiceScripts) is a project about **Voice Scripts** for *Zero no Kiseki* & *Ao no Kiseki*.    
 
-[SoraVoiceScripts](https://github.com/ZhenjianYang/SoraVoiceScripts) is a project about **Voice Scripts** for
-*Sora no Kiseki*/*Trails in the Sky* series.   
-**NOTE**: **Voice Scripts** for some games listed above are not finished yet.   
+[SoraVoiceScripts](https://github.com/ZhenjianYang/SoraVoiceScripts) is a project about **Voice Scripts** for *Sora no Kiseki*/*Trails in the Sky*.   
 
-### Voice Files
-
-They can be only extracted from the Vita edition (*Evolution*) game.   
-So you may need a PS Vita/PS TV with HENKaku installed and a copy of the Vita edition game to dump the game's data.   
-We assume you have dumped the game.
-
-#### 1. Extract data.psarc
-
-Drag & Drop `<Evolution Game Folder>/gamedata/data.psarc` on [PSArcTool](https://github.com/periander/PSArcTool).   
-Or if you have **psarc.exe** from Sony's PS3 SDK, use this command: `psarc.exe extract data.psarc`
-
-Then you will get a folder `data` which contains the extracted data.
-
-**NOTE**: If you find data0.psarc, data1.psarc, ... in the same folder with data.psarc, then extract them by same way.
-
-#### 2. Convert at9 files to ogg files.   
-
-- Tools needed:   
-  **at9tool.exe**, it can only be found in Sony's PS3 SDK.   
-  [**oggenc2**](http://www.rarewares.org/ogg-oggenc.php).   
-
-1. Create a folder `at9`, and copy (or cut if you like) extracted folder `data/talk` into it.   
-- **NOTE**: For ***Sora FC, SC, and the 3rd***, you also need copy `data/bgm/arrange/ed6501.at9`(or `data/bgm/ed6501.at9`) into `at9`. Keep in mind though that ***Sora FC and the 3rd*** share the same file, while ***Sora SC*** features its own `ed6501.at9`.
-
-2. Open notepad, copy these contents in it, and **Save as** > Select **All Files (format wise)** > Input **Convert.bat** > **Save**.   
-~~~
-@echo off
-mkdir wav
-mkdir ogg
-for /f "delims=" %%i in ('dir /s /b /a-d at9\*.at9') do (
-title converting %%~ni.at9
-at9tool.exe -d -repeat 1 "%%i" "wav\%%~ni.wav"
-oggenc2.exe -Q -q 6.00 -n "ogg\%%~ni.ogg" "wav\%%~ni.wav"
-)
-~~~
-- **NOTE**: `-q 6.00` is setting ogg files' quality to 6.00, you can choose another value between 2 to 10 (higher value means higher quality). 
-
-3. Put **at9tool.exe**, **oggenc2.exe** and **Convert.bat** together with the folder `at9`, then double click **Convert.bat**.   
-- **NOTE**: This step may take very long time, be patient.   
-
-Then, you will get **Voice Files** in the folder `ogg`. 
+***NOTE***: If you're wondering about building the scripts yourselves... don't. You don't have to unless you wanna do it for some reasons. The steps are explained to this specific end, but a proper release is available.  
 
 ## Apply the patch
 
-**NOTE**: No game files will be overwritten.
+**NOTE**: The original game files will remain untouched.
 
-1. Extract the files from the [Release](https://github.com/ZhenjianYang/SoraVoice/releases), and copy the `voice` folder and
-**dinput8.dll** into `<Game Folder>` (where the game EXE is).   
+1. Extract the files you downloaded from [Release](https://github.com/ZhenjianYang/SoraVoice/releases), and copy the `voice` folder and
+**dinput8.dll** into `<Game Folder>` (where the game EXE is). It'll look like the following picture.  
 
-2. Download the **Voice Scripts** linked above. Inside the archive, you'll find a folder named `scena`. Extract it AS IS
-inside `<Game Folder>/voice/`.   
+![Pic3](doc/res/pic3.jpg)
+
+2. Download the **Voice Scripts** linked above. Inside the archive, you'll find a folder named `scena.xx.xx`. ***xx.xx*** stands for scripts language (JP, CH, EN) and game (Ao, Zero and so on).
+
+![Pic4](doc/res/pic4.jpg)
+
+Extract `scena.xx.xx` inside `<Game Folder>/voice/`, and remove the ***xx.xx***. It should look like the following picture.
+
+![Pic5](doc/res/pic5.jpg)
 
 3. Copy all **Voice Files** into `<Game Folder>/voice/ogg/`   
-   **NOTE**: Remember that you also need **ed6501.ogg** inside this folder when it comes to ***Sora FC / SC / the 3rd***.
+   **NOTE**: Remember that you also need **ed6501.ogg** inside this folder when it comes to ***Sora FC / SC / the 3rd***. Remember: ***Sora SC*** features its own ***ed6501.ogg***.
 
-4. (**For *Zero/Ao no Kiseki***) Create the `dll` folder inside `<Game Folder>/voice/`, then copy **ogg.dll**, **vorbis.dll** and
-**vorbisfile.dll** into it.   
-   **NOTE**: *Sora no Kiseki*/*Trails in the Sky* versions do NOT need the `dll` folder, as they come with it already. 
+![Pic6](doc/res/pic6.jpg)
 
-5. Launch your game.   
+4. (**For *Sora no Kiseki*/*Trails in the Sky***) The trilogy ***DOES NOT*** need the `dll` folder inside `<Game Folder>/voice/`, as it comes with it already.
+
+5. If you did it right, upon launching the game, this message will pop up.
+
+![Pic7](doc/res/pic7.jpg)
+
+This will also generate `ed_voice.ini` inside `<Game Folder>/voice/`, which contains settings like the auto-scroll.
 
 **NOTE**: To disable the patch, simply rename **dinput8.dll** to something else.
 
-### About dsound.dll   
+### About dsound.dll
 
-For *Sora no Kiseki*/*Trails in the Sky* series, you can use **dsound.dll** instead of **dinput8.dll**, in case that
-you couldn't use the latter for some reasons (e.g. another MOD also uses dinput8.dll).   
+For *Sora no Kiseki*/*Trails in the Sky* series, you can use **dsound.dll** instead of **dinput8.dll**, in case that you couldn't use the latter for some reasons (e.g. another MOD also uses dinput8.dll).   
 
 ## About the configuration file   
 
-The voice patch's configuration file will be created after launching the game: `<Game Folder>/voice/ed_voice.ini`.   
-It contains every setting' description. So we don't repeat it here, please check the configuration file for details.   
+It contains every setting' description, so we're not gonna go too much into details here. Please, check the configuration file for details.   
 Just **NOTE**:   
-1. The default **Volume** is 100(maximum), maybe too loud for *Sora*, because *Sora*'s voices are much louder than *Zero*/*Ao*'s.   
-2. With default setting, all dialogs will be auto scrolled. You can disable this feature or let it scroll voiced dialogs only.
-   And the default timing settings for auto-scroll are designed for Chinese/Japanese versions, they may not be suitable for English versions. 
+1. The default **Volume** is 100(maximum), maybe too loud for *Sora*, because *Sora*'s voices are louder than *Zero*/*Ao*'s.   
+2. With default setting, all dialogues will be auto-scrolled. You can disable this feature or let it scroll voiced dialogues only.
+   And the default timing settings for auto-scroll are designed for Chinese/Japanese versions, they may not be suitable for English versions.
+3. You can hide the pop up message at launch by changing line 56 `ShowInfo` to 0.
 
 ## External libraries used in this project   
 -   [libVorbis & libOgg](https://www.xiph.org/), licensed under the [BSD-like license](https://www.xiph.org/licenses/bsd/).   
