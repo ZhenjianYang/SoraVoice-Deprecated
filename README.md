@@ -34,6 +34,7 @@ What you need to grab in **Release** is the archive *SoraVoice_YYYYMMDD.7z*. Thi
 ![Pic1](doc/res/pic1.jpg)
 
 ![Pic2](doc/res/pic2.jpg)
+
 And this is the content of the *voice* folder in the first picture.
 
 To make the Voice Patch work, you need **Voice Scripts** and **Voice Files** for your game.
