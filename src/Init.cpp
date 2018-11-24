@@ -104,6 +104,9 @@ const SVData::Scode scode_ao = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F, 0xC5 };
 
 constexpr const char * const rc_SoraData[] = {
 	"voice/SoraData.ini",
+	"voice/SoraDataSora.ini",
+	"voice/SoraDataTITS.ini",
+	"voice/SoraDataZA.ini",
 };
 constexpr char rc_ao_vlist[] = "voice/ao_rnd_vlst.txt";
 
