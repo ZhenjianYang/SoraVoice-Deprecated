@@ -15,6 +15,7 @@ typedef struct RedirectDir {
 } RedirectDir;
 static const RedirectDir REDIRECT_DIRS[] = {
 	{ 0x00, "voice/fonts" },
+	{ 0x20, "voice/fonts" },
 	{ 0x01, "voice/scena" },
 	{ 0x21, "voice/scena" },
 	{ 0x22, "voice/scena" }
