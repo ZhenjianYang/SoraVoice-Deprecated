@@ -137,7 +137,9 @@ constexpr const char* addr_list[] = {
 
 	"addr_ppscn",
 	"addr_iscn",
-	"addr_quizp"
+	"addr_quizp",
+
+	"addr_pdirs"
 };
 constexpr int num_addr = sizeof(addr_list) / sizeof(*addr_list);
 
@@ -148,6 +150,7 @@ struct AsmCode {
 
 	static constexpr int NotForce = 1;
 	static constexpr int Jmp = 2;
+	static constexpr int Backup = 4;
 };
 const AsmCode asm_codes[] = {
 	{ "text",	(unsigned)ASM::text,	0 },
@@ -161,6 +164,8 @@ const AsmCode asm_codes[] = {
 	{ "ldquiz",	(unsigned)ASM::ldquiz,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "ldquizB",(unsigned)ASM::ldquizB,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "scnp",	(unsigned)ASM::scnp,	AsmCode::NotForce },
+	{ "ldat",	(unsigned)ASM::ldat,	AsmCode::NotForce | AsmCode::Jmp | AsmCode::Backup },
+	{ "dcdat",	(unsigned)ASM::dcdat,	AsmCode::NotForce | AsmCode::Jmp | AsmCode::Backup },
 	{ "prst",	(unsigned)ASM::prst,	AsmCode::NotForce },
 	{ "prst2",	(unsigned)ASM::prst,	AsmCode::NotForce },
 	{ "prst3",	(unsigned)ASM::prst,	AsmCode::NotForce },
@@ -392,8 +397,12 @@ bool SearchGame()
 	return false;
 }
 
+static Byte code_backup[1024];
 bool ApplyMemoryPatch()
 {
+	bool need_backup = false;
+	int icb = 0;
+
 	SVData::Jcs *jcs = (SVData::Jcs *)&SV.jcs;
 	for (int j = 0; j < num_asm_codes; j++) {
 		unsigned addr_next = jcs[j].next;
@@ -436,6 +445,22 @@ bool ApplyMemoryPatch()
 		LOG("change code at : 0x%08X", (unsigned)from);
 		DWORD dwProtect, dwProtect2;
 		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &dwProtect)) {
+			if (addr_type & AsmCode::Backup) {
+				memcpy(code_backup + icb, from, len_op);
+				if (code_backup[icb] == opjmp || code_backup[icb] == opcall) {
+					*(int*)(code_backup + icb + 1) -= code_backup + icb - from;
+				}
+
+				int jc_len_bk = (Byte*)jcs[j].next - (code_backup + icb + len_op) - 5;
+				jcs[j].next = (unsigned)(code_backup + icb);
+				icb += len_op;
+
+				PUT(opjmp, code_backup + icb); icb += 1;
+				PUT(jc_len_bk, code_backup + icb); icb += 4;
+
+				need_backup = true;
+			}
+
 			if (!SV.addrs.p_mute && add_pmute) {
 				SV.addrs.p_mute = *(void**)(from + add_pmute);
 				LOG("Set p_mute = 0x%08X", (unsigned)SV.addrs.p_mute);
@@ -456,6 +481,17 @@ bool ApplyMemoryPatch()
 
 		LOG("Set p_mute to fake_mute : 0x%08X", (unsigned)SV.addrs.p_mute);
 		LOG("*p_mute = 0x%08X", SV.addrs.p_mute ? *(unsigned*)SV.addrs.p_mute : 0);
+	}
+
+	if (need_backup) {
+		LOG("code backup needed, change protection...");
+		DWORD dwProtect;
+		if (VirtualProtect(code_backup, sizeof(code_backup), PAGE_EXECUTE_READWRITE, &dwProtect)) {
+			LOG("Protection changed.");
+		}
+		else {
+			LOG("Change Protection failed.");
+		}
 	}
 
 	ApplyMemoryPatch2();

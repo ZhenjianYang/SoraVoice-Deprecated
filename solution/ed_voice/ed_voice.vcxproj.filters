@@ -264,6 +264,15 @@
     <ClCompile Include="..\..\src\Utils\Encoding.cpp">
       <Filter>src\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_ldat.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\Calls_LoadDat.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_dcdat.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\RC\files\SoraData.ini">

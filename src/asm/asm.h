@@ -12,4 +12,6 @@ namespace ASM {
 	void ldquizB();
 	void scnp();
 	void prst();
+	void ldat();
+	void dcdat();
 }

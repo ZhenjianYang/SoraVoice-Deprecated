@@ -138,6 +138,7 @@
     <ClCompile Include="..\..\src\asm\asm_aup.cpp" />
     <ClCompile Include="..\..\src\asm\asm_dlgse.cpp" />
     <ClCompile Include="..\..\src\asm\asm_dududu.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_ldat.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldquiz.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldquizB.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldscn.cpp" />
@@ -146,6 +147,8 @@
     <ClCompile Include="..\..\src\asm\asm_scnp.cpp" />
     <ClCompile Include="..\..\src\asm\asm_scode.cpp" />
     <ClCompile Include="..\..\src\asm\asm_text.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_dcdat.cpp" />
+    <ClCompile Include="..\..\src\asm\Calls_LoadDat.cpp" />
     <ClCompile Include="..\..\src\asm\Calls_LoadScns.cpp" />
     <ClCompile Include="..\..\src\asm\Calls_SoraVoice.cpp" />
     <ClCompile Include="..\..\src\Config.cpp" />
