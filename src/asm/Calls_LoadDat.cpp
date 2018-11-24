@@ -6,7 +6,7 @@
 #include <cstdio>
 
 #define FAKE_COMP_TAG_MAGIC 0x9CCBB9F7
-#define MAX_FILES 1024
+#define MAX_FILES 4096
 #define FILENAME_BUFF_SIZE 64
 
 typedef struct RedirectDir {
