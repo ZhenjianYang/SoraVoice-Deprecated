@@ -30,14 +30,13 @@ static bool SearchGame();
 static bool ApplyMemoryPatch();
 static bool GetMemPatchInfos(const INI::Group* group);
 static bool ApplyMemoryPatch2();
-static bool DoStart();
 
 static HMODULE moduleHandle;
 static MODULEINFO mi_exe;
 
 using Byte = uint8_t;
 
-int StartSoraVoice(void* mh)
+int InitSoraVoice(void* mh)
 {
 	LOG("Starting SoraVoice...");
 
@@ -70,11 +69,23 @@ int StartSoraVoice(void* mh)
 	LOG("config.SaveChange = %d", Config.SaveChange);
 
 	if (!LoadRC() || !SearchGame()) return 0;
-	if (SERIES_IS_ED6(SV.series) && !InitSVData()) return 0;
+	ApplyMemoryPatch();
 
-	if(ApplyMemoryPatch()) DoStart();
+	LOG("SoraVoice Initialized.");
+	return 1;
+}
 
-	LOG("SoraVoice Started.");
+int UninitSoraVoice()
+{
+	return 1;
+}
+
+int StartSoraVoice()
+{
+	if (SERIES_IS_ED6(SV.series)) {
+		if (!InitSVData() || !SoraVoice::Init())
+			return 0;
+	}
 	return 1;
 }
 
@@ -598,7 +609,6 @@ bool GetMemPatchInfos(const INI::Group * group)
 	return true;
 }
 
-
 bool ApplyMemoryPatch2()
 {
 	if (!mps.empty()) {
@@ -636,12 +646,3 @@ bool ApplyMemoryPatch2()
 	return false;
 }
 
-bool DoStart()
-{
-	if (SERIES_IS_ED6(SV.series)) {
-		return SoraVoice::Init();
-	}
-	else {
-		return true;
-	}
-}

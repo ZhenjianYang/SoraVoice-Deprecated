@@ -6,9 +6,17 @@
 static void* hDll = nullptr;
 static int last_rst = 0;
 
-int SVCALL Start() {
-	if (!last_rst) last_rst = StartSoraVoice(hDll);
+int SVCALL Init() {
+	if (!last_rst) last_rst = InitSoraVoice(hDll);
 	return last_rst;
+}
+
+int SVCALL Uninit() {
+	return UninitSoraVoice();
+}
+
+int SVCALL Start() {
+	return StartSoraVoice();
 }
 int SVCALL End() {
 	return EndSoraVoice();
