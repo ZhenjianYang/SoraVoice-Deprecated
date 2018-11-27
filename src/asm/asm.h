@@ -14,4 +14,5 @@ namespace ASM {
 	void prst();
 	void ldat();
 	void dcdat();
+	void drawt();
 }

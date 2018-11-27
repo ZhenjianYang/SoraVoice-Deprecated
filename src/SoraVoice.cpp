@@ -16,6 +16,7 @@
 #include <Hook/Hook.h>
 #include <Player/Player.h>
 #include <Draw/Draw.h>
+#include <DrawTexts/DrawTexts.h>
 
 #include <string>
 #include <vector>
@@ -709,6 +710,7 @@ bool SoraVoice::Init() {
 	Clock::InitClock(SV.rcd.now, SV.rcd.recent);
 	Draw::Init();
 	Player::Init(*SV.addrs.p_pDS, stopCallBack);
+	DrawTexts::Init();
 
 	VC_keys = new Keys(SV.addrs.p_keys, *SV.addrs.p_did);
 	VC_aup = new AutoPlay(SV.rcd.now, SV.rcd.count_ch, SV.status.wait,

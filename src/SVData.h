@@ -60,6 +60,7 @@ struct SVData
 		void* addr_quizp;
 
 		void* addr_pdirs;
+		void* p_fontsize;
 	} addrs;
 
 	struct {
@@ -76,6 +77,7 @@ struct SVData
 		Jcs scnp;
 		Jcs ldat;
 		Jcs dcdat;
+		Jcs drawt;
 		Jcs prst;
 		Jcs prst2;
 		Jcs prst3;

@@ -153,7 +153,8 @@ constexpr const char* addr_list[] = {
 	"addr_iscn",
 	"addr_quizp",
 
-	"addr_pdirs"
+	"addr_pdirs",
+	"p_fontsize"
 };
 constexpr int num_addr = sizeof(addr_list) / sizeof(*addr_list);
 
@@ -180,6 +181,7 @@ const AsmCode asm_codes[] = {
 	{ "scnp",	(unsigned)ASM::scnp,	AsmCode::NotForce },
 	{ "ldat",	(unsigned)ASM::ldat,	AsmCode::NotForce | AsmCode::Jmp | AsmCode::Backup },
 	{ "dcdat",	(unsigned)ASM::dcdat,	AsmCode::NotForce | AsmCode::Jmp | AsmCode::Backup },
+	{ "drawt",	(unsigned)ASM::drawt,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "prst",	(unsigned)ASM::prst,	AsmCode::NotForce },
 	{ "prst2",	(unsigned)ASM::prst,	AsmCode::NotForce },
 	{ "prst3",	(unsigned)ASM::prst,	AsmCode::NotForce },

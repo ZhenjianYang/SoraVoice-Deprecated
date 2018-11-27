@@ -32,6 +32,9 @@
     <Filter Include="src\Patch">
       <UniqueIdentifier>{b90338af-5608-4ac9-b645-8284f80f7712}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\DrawTexts">
+      <UniqueIdentifier>{3fdd593e-211b-4cf5-a5d2-f7600108e7bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Hook\Hook.h">
@@ -150,6 +153,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Patch\Pattern.h">
       <Filter>src\Patch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\DrawTexts\DrawTexts.h">
+      <Filter>src\DrawTexts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -272,6 +278,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\asm\asm_dcdat.cpp">
       <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_drawt.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\DrawTexts\DrawTexts.cpp">
+      <Filter>src\DrawTexts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

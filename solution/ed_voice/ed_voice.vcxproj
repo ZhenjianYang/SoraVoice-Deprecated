@@ -98,6 +98,7 @@
     <ClInclude Include="..\..\src\asm\Calls.h" />
     <ClInclude Include="..\..\src\asm\inline_asm.h" />
     <ClInclude Include="..\..\src\Config.h" />
+    <ClInclude Include="..\..\src\DrawTexts\DrawTexts.h" />
     <ClInclude Include="..\..\src\Draw\Draw.h" />
     <ClInclude Include="..\..\src\Draw\Draw_D3D.h" />
     <ClInclude Include="..\..\src\Draw\Draw_D3D_DX8.h" />
@@ -137,6 +138,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\asm\asm_aup.cpp" />
     <ClCompile Include="..\..\src\asm\asm_dlgse.cpp" />
+    <ClCompile Include="..\..\src\asm\asm_drawt.cpp" />
     <ClCompile Include="..\..\src\asm\asm_dududu.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldat.cpp" />
     <ClCompile Include="..\..\src\asm\asm_ldquiz.cpp" />
@@ -152,6 +154,7 @@
     <ClCompile Include="..\..\src\asm\Calls_LoadScns.cpp" />
     <ClCompile Include="..\..\src\asm\Calls_SoraVoice.cpp" />
     <ClCompile Include="..\..\src\Config.cpp" />
+    <ClCompile Include="..\..\src\DrawTexts\DrawTexts.cpp" />
     <ClCompile Include="..\..\src\Draw\Draw.cpp" />
     <ClCompile Include="..\..\src\Draw\Draw_D3D.cpp" />
     <ClCompile Include="..\..\src\Draw\Draw_D3D_DX8.cpp" />

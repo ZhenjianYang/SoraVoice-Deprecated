@@ -26,6 +26,8 @@ void SVCALL ASM_Show(void* pD3DD);
 int CCALL ASM_LoadDat(void*, void* buff, int idx, unsigned offset, unsigned size);
 int SVCALL ASM_DecompressDat(void** compressed, void** uncompressed);
 
+void* SVCALL ASM_DrawTexts(const char * text, void * buffer, unsigned stride, unsigned color_index);
+
 #ifdef __cplusplus
 }
 #endif
