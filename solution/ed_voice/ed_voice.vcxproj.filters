@@ -151,6 +151,9 @@
     <ClInclude Include="..\..\src\Patch\Pattern.h">
       <Filter>src\Patch</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Patch\FontWidthsPatch.h">
+      <Filter>src\Patch</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hook\Hook.cpp">
@@ -272,6 +275,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\asm\asm_dcdat.cpp">
       <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Patch\FontWidthsPatch.cpp">
+      <Filter>src\Patch</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

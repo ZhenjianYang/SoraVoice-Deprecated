@@ -5,6 +5,7 @@
 #include <Utils/ApiPack.h>
 #include <Patch/MemPatch.h>
 #include <Patch/StringPatch.h>
+#include <Patch/FontWidthsPatch.h>
 #include <RC/RC.h>
 #include <RC/RC_SoraRC.h>
 #include <asm/asm.h>
@@ -153,7 +154,8 @@ constexpr const char* addr_list[] = {
 	"addr_iscn",
 	"addr_quizp",
 
-	"addr_pdirs"
+	"addr_pdirs",
+	"addr_pfontsizes"
 };
 constexpr int num_addr = sizeof(addr_list) / sizeof(*addr_list);
 
@@ -511,6 +513,8 @@ bool ApplyMemoryPatch()
 	ApplyMemoryPatch2();
 
 	StringPatch::Apply(mi_exe.lpBaseOfDll, mi_exe.SizeOfImage);
+
+	FontWidthsPatch::Apply(SV.addrs.addr_pfontsizes);
 
 	LOG("ApplyMemoryPatch Finished.")
 	return true;
