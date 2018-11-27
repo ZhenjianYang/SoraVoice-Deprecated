@@ -72,7 +72,7 @@ long SVCALL HOOKED_API CALL_PARAM_DCL
 	return rst;
 }
 
-BOOL Initialize(PVOID BaseAddress) {
+BOOL Initialize(PVOID /*BaseAddress*/) {
 #if _DEBUG
 	MessageBox(0, "Stop", "Stop", 0);
 #endif // _DEBUG
@@ -109,11 +109,11 @@ BOOL Initialize(PVOID BaseAddress) {
 	return TRUE;
 }
 
-BOOL Uninitialize(PVOID BaseAddress) {
+BOOL Uninitialize(PVOID /*BaseAddress*/) {
 	return TRUE;
 }
 
-BOOL WINAPI DllMain(PVOID BaseAddress, ULONG Reason, PVOID Reserved)
+BOOL WINAPI DllMain(PVOID BaseAddress, ULONG Reason, PVOID /*Reserved*/)
 {
 	switch (Reason)
 	{

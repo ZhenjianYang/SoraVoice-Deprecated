@@ -28,7 +28,7 @@ std::wstring Encoding::StrToUtf16(const char* str, const char* codename)
 	while (*str_end) str_end++;
 
 	auto wstr = con.from_bytes(str, str_end);
-	if (wstr.length() == str_end - str) {
+	if ((int)wstr.length() == str_end - str) {
 		for (auto ch : wstr) if (ch >= 0x80) return WSTR_EMPTY;
 	}
 	return wstr;
@@ -42,7 +42,7 @@ std::string Encoding::Utf16ToStr(const wchar_t* utf16str, const char* codename)
 	while (*str_end) str_end++;
 
 	auto str = con.to_bytes(utf16str, str_end);
-	if (str.length() == str_end - utf16str) {
+	if ((int)str.length() == str_end - utf16str) {
 		for (auto ch : str) if (ch >= 0x80) return STR_EMPTY;
 	}
 	return str;
