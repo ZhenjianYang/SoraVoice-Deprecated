@@ -30,12 +30,12 @@ bool FontWidthsPatch::Apply(void * p_fontwidths) {
 		if (2 != std::sscanf(s.c_str(), "%X %d", &ansi, &width)) continue;
 		if (ansi < MIN_ANSI || ansi > MAX_ANSI) continue;
 		if (width < MIN_WIDTH) continue;
-		fontwidths[ansi] = width - MIN_WIDTH;
+		fontwidths[ansi] = max(0, width - MIN_WIDTH);
 	}
 	ifs.close();
 
 	DWORD dwProtect2;
-	VirtualProtect(p_fontwidths, sizeof(int) * (MAX_ANSI - MIN_ANSI + 1), dwProtect, &dwProtect2);
+	VirtualProtect(p_fontwidths, sizeof(int) * (MAX_ANSI + 1), dwProtect, &dwProtect2);
 
 	return true;
 }
