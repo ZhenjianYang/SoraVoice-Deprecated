@@ -1,4 +1,6 @@
 #pragma once
 
-int StartSoraVoice(void* moduleHandle);
+int InitSoraVoice(void* moduleHandle);
+int UninitSoraVoice();
+int StartSoraVoice();
 int EndSoraVoice();

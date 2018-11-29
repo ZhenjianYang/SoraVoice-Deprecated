@@ -10,6 +10,8 @@ extern "C" {
 
 	int SVCALL Start();
 	int SVCALL End();
+	int SVCALL Init();
+	int SVCALL Uninit();
 
 #ifdef __cplusplus
 }

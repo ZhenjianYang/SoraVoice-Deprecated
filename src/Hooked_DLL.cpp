@@ -40,6 +40,8 @@ extern "C" {
 #define STR_ED_VOICE_DLL "voice/ed_voice.dll"
 #define STR_START "Start"
 #define STR_END "End"
+#define STR_INIT "Init"
+#define STR_UINIT "Uninit"
 
 #define MAX_PATH_LEN 512
 
@@ -49,17 +51,28 @@ static bool init = false;
 static struct {
 	decltype(::Start)* Start;
 	decltype(::End)* End;
+	decltype(::Init)* Init;
+	decltype(::Uninit)* Uninit;
 } ed_voice_apis;
 
 using Call_Create = decltype(HOOKED_API)*;
 static Call_Create ori_api = nullptr;
 
 long SVCALL HOOKED_API CALL_PARAM_DCL
-{
-#if _DEBUG
-	MessageBox(0, "Stop", "Stop", 0);
-#endif // _DEBUG
+{	
+	auto rst = ori_api ? ori_api CALL_PARAM : ERR_CODE;
 
+	if (!init) {
+		init = true;
+		if (ed_voice_apis.Start) {
+			ed_voice_apis.Start();
+		}
+	}
+
+	return rst;
+}
+
+BOOL Initialize(PVOID /*BaseAddress*/) {
 	if (!dll) {
 		dll = LoadLibraryA(OLD_NAME_DLL);
 		if (!dll) {
@@ -71,27 +84,44 @@ long SVCALL HOOKED_API CALL_PARAM_DCL
 		if (dll) {
 			ori_api = (Call_Create)GetProcAddress(dll, STR_HOOKAPI_NAME);
 		}
-	}
-	
-	auto rst = ori_api ? ori_api CALL_PARAM : ERR_CODE;
 
-	if (!init) {
-		init = true;
 		dll_ed_voice = LoadLibraryA(STR_ED_VOICE_DLL);
 		if (dll_ed_voice) {
+#if _DEBUG
+			MessageBox(0, "Stop", "Stop", 0);
+#endif // _DEBUG
 			ed_voice_apis.Start = (decltype(ed_voice_apis.Start))GetProcAddress(dll_ed_voice, STR_START);
 			ed_voice_apis.End = (decltype(ed_voice_apis.End))GetProcAddress(dll_ed_voice, STR_END);
+			ed_voice_apis.Init = (decltype(ed_voice_apis.Start))GetProcAddress(dll_ed_voice, STR_INIT);
+			ed_voice_apis.Uninit = (decltype(ed_voice_apis.End))GetProcAddress(dll_ed_voice, STR_UINIT);
 
-			if (ed_voice_apis.Start) {
-				if (!ed_voice_apis.Start()) {
+			if (ed_voice_apis.Init) {
+				if (!ed_voice_apis.Init()) {
 					FreeLibrary(dll_ed_voice);
-					ed_voice_apis.Start = ed_voice_apis.End = nullptr;
+					ed_voice_apis.Init = ed_voice_apis.Uninit = ed_voice_apis.Start = ed_voice_apis.End = nullptr;
 					dll_ed_voice = nullptr;
 				}
 			}
 		}
 	}
 
-	return rst;
+	return TRUE;
 }
 
+BOOL Uninitialize(PVOID /*BaseAddress*/) {
+	return TRUE;
+}
+
+BOOL WINAPI DllMain(PVOID BaseAddress, ULONG Reason, PVOID /*Reserved*/)
+{
+	switch (Reason)
+	{
+	case DLL_PROCESS_ATTACH:
+		return Initialize(BaseAddress);
+
+	case DLL_PROCESS_DETACH:
+		return Uninitialize(BaseAddress);
+	}
+
+	return TRUE;
+}

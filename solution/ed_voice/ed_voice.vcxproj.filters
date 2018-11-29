@@ -151,6 +151,9 @@
     <ClInclude Include="..\..\src\Patch\Pattern.h">
       <Filter>src\Patch</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Patch\FontWidthsPatch.h">
+      <Filter>src\Patch</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Hook\Hook.cpp">
@@ -264,11 +267,20 @@
     <ClCompile Include="..\..\src\Utils\Encoding.cpp">
       <Filter>src\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_ldat.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\Calls_LoadDat.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\asm\asm_dcdat.cpp">
+      <Filter>src\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Patch\FontWidthsPatch.cpp">
+      <Filter>src\Patch</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\RC\files\SoraData.ini">
-      <Filter>src\RC\files</Filter>
-    </None>
     <None Include="..\..\src\RC\files\ao_rnd_vlst.txt">
       <Filter>src\RC\files</Filter>
     </None>
@@ -276,6 +288,18 @@
       <Filter>src\RC\files</Filter>
     </None>
     <None Include="..\..\src\RC\files\Message_zh.ini">
+      <Filter>src\RC\files</Filter>
+    </None>
+    <None Include="..\..\src\RC\files\SoraData.ini">
+      <Filter>src\RC\files</Filter>
+    </None>
+    <None Include="..\..\src\RC\files\SoraDataTITS.ini">
+      <Filter>src\RC\files</Filter>
+    </None>
+    <None Include="..\..\src\RC\files\SoraDataZA.ini">
+      <Filter>src\RC\files</Filter>
+    </None>
+    <None Include="..\..\src\RC\files\SoraDataSora.ini">
       <Filter>src\RC\files</Filter>
     </None>
   </ItemGroup>

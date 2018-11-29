@@ -23,6 +23,9 @@ int CCALL ASM_RdScnPath(void* ret, char* buff, const char* format, char* dir, co
 
 void SVCALL ASM_Show(void* pD3DD);
 
+int CCALL ASM_LoadDat(void*, void* buff, int idx, unsigned offset, unsigned size);
+int SVCALL ASM_DecompressDat(void** compressed, void** uncompressed);
+
 #ifdef __cplusplus
 }
 #endif

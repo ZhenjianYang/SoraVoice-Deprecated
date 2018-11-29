@@ -5,6 +5,7 @@
 #include <Utils/ApiPack.h>
 #include <Patch/MemPatch.h>
 #include <Patch/StringPatch.h>
+#include <Patch/FontWidthsPatch.h>
 #include <RC/RC.h>
 #include <RC/RC_SoraRC.h>
 #include <asm/asm.h>
@@ -30,14 +31,13 @@ static bool SearchGame();
 static bool ApplyMemoryPatch();
 static bool GetMemPatchInfos(const INI::Group* group);
 static bool ApplyMemoryPatch2();
-static bool DoStart();
 
 static HMODULE moduleHandle;
 static MODULEINFO mi_exe;
 
 using Byte = uint8_t;
 
-int StartSoraVoice(void* mh)
+int InitSoraVoice(void* mh)
 {
 	LOG("Starting SoraVoice...");
 
@@ -70,11 +70,23 @@ int StartSoraVoice(void* mh)
 	LOG("config.SaveChange = %d", Config.SaveChange);
 
 	if (!LoadRC() || !SearchGame()) return 0;
-	if (SERIES_IS_ED6(SV.series) && !InitSVData()) return 0;
+	ApplyMemoryPatch();
 
-	if(ApplyMemoryPatch()) DoStart();
+	LOG("SoraVoice Initialized.");
+	return 1;
+}
 
-	LOG("SoraVoice Started.");
+int UninitSoraVoice()
+{
+	return 1;
+}
+
+int StartSoraVoice()
+{
+	if (SERIES_IS_ED6(SV.series)) {
+		if (!InitSVData() || !SoraVoice::Init())
+			return 0;
+	}
 	return 1;
 }
 
@@ -104,6 +116,9 @@ const SVData::Scode scode_ao = { 0x55, 0x5C, 0x5D, 0x5E, 0x5F, 0xC5 };
 
 constexpr const char * const rc_SoraData[] = {
 	"voice/SoraData.ini",
+	"voice/SoraDataSora.ini",
+	"voice/SoraDataTITS.ini",
+	"voice/SoraDataZA.ini",
 };
 constexpr char rc_ao_vlist[] = "voice/ao_rnd_vlst.txt";
 
@@ -137,7 +152,10 @@ constexpr const char* addr_list[] = {
 
 	"addr_ppscn",
 	"addr_iscn",
-	"addr_quizp"
+	"addr_quizp",
+
+	"addr_pdirs",
+	"addr_pfontsizes"
 };
 constexpr int num_addr = sizeof(addr_list) / sizeof(*addr_list);
 
@@ -148,6 +166,7 @@ struct AsmCode {
 
 	static constexpr int NotForce = 1;
 	static constexpr int Jmp = 2;
+	static constexpr int Backup = 4;
 };
 const AsmCode asm_codes[] = {
 	{ "text",	(unsigned)ASM::text,	0 },
@@ -161,6 +180,8 @@ const AsmCode asm_codes[] = {
 	{ "ldquiz",	(unsigned)ASM::ldquiz,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "ldquizB",(unsigned)ASM::ldquizB,	AsmCode::NotForce | AsmCode::Jmp },
 	{ "scnp",	(unsigned)ASM::scnp,	AsmCode::NotForce },
+	{ "ldat",	(unsigned)ASM::ldat,	AsmCode::NotForce | AsmCode::Jmp | AsmCode::Backup },
+	{ "dcdat",	(unsigned)ASM::dcdat,	AsmCode::NotForce | AsmCode::Jmp | AsmCode::Backup },
 	{ "prst",	(unsigned)ASM::prst,	AsmCode::NotForce },
 	{ "prst2",	(unsigned)ASM::prst,	AsmCode::NotForce },
 	{ "prst3",	(unsigned)ASM::prst,	AsmCode::NotForce },
@@ -392,8 +413,12 @@ bool SearchGame()
 	return false;
 }
 
+static Byte code_backup[1024];
 bool ApplyMemoryPatch()
 {
+	bool need_backup = false;
+	int icb = 0;
+
 	SVData::Jcs *jcs = (SVData::Jcs *)&SV.jcs;
 	for (int j = 0; j < num_asm_codes; j++) {
 		unsigned addr_next = jcs[j].next;
@@ -436,6 +461,22 @@ bool ApplyMemoryPatch()
 		LOG("change code at : 0x%08X", (unsigned)from);
 		DWORD dwProtect, dwProtect2;
 		if (VirtualProtect(from, len_op, PAGE_EXECUTE_READWRITE, &dwProtect)) {
+			if (addr_type & AsmCode::Backup) {
+				memcpy(code_backup + icb, from, len_op);
+				if (code_backup[icb] == opjmp || code_backup[icb] == opcall) {
+					*(int*)(code_backup + icb + 1) -= code_backup + icb - from;
+				}
+
+				int jc_len_bk = (Byte*)jcs[j].next - (code_backup + icb + len_op) - 5;
+				jcs[j].next = (unsigned)(code_backup + icb);
+				icb += len_op;
+
+				PUT(opjmp, code_backup + icb); icb += 1;
+				PUT(jc_len_bk, code_backup + icb); icb += 4;
+
+				need_backup = true;
+			}
+
 			if (!SV.addrs.p_mute && add_pmute) {
 				SV.addrs.p_mute = *(void**)(from + add_pmute);
 				LOG("Set p_mute = 0x%08X", (unsigned)SV.addrs.p_mute);
@@ -458,9 +499,22 @@ bool ApplyMemoryPatch()
 		LOG("*p_mute = 0x%08X", SV.addrs.p_mute ? *(unsigned*)SV.addrs.p_mute : 0);
 	}
 
+	if (need_backup) {
+		LOG("code backup needed, change protection...");
+		DWORD dwProtect;
+		if (VirtualProtect(code_backup, sizeof(code_backup), PAGE_EXECUTE_READWRITE, &dwProtect)) {
+			LOG("Protection changed.");
+		}
+		else {
+			LOG("Change Protection failed.");
+		}
+	}
+
 	ApplyMemoryPatch2();
 
 	StringPatch::Apply(mi_exe.lpBaseOfDll, mi_exe.SizeOfImage);
+
+	FontWidthsPatch::Apply(SV.addrs.addr_pfontsizes);
 
 	LOG("ApplyMemoryPatch Finished.")
 	return true;
@@ -559,7 +613,6 @@ bool GetMemPatchInfos(const INI::Group * group)
 	return true;
 }
 
-
 bool ApplyMemoryPatch2()
 {
 	if (!mps.empty()) {
@@ -597,12 +650,3 @@ bool ApplyMemoryPatch2()
 	return false;
 }
 
-bool DoStart()
-{
-	if (SERIES_IS_ED6(SV.series)) {
-		return SoraVoice::Init();
-	}
-	else {
-		return true;
-	}
-}
