@@ -184,6 +184,9 @@
     <None Include="..\..\src\RC\files\Message_zh.ini" />
     <None Include="..\..\src\RC\files\ao_rnd_vlst.txt" />
     <None Include="..\..\src\RC\files\SoraData.ini" />
+    <None Include="..\..\src\RC\files\SoraDataSora.ini" />
+    <None Include="..\..\src\RC\files\SoraDataTITS.ini" />
+    <None Include="..\..\src\RC\files\SoraDataZA.ini" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
