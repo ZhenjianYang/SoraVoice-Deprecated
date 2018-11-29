@@ -73,10 +73,6 @@ long SVCALL HOOKED_API CALL_PARAM_DCL
 }
 
 BOOL Initialize(PVOID /*BaseAddress*/) {
-#if _DEBUG
-	MessageBox(0, "Stop", "Stop", 0);
-#endif // _DEBUG
-
 	if (!dll) {
 		dll = LoadLibraryA(OLD_NAME_DLL);
 		if (!dll) {
@@ -91,6 +87,9 @@ BOOL Initialize(PVOID /*BaseAddress*/) {
 
 		dll_ed_voice = LoadLibraryA(STR_ED_VOICE_DLL);
 		if (dll_ed_voice) {
+#if _DEBUG
+			MessageBox(0, "Stop", "Stop", 0);
+#endif // _DEBUG
 			ed_voice_apis.Start = (decltype(ed_voice_apis.Start))GetProcAddress(dll_ed_voice, STR_START);
 			ed_voice_apis.End = (decltype(ed_voice_apis.End))GetProcAddress(dll_ed_voice, STR_END);
 			ed_voice_apis.Init = (decltype(ed_voice_apis.Start))GetProcAddress(dll_ed_voice, STR_INIT);
