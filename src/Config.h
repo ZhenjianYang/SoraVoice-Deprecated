@@ -34,7 +34,7 @@ struct CConfig
 
 	DEFINE_CONFIG_WMAX(OriVolumePercent, 100, 200);
 
-	DEFINE_CONFIG_WMAX(AutoPlay, AutoPlay_ALL, 2);
+	DEFINE_CONFIG_WMAX(AutoPlay, AutoPlay_Off, 2);
 	DEFINE_CONFIG(WaitTimePerChar, 60);
 	DEFINE_CONFIG(WaitTimeDialog, 800);
 	DEFINE_CONFIG(WaitTimeDialogVoice, 500);
