@@ -10,4 +10,6 @@ namespace StringPatch {
 	int Apply(void* start, int size, const char* pattern = nullptr);
 
 	void SetEditFun(EditFun* editFun);
+
+	void SetBaseOffset(int baseOffset);
 }

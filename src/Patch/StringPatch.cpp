@@ -14,6 +14,7 @@ using MapOffStrType = unordered_map<int, string>;
 static MapOffStrType mOffStr;
 static string cPattern;
 static StringPatch::EditFun* pEditFun = nullptr;
+static int iBaseOffset = 0;
 
 static constexpr int MaxSize = 0x220000;
 
@@ -98,13 +99,14 @@ void StringPatch::SetPattern(const char * pattern)
 int StringPatch::Apply(void * start, int size, const char * pattern)
 {
 	if (mOffStr.empty()) return 0;
-	if (!pattern && cPattern.empty() || !pEditFun) return 0;
+	if (!pattern) pattern = cPattern.c_str();
+	if (!pattern || !pEditFun) return 0;
 
 	if (size > MaxSize) size = MaxSize;
 
 	LOG("StringPatch::Apply, Start=0x%08X, Size=%d, Pattern=%s", (unsigned)start, size, pattern);
 
-	const Pattern pt(pattern ? pattern : cPattern.c_str());
+	const Pattern pt(pattern);
 
 	int cnt = 0;
 	for (unsigned char* p = (unsigned char*)start;
@@ -114,7 +116,7 @@ int StringPatch::Apply(void * start, int size, const char * pattern)
 		if (!pt.Check(p)) p++;
 		else {
 			p += pt.Legnth();
-			int off = *(int*)p;
+			int off = *(int*)p - iBaseOffset;
 			auto it = mOffStr.find(off);
 			if (it != mOffStr.end()) {
 				pEditFun(p, (int)it->second.c_str());
@@ -132,4 +134,9 @@ int StringPatch::Apply(void * start, int size, const char * pattern)
 void StringPatch::SetEditFun(EditFun * editFun)
 {
 	pEditFun = editFun;
+}
+
+void StringPatch::SetBaseOffset(int baseOffset)
+{
+	::iBaseOffset = baseOffset;
 }

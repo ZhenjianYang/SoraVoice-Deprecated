@@ -192,19 +192,20 @@ constexpr int num_asm_codes = sizeof(asm_codes) / sizeof(*asm_codes);
 
 static char buff_ao_vlist[1024];
 
-const char str_memPatch_offset[] = "memPatch_offset_";
-const char str_memPatch_type[] = "memPatch_type_";
-const char str_memPatch_old[] = "memPatch_old_";
-const char str_memPatch_new[] = "memPatch_new_";
-const char str_memPatch_con[] = "memPatch_con_";
+constexpr char str_memPatch_offset[] = "memPatch_offset_";
+constexpr char str_memPatch_type[] = "memPatch_type_";
+constexpr char str_memPatch_old[] = "memPatch_old_";
+constexpr char str_memPatch_new[] = "memPatch_new_";
+constexpr char str_memPatch_con[] = "memPatch_con_";
 const char memPatch_con_enable[] = "1";
 static std::vector<MemPatch> mps;
 constexpr int MemPatchType_Int = 0;
 constexpr int MemPatchType_Str = 1;
 constexpr int MemPatchType_Hex = 2;
 
-const char str_StrPatchFile[] = "StrPatchFile";
-const char str_StrPatchPattern[] = "StrPatchPattern";
+constexpr char str_StrPatchFile[] = "StrPatchFile";
+constexpr char str_StrPatchPattern[] = "StrPatchPattern";
+constexpr char str_StrPatchOffset[] = "StrPatchOffset";
 
 bool LoadRC()
 {
@@ -394,13 +395,21 @@ static bool SearchGame(const char* iniName) {
 
 	auto strPatchFile = group->GetValue(str_StrPatchFile);
 	auto strPatchPattern = group->GetValue(str_StrPatchPattern);
+	auto strPatchOffset = group->GetValue(str_StrPatchOffset);
 	if (strPatchFile && strPatchPattern) {
 		string path = scena_folder_path;
 		path.append(strPatchFile);
 
+		int patchOffset = (int)GetUIntFromValue(strPatchOffset);
+		LOG("PatchFile: %s\n"
+			"PatchPattern: %s\n"
+			"PatchOffset: 0x%08X",
+			strPatchFile, strPatchPattern, patchOffset);
+
 		StringPatch::SetEditFun(EditInt);
 		StringPatch::LoadStrings(path.c_str());
 		StringPatch::SetPattern(strPatchPattern);
+		StringPatch::SetBaseOffset(patchOffset);
 	}
 	return true;
 }
