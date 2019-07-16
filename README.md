@@ -25,7 +25,7 @@ All informations about this project can be found at [SoraVoice](https://github.c
 
 ## Build
 
-You can download built files in [Release](https://github.com/ZhenjianYang/SoraVoice/releases), or build them with VS2017 (Desktop development with C++).   
+You can download built files in [Release](https://github.com/ZhenjianYang/SoraVoice/releases), or build them with the latest version of Visual Studio (Desktop development with C++).   
 
 ## Preparation
 
@@ -166,7 +166,7 @@ PC游戏《空·零·碧之轨迹》系列的语音补丁。
 
 ## 编译
 
-您可以从[Release](https://github.com/ZhenjianYang/SoraVoice/releases)获取已编译好的文件, 或者用VS2017(使用c++的桌面开发)来进行编译。
+您可以从[Release](https://github.com/ZhenjianYang/SoraVoice/releases)获取已编译好的文件, 或者用最新版的Visual Studio(使用c++的桌面开发)来进行编译。
 
 ## 支持的游戏
 
