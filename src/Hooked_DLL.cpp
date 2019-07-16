@@ -62,6 +62,12 @@ long SVCALL HOOKED_API CALL_PARAM_DCL
 {	
 	auto rst = ori_api ? ori_api CALL_PARAM : ERR_CODE;
 
+	if (ed_voice_apis.Init && !ed_voice_apis.Init()) {
+		FreeLibrary(dll_ed_voice);
+		ed_voice_apis.Init = ed_voice_apis.Uninit = ed_voice_apis.Start = ed_voice_apis.End = nullptr;
+		dll_ed_voice = nullptr;
+	}
+
 	if (!init) {
 		init = true;
 		if (ed_voice_apis.Start) {
@@ -96,11 +102,7 @@ BOOL Initialize(PVOID /*BaseAddress*/) {
 			ed_voice_apis.Uninit = (decltype(ed_voice_apis.End))GetProcAddress(dll_ed_voice, STR_UINIT);
 
 			if (ed_voice_apis.Init) {
-				if (!ed_voice_apis.Init()) {
-					FreeLibrary(dll_ed_voice);
-					ed_voice_apis.Init = ed_voice_apis.Uninit = ed_voice_apis.Start = ed_voice_apis.End = nullptr;
-					dll_ed_voice = nullptr;
-				}
+				ed_voice_apis.Init();
 			}
 		}
 	}
