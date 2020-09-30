@@ -1,4 +1,4 @@
-# DEPERECATED
+# DEPRECATED
 **This project is no longer under maintenance. It doesn't support the latest update of *Trails in the Sky*
 series. If you are seeking for support for this series, go to 
 [SoraVoice (Lite)](https://github.com/ZhenjianYang/SoraVoice).**
